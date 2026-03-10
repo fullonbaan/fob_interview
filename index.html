@@ -82,6 +82,91 @@
   }
   @keyframes mote { 0%,100%{opacity:0;transform:scale(.3)} 50%{opacity:var(--op);transform:scale(1)} }
 
+  /* ── Ecosystem Nav Bar ── */
+  .eco-nav {
+    position: relative; z-index: 10;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 11px 28px;
+    background: linear-gradient(90deg, var(--ink) 0%, var(--ink-mid) 100%);
+    border-bottom: 1px solid rgba(201,148,62,0.25);
+  }
+  .eco-nav-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase;
+    color: rgba(201,148,62,0.55);
+    white-space: nowrap;
+  }
+  .eco-nav-links {
+    display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end;
+  }
+  .eco-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 13px;
+    border: 1px solid rgba(201,148,62,0.28);
+    border-radius: 20px;
+    background: rgba(201,148,62,0.07);
+    color: var(--gold-lt);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px; font-weight: 500;
+    text-decoration: none;
+    transition: background .18s, border-color .18s, color .18s;
+    white-space: nowrap;
+  }
+  .eco-link:hover {
+    background: rgba(201,148,62,0.18);
+    border-color: var(--gold-mid);
+    color: #fff;
+  }
+  .eco-link .eco-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .eco-link-repo  .eco-dot { background: #5B8DEF; }
+  .eco-link-train .eco-dot { background: #4CAF82; }
+  .eco-link-jobs  .eco-dot { background: #E2914A; }
+
+  /* ── Ecosystem Footer Section ── */
+  .eco-footer {
+    margin-top: 32px;
+    padding: 22px 0 4px;
+    border-top: 1px solid var(--border-lt);
+    text-align: center;
+  }
+  .eco-footer-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase;
+    color: var(--ink-lt); margin-bottom: 14px;
+  }
+  .eco-footer-links {
+    display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
+  }
+  .eco-footer-link {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 9px 18px;
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    background: var(--smoke);
+    color: var(--ink-mid);
+    font-size: 12px; font-weight: 500;
+    text-decoration: none;
+    transition: background .18s, border-color .18s, box-shadow .18s;
+  }
+  .eco-footer-link:hover {
+    background: var(--gold-pale);
+    border-color: var(--gold-mid);
+    box-shadow: 0 2px 10px rgba(168,120,42,0.12);
+    color: var(--ink);
+  }
+  .eco-footer-link .efl-icon { font-size: 14px; }
+  .eco-footer-link .efl-name { font-weight: 600; color: var(--gold); }
+  .eco-footer-link .efl-desc { color: var(--ink-lt); font-size: 11px; }
+
+  @media(max-width:600px){
+    .eco-nav { flex-direction:column; gap:8px; align-items:flex-start; padding:10px 16px; }
+    .eco-nav-links { justify-content:flex-start; }
+    .eco-footer-links { flex-direction:column; align-items:center; }
+  }
+
   .card-inner { position:relative; z-index:2; padding:50px 56px 44px; }
 
   /* ── Header ── */
@@ -644,6 +729,22 @@
   <div class="card-bg"></div>
   <div class="dots" id="dots"></div>
 
+  <!-- ── FOB Ecosystem Nav ── -->
+  <nav class="eco-nav">
+    <span class="eco-nav-label">◆ FOB Ecosystem</span>
+    <div class="eco-nav-links">
+      <a class="eco-link eco-link-repo"  href="https://fobrepo.vercel.app/"     target="_blank" rel="noopener">
+        <span class="eco-dot"></span>FOB Repo
+      </a>
+      <a class="eco-link eco-link-train" href="https://fobtraining.vercel.app/" target="_blank" rel="noopener">
+        <span class="eco-dot"></span>FOB Training
+      </a>
+      <a class="eco-link eco-link-jobs"  href="https://fobjobs.vercel.app/"     target="_blank" rel="noopener">
+        <span class="eco-dot"></span>FOB Jobs
+      </a>
+    </div>
+  </nav>
+
   <div class="card-inner">
 
     <!-- ── Header ── -->
@@ -1032,7 +1133,7 @@
         <div class="ci-label">Call / WhatsApp</div>
         <div class="ci-val">+91 63605 93122</div>
       </a>
-      <a class="ci" href="mailto:fullonbaan@gmail.com" target="_blank" rel="noopener">
+      <a class="ci" href="mailto:fullonbaan@gmail.com">
         <span class="ci-icon">✉️</span>
         <div class="ci-label">Email</div>
         <div class="ci-val">fullonbaan@gmail.com</div>
@@ -1249,6 +1350,28 @@
       </div>
     </div>
 
+    <!-- ── FOB Ecosystem Links ── -->
+    <div class="eco-footer">
+      <div class="eco-footer-label">◆ Explore the FOB Ecosystem ◆</div>
+      <div class="eco-footer-links">
+        <a class="eco-footer-link" href="https://fobrepo.vercel.app/" target="_blank" rel="noopener">
+          <span class="efl-icon">📦</span>
+          <span class="efl-name">FOB Repo</span>
+          <span class="efl-desc">Resources &amp; Downloads</span>
+        </a>
+        <a class="eco-footer-link" href="https://fobtraining.vercel.app/" target="_blank" rel="noopener">
+          <span class="efl-icon">🎓</span>
+          <span class="efl-name">FOB Training</span>
+          <span class="efl-desc">Courses &amp; Learning</span>
+        </a>
+        <a class="eco-footer-link" href="https://fobjobs.vercel.app/" target="_blank" rel="noopener">
+          <span class="efl-icon">💼</span>
+          <span class="efl-name">FOB Jobs</span>
+          <span class="efl-desc">Infor LN Opportunities</span>
+        </a>
+      </div>
+    </div>
+
     <!-- ── Footer ── -->
     <div class="card-footer">
       <div class="brand-block">
@@ -1266,7 +1389,7 @@
   </div>
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
 <script>
   // ═══════════════════════════════════════════════════════════════
   //  EMAILJS SETUP — replace the 3 values below with your own
@@ -1525,7 +1648,7 @@
 
 
 
-  // ── Show / hide steps ─────────────────────────────────────────
+  // ── Show / hide steps ────────────────────────────────
   function showStep(id) {
     ['step1', 'step2', 'step3', 'step4', 'step5'].forEach(function(s) {
       document.getElementById(s).style.display = (s === id) ? 'block' : 'none';
