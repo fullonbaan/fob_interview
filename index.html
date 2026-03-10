@@ -211,6 +211,29 @@
     background: linear-gradient(90deg, rgba(123,50,16,0.05), rgba(168,120,42,0.08), rgba(123,50,16,0.05));
     border-top: 2px solid var(--gold-mid) !important;
   }
+  .section-header-row td {
+    padding: 10px 14px !important;
+    background: transparent;
+    border-bottom: none !important;
+  }
+  .section-label {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 2.5px;
+    text-transform: uppercase; font-weight: 600;
+    border-radius: 20px; padding: 4px 14px;
+  }
+  .tech-label {
+    background: linear-gradient(135deg, rgba(26,74,138,0.10), rgba(77,144,240,0.12));
+    border: 1px solid rgba(26,74,138,0.22); color: #1a4a8a;
+  }
+  .func-label {
+    background: linear-gradient(135deg, rgba(46,125,79,0.10), rgba(80,200,128,0.12));
+    border: 1px solid rgba(46,125,79,0.22); color: var(--green);
+  }
+  .mega-combo-row {
+    background: linear-gradient(90deg, rgba(123,50,16,0.08), rgba(168,120,42,0.14), rgba(123,50,16,0.08)) !important;
+    border-top: 2px solid var(--gold) !important;
+  }
 
   .num  { font-family:'DM Mono',monospace; font-size:12px; color:var(--gold); font-weight:500; }
   .mod  { font-weight:500; color:var(--ink); font-size:13px; }
@@ -504,6 +527,101 @@
 
   @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
 
+  /* ── Step flow styles ── */
+  .step-header {
+    display:flex; align-items:center; gap:12px; margin-bottom:14px;
+  }
+  .back-btn {
+    background:none; border:1px solid var(--border); border-radius:8px;
+    padding:6px 14px; font-size:12px; color:var(--gold); cursor:pointer;
+    font-family:'DM Sans',sans-serif; transition:background .2s;
+  }
+  .back-btn:hover { background:var(--gold-pale); }
+  .step-title {
+    font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:700;
+    color:var(--ink);
+  }
+  .step-summary {
+    background:var(--gold-pale); border:1px solid rgba(168,120,42,0.2);
+    border-radius:8px; padding:10px 14px; font-size:12px;
+    color:var(--ink-mid); margin-bottom:14px; font-weight:500;
+  }
+  .user-fields { display:flex; flex-direction:column; gap:10px; margin-bottom:12px; }
+  .field-group { display:flex; flex-direction:column; gap:5px; }
+  .pay-input {
+    width:100%; padding:11px 14px;
+    background:var(--cream); border:1px solid var(--border); border-radius:8px;
+    color:var(--ink); font-family:'DM Sans',sans-serif; font-size:13px;
+    transition:border-color .2s, box-shadow .2s;
+  }
+  .pay-input:focus { outline:none; border-color:var(--gold); box-shadow:0 0 0 3px rgba(168,120,42,0.10); }
+  .field-error {
+    font-size:11.5px; color:var(--rust); font-family:'DM Mono',monospace;
+    min-height:16px; margin-bottom:6px;
+  }
+
+  /* UPI App Grid */
+  .upi-apps-grid {
+    display:grid; grid-template-columns:repeat(5,1fr); gap:10px;
+    margin:12px 0 16px;
+  }
+  .upi-app-btn {
+    display:flex; flex-direction:column; align-items:center; gap:7px;
+    background:var(--cream); border:2px solid var(--border); border-radius:12px;
+    padding:14px 8px; cursor:pointer;
+    transition:border-color .2s, background .2s, transform .15s, box-shadow .2s;
+    font-family:'DM Sans',sans-serif;
+  }
+  .upi-app-btn:hover {
+    border-color:var(--gold-mid); background:var(--gold-pale);
+    transform:translateY(-3px); box-shadow:0 6px 18px rgba(168,120,42,0.14);
+  }
+  .upi-app-icon { width:40px; height:40px; display:flex; align-items:center; justify-content:center; line-height:1; }
+  .upi-app-name { font-size:10px; font-weight:600; color:var(--ink-mid); text-align:center; }
+
+  .upi-manual-note {
+    text-align:center; font-size:11px; color:var(--ink-lt);
+    font-family:'DM Mono',monospace; letter-spacing:.3px;
+    margin-bottom:12px;
+  }
+  .pay-confirm-btns {
+    display:flex; gap:10px;
+  }
+  .btn-success, .btn-failure {
+    flex:1; padding:13px; border:none; border-radius:10px;
+    font-family:'DM Sans',sans-serif; font-weight:700; font-size:13px;
+    cursor:pointer; transition:opacity .2s, transform .15s;
+  }
+  .btn-success { background:linear-gradient(135deg,#2E7D4F,#50c880); color:#fff; }
+  .btn-failure { background:linear-gradient(135deg,var(--rust),#e07050); color:#fff; }
+  .btn-success:hover, .btn-failure:hover { opacity:.9; transform:translateY(-1px); }
+
+  /* Thank You / Failure */
+  .thankyou-wrap { text-align:center; padding:10px 0 4px; }
+  .ty-icon { font-size:52px; margin-bottom:10px; }
+  .ty-title {
+    font-family:'Cormorant Garamond',serif; font-size:30px; font-weight:700;
+    color:var(--ink); margin-bottom:8px;
+  }
+  .ty-msg { font-size:13px; color:var(--ink-lt); margin-bottom:14px; }
+  .ty-order-box {
+    background:var(--gold-pale); border:1px solid rgba(168,120,42,0.25);
+    border-radius:10px; padding:14px 18px; margin-bottom:14px;
+    text-align:left; font-size:13px; color:var(--ink-mid); line-height:1.8;
+  }
+  .ty-order-box strong { color:var(--ink); }
+  .ty-delivery {
+    font-size:13px; color:var(--ink-mid); margin-bottom:10px; line-height:1.6;
+  }
+  .ty-contact {
+    font-size:12px; color:var(--ink-lt); font-family:'DM Mono',monospace;
+  }
+
+  @media(max-width:620px){
+    .upi-apps-grid { grid-template-columns:repeat(3,1fr); }
+    .pay-confirm-btns { flex-direction:column; }
+  }
+
   @media(max-width:620px){
     .card-inner{padding:32px 22px 28px;}
     .main-title{font-size:34px;}
@@ -532,7 +650,7 @@
     <div class="card-header">
       <div class="eyebrow"><span>◆</span>FullonBaan Education<span>◆</span></div>
       <div class="main-title">Infor LN <em>Interview</em><br>Preparation Guides</div>
-      <div class="sub-title">55–65 Expert Q&amp;A per Guide &nbsp;·&nbsp; Foundational · Intermediate · Advanced &nbsp;·&nbsp; 2025 Edition</div>
+      <div class="sub-title">55–65 Expert Q&amp;A per Guide &nbsp;·&nbsp; Foundational · Intermediate · Advanced &nbsp;·&nbsp; 10 Guides · 2025 Edition</div>
       <div class="gold-rule"></div>
     </div>
 
@@ -548,6 +666,7 @@
         <div class="ib-chip chip-rust"><span class="chip-dot"></span>Foundational → Advanced</div>
         <div class="ib-chip chip-violet"><span class="chip-dot"></span>Code samples included</div>
         <div class="ib-chip chip-green"><span class="chip-dot"></span>Instant PDF delivery</div>
+        <div class="ib-chip chip-blue"><span class="chip-dot"></span>10 Guides — Technical &amp; Functional</div>
       </div>
     </div>
 
@@ -562,6 +681,10 @@
         </tr>
       </thead>
       <tbody>
+        <!-- Technical Section Header -->
+        <tr class="section-header-row">
+          <td colspan="4"><span class="section-label tech-label">⚙ Technical</span></td>
+        </tr>
         <tr class="highlight-row">
           <td class="num">01</td>
           <td class="mod">Infor LN Development<span class="tag-new">New</span></td>
@@ -570,20 +693,20 @@
         </tr>
         <tr class="highlight-row">
           <td class="num">02</td>
-          <td class="mod">Infor BOD<span class="tag-new">New</span></td>
+          <td class="mod">Infor LN Administration<span class="tag-new">New</span></td>
           <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--ink-lt)">55+ Q&amp;A</td>
           <td><span class="pval">₹499</span></td>
         </tr>
         <tr class="highlight-row">
           <td class="num">03</td>
-          <td class="mod">Infor ION<span class="tag-new">New</span></td>
-          <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--ink-lt)">60+ Q&amp;A</td>
+          <td class="mod">Infor BOD<span class="tag-new">New</span></td>
+          <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--ink-lt)">55+ Q&amp;A</td>
           <td><span class="pval">₹499</span></td>
         </tr>
         <tr class="highlight-row">
           <td class="num">04</td>
-          <td class="mod">Infor LN Finance<span class="tag-new">New</span></td>
-          <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--ink-lt)">55+ Q&amp;A</td>
+          <td class="mod">Infor ION<span class="tag-new">New</span></td>
+          <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--ink-lt)">60+ Q&amp;A</td>
           <td><span class="pval">₹499</span></td>
         </tr>
         <tr class="highlight-row">
@@ -592,18 +715,63 @@
           <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--ink-lt)">65+ Q&amp;A</td>
           <td><span class="pval">₹499</span></td>
         </tr>
+        <tr class="combo-row">
+          <td class="num" style="color:var(--gold-mid)">★</td>
+          <td class="mod" style="font-weight:700;color:var(--ink)">Combo Technical — All 5 Tech Guides</td>
+          <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--ink-lt)">290+ Q&amp;A</td>
+          <td>
+            <span class="combo-badge">₹1,999 <span class="save-tag">SAVE ₹496</span></span>
+          </td>
+        </tr>
+        <!-- Functional Section Header -->
+        <tr class="section-header-row">
+          <td colspan="4"><span class="section-label func-label">📊 Functional</span></td>
+        </tr>
         <tr class="highlight-row">
           <td class="num">06</td>
+          <td class="mod">Infor LN Finance<span class="tag-new">New</span></td>
+          <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--ink-lt)">55+ Q&amp;A</td>
+          <td><span class="pval">₹499</span></td>
+        </tr>
+        <tr class="highlight-row">
+          <td class="num">07</td>
           <td class="mod">Infor LN SCM<span class="tag-new">New</span></td>
+          <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--ink-lt)">55+ Q&amp;A</td>
+          <td><span class="pval">₹499</span></td>
+        </tr>
+        <tr class="highlight-row">
+          <td class="num">08</td>
+          <td class="mod">Infor LN Manufacturing<span class="tag-new">New</span></td>
+          <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--ink-lt)">55+ Q&amp;A</td>
+          <td><span class="pval">₹499</span></td>
+        </tr>
+        <tr class="highlight-row">
+          <td class="num">09</td>
+          <td class="mod">Infor LN Planning<span class="tag-new">New</span></td>
+          <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--ink-lt)">55+ Q&amp;A</td>
+          <td><span class="pval">₹499</span></td>
+        </tr>
+        <tr class="highlight-row">
+          <td class="num">10</td>
+          <td class="mod">Infor LN WMS<span class="tag-new">New</span></td>
           <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--ink-lt)">55+ Q&amp;A</td>
           <td><span class="pval">₹499</span></td>
         </tr>
         <tr class="combo-row">
           <td class="num" style="color:var(--gold-mid)">★</td>
-          <td class="mod" style="font-weight:700;color:var(--ink)">Combo — All 6 Guides</td>
-          <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--ink-lt)">350+ Q&amp;A</td>
+          <td class="mod" style="font-weight:700;color:var(--ink)">Combo Functional — All 5 Func Guides</td>
+          <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--ink-lt)">275+ Q&amp;A</td>
           <td>
-            <span class="combo-badge">₹1,999 <span class="save-tag">SAVE ₹995</span></span>
+            <span class="combo-badge">₹1,999 <span class="save-tag">SAVE ₹496</span></span>
+          </td>
+        </tr>
+        <!-- Mega Combo -->
+        <tr class="combo-row mega-combo-row">
+          <td class="num" style="color:var(--gold-mid)">⭐</td>
+          <td class="mod" style="font-weight:700;color:var(--ink)">Combo Technical &amp; Functional — All 10 Guides</td>
+          <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--ink-lt)">565+ Q&amp;A</td>
+          <td>
+            <span class="combo-badge" style="font-size:15px;">₹2,999 <span class="save-tag">SAVE ₹1,991</span></span>
           </td>
         </tr>
       </tbody>
@@ -611,7 +779,7 @@
 
     <!-- ── Individual Guide Cards ── -->
     <div class="guides-section">
-      <div class="guides-eyebrow">Browse Individual Guides</div>
+      <div class="guides-eyebrow">⚙ Technical Guides</div>
       <div class="guides-grid">
 
         <div class="guide-card gc-blue">
@@ -625,13 +793,28 @@
           </div>
           <div class="gc-price-tag">
             <span class="gc-price-val">₹499</span>
-            <span class="gc-q-count">Technical &amp; Functional</span>
+            <span class="gc-q-count">Technical</span>
           </div>
         </div>
 
         <div class="guide-card gc-teal">
-          <span class="gc-icon">📡</span>
+          <span class="gc-icon">🖥️</span>
           <div class="gc-num">Guide 02</div>
+          <div class="gc-title">Infor LN Administration</div>
+          <div class="gc-desc">System setup, user management, environment configuration, security roles, patches &amp; LN infrastructure</div>
+          <div class="gc-stats">
+            <span class="gc-stat">55+ Q&amp;A</span>
+            <span class="gc-stat">7 Chapters</span>
+          </div>
+          <div class="gc-price-tag">
+            <span class="gc-price-val">₹499</span>
+            <span class="gc-q-count">Technical</span>
+          </div>
+        </div>
+
+        <div class="guide-card gc-gold">
+          <span class="gc-icon">📡</span>
+          <div class="gc-num">Guide 03</div>
           <div class="gc-title">Infor BOD</div>
           <div class="gc-desc">BOD structure, OAGIS standard, publishing &amp; receiving, UserArea, BOD Mapping, ION integration patterns</div>
           <div class="gc-stats">
@@ -640,13 +823,13 @@
           </div>
           <div class="gc-price-tag">
             <span class="gc-price-val">₹499</span>
-            <span class="gc-q-count">Technical &amp; Integration</span>
+            <span class="gc-q-count">Technical</span>
           </div>
         </div>
 
-        <div class="guide-card gc-gold">
+        <div class="guide-card gc-rust">
           <span class="gc-icon">🔗</span>
-          <div class="gc-num">Guide 03</div>
+          <div class="gc-num">Guide 04</div>
           <div class="gc-title">Infor ION</div>
           <div class="gc-desc">ION architecture, Connect, Event Management, Workflow, ION Desk, Ming.le, Pulse API &amp; CloudSuite</div>
           <div class="gc-stats">
@@ -655,22 +838,7 @@
           </div>
           <div class="gc-price-tag">
             <span class="gc-price-val">₹499</span>
-            <span class="gc-q-count">Technical &amp; Functional</span>
-          </div>
-        </div>
-
-        <div class="guide-card gc-rust">
-          <span class="gc-icon">💰</span>
-          <div class="gc-num">Guide 04</div>
-          <div class="gc-title">Infor LN Finance</div>
-          <div class="gc-desc">GL, AP, AR, Cash &amp; Bank, Fixed Assets, Period End close, Tax, Budget Control &amp; Reporting</div>
-          <div class="gc-stats">
-            <span class="gc-stat">55+ Q&amp;A</span>
-            <span class="gc-stat">6 Chapters</span>
-          </div>
-          <div class="gc-price-tag">
-            <span class="gc-price-val">₹499</span>
-            <span class="gc-q-count">Functional</span>
+            <span class="gc-q-count">Technical</span>
           </div>
         </div>
 
@@ -685,13 +853,55 @@
           </div>
           <div class="gc-price-tag">
             <span class="gc-price-val">₹499</span>
-            <span class="gc-q-count">Technical &amp; Advanced</span>
+            <span class="gc-q-count">Technical</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Combo Technical Hero -->
+      <div class="combo-hero" style="margin-bottom:20px;">
+        <div class="ch-left">
+          <div class="ch-eyebrow">⭐ Best Value — Combo Technical</div>
+          <div class="ch-title">All 5 Technical Guides Bundle</div>
+          <div class="ch-desc">Master every technical domain — 290+ expert Q&amp;As</div>
+          <div class="ch-chips">
+            <span class="ch-chip">✓ LN Development</span>
+            <span class="ch-chip">✓ LN Administration</span>
+            <span class="ch-chip">✓ BOD</span>
+            <span class="ch-chip">✓ ION</span>
+            <span class="ch-chip">✓ Extensions</span>
+          </div>
+        </div>
+        <div class="ch-right">
+          <div class="ch-was">₹2,495 individually</div>
+          <div class="ch-curr">INR</div>
+          <div class="ch-price">1,999</div>
+          <div class="ch-save">SAVE ₹496</div>
+        </div>
+      </div>
+
+      <div class="guides-eyebrow" style="margin-top:24px;">📊 Functional Guides</div>
+      <div class="guides-grid">
+
+        <div class="guide-card gc-rust">
+          <span class="gc-icon">💰</span>
+          <div class="gc-num">Guide 06</div>
+          <div class="gc-title">Infor LN Finance</div>
+          <div class="gc-desc">GL, AP, AR, Cash &amp; Bank, Fixed Assets, Period End close, Tax, Budget Control &amp; Reporting</div>
+          <div class="gc-stats">
+            <span class="gc-stat">55+ Q&amp;A</span>
+            <span class="gc-stat">6 Chapters</span>
+          </div>
+          <div class="gc-price-tag">
+            <span class="gc-price-val">₹499</span>
+            <span class="gc-q-count">Functional</span>
           </div>
         </div>
 
         <div class="guide-card gc-green">
           <span class="gc-icon">📦</span>
-          <div class="gc-num">Guide 06</div>
+          <div class="gc-num">Guide 07</div>
           <div class="gc-title">Infor LN SCM</div>
           <div class="gc-desc">Procurement, Sales, Warehousing, Inventory, Shipping, Order Management &amp; Supply Chain Planning</div>
           <div class="gc-stats">
@@ -704,28 +914,99 @@
           </div>
         </div>
 
+        <div class="guide-card gc-blue">
+          <span class="gc-icon">🏭</span>
+          <div class="gc-num">Guide 08</div>
+          <div class="gc-title">Infor LN Manufacturing</div>
+          <div class="gc-desc">Production orders, BOMs, routings, shop floor control, costing, MRP &amp; manufacturing execution</div>
+          <div class="gc-stats">
+            <span class="gc-stat">55+ Q&amp;A</span>
+            <span class="gc-stat">7 Chapters</span>
+          </div>
+          <div class="gc-price-tag">
+            <span class="gc-price-val">₹499</span>
+            <span class="gc-q-count">Functional</span>
+          </div>
+        </div>
+
+        <div class="guide-card gc-teal">
+          <span class="gc-icon">📅</span>
+          <div class="gc-num">Guide 09</div>
+          <div class="gc-title">Infor LN Planning</div>
+          <div class="gc-desc">Master planning, DRP, MPS, MRP, demand management, supply planning &amp; constraint-based scheduling</div>
+          <div class="gc-stats">
+            <span class="gc-stat">55+ Q&amp;A</span>
+            <span class="gc-stat">7 Chapters</span>
+          </div>
+          <div class="gc-price-tag">
+            <span class="gc-price-val">₹499</span>
+            <span class="gc-q-count">Functional</span>
+          </div>
+        </div>
+
+        <div class="guide-card gc-violet">
+          <span class="gc-icon">🏬</span>
+          <div class="gc-num">Guide 10</div>
+          <div class="gc-title">Infor LN WMS</div>
+          <div class="gc-desc">Warehouse setup, inbound/outbound flows, locations, lot tracking, cycle counting &amp; warehouse automation</div>
+          <div class="gc-stats">
+            <span class="gc-stat">55+ Q&amp;A</span>
+            <span class="gc-stat">7 Chapters</span>
+          </div>
+          <div class="gc-price-tag">
+            <span class="gc-price-val">₹499</span>
+            <span class="gc-q-count">Functional</span>
+          </div>
+        </div>
+
       </div>
 
-      <!-- Combo Hero -->
-      <div class="combo-hero">
+      <!-- Combo Functional Hero -->
+      <div class="combo-hero" style="margin-bottom:20px;">
         <div class="ch-left">
-          <div class="ch-eyebrow">⭐ Best Value — Combo Offer</div>
-          <div class="ch-title">All 6 Interview Guides Bundle</div>
-          <div class="ch-desc">Get every guide — 350+ expert Q&amp;As across all Infor LN domains</div>
+          <div class="ch-eyebrow">⭐ Best Value — Combo Functional</div>
+          <div class="ch-title">All 5 Functional Guides Bundle</div>
+          <div class="ch-desc">Ace every functional domain — 275+ expert Q&amp;As</div>
           <div class="ch-chips">
-            <span class="ch-chip">✓ LN Development</span>
-            <span class="ch-chip">✓ BOD</span>
-            <span class="ch-chip">✓ ION</span>
             <span class="ch-chip">✓ Finance</span>
-            <span class="ch-chip">✓ Extensions</span>
             <span class="ch-chip">✓ SCM</span>
+            <span class="ch-chip">✓ Manufacturing</span>
+            <span class="ch-chip">✓ Planning</span>
+            <span class="ch-chip">✓ WMS</span>
           </div>
         </div>
         <div class="ch-right">
-          <div class="ch-was">₹2,994 individually</div>
+          <div class="ch-was">₹2,495 individually</div>
           <div class="ch-curr">INR</div>
           <div class="ch-price">1,999</div>
-          <div class="ch-save">SAVE ₹995</div>
+          <div class="ch-save">SAVE ₹496</div>
+        </div>
+      </div>
+
+      <!-- Mega Combo Hero -->
+      <div class="combo-hero" style="background: linear-gradient(135deg, #0a1228 0%, #1a2040 50%, #0a1228 100%); border-color: rgba(168,120,42,0.5); box-shadow: 0 12px 40px rgba(10,20,50,0.28);">
+        <div class="ch-left">
+          <div class="ch-eyebrow" style="color:#f0c060;">🏆 Ultimate Bundle — Technical &amp; Functional</div>
+          <div class="ch-title" style="font-size:20px;">All 10 Interview Guides Bundle</div>
+          <div class="ch-desc">Complete mastery — 565+ expert Q&amp;As across all Infor LN domains</div>
+          <div class="ch-chips">
+            <span class="ch-chip">✓ Development</span>
+            <span class="ch-chip">✓ Administration</span>
+            <span class="ch-chip">✓ BOD</span>
+            <span class="ch-chip">✓ ION</span>
+            <span class="ch-chip">✓ Extensions</span>
+            <span class="ch-chip">✓ Finance</span>
+            <span class="ch-chip">✓ SCM</span>
+            <span class="ch-chip">✓ Manufacturing</span>
+            <span class="ch-chip">✓ Planning</span>
+            <span class="ch-chip">✓ WMS</span>
+          </div>
+        </div>
+        <div class="ch-right">
+          <div class="ch-was">₹4,990 individually</div>
+          <div class="ch-curr">INR</div>
+          <div class="ch-price" style="font-size:40px;">2,999</div>
+          <div class="ch-save" style="background:linear-gradient(135deg,#f0c060,#e09030);">SAVE ₹1,991</div>
         </div>
       </div>
 
@@ -733,7 +1014,7 @@
 
     <!-- ── Value Bar ── -->
     <div class="value-bar">
-      <div class="vb-item"><div class="vb-icon">✔</div><div><strong>350+</strong> expert Q&amp;As across all 6 guides</div></div>
+      <div class="vb-item"><div class="vb-icon">✔</div><div><strong>565+</strong> expert Q&amp;As across all 10 guides</div></div>
       <div class="vb-div"></div>
       <div class="vb-item"><div class="vb-icon">✔</div><div><strong>Pro Tips</strong> with every answer</div></div>
       <div class="vb-div"></div>
@@ -771,45 +1052,199 @@
 
       <div class="pay-panel" id="payPanel">
         <div class="pay-inner">
-          <div class="pay-row">
-            <div>
-              <span class="pay-label">Select Guide</span>
-              <select class="pay-select" id="modSelect" onchange="onModuleChange()">
-                <option value="">— Choose a guide —</option>
-                <option value="dev">Infor LN Development — ₹499</option>
-                <option value="bod">Infor BOD — ₹499</option>
-                <option value="ion">Infor ION — ₹499</option>
-                <option value="fin">Infor LN Finance — ₹499</option>
-                <option value="ext">Infor LN Extensions — ₹499</option>
-                <option value="scm">Infor LN SCM — ₹499</option>
-                <option value="combo">⭐ Combo — All 6 Guides — ₹1,999</option>
-              </select>
+
+          <!-- STEP 1: Select Guide -->
+          <div id="step1">
+            <div class="pay-row">
+              <div>
+                <span class="pay-label">Select Guide</span>
+                <select class="pay-select" id="modSelect" onchange="onModuleChange()">
+                  <option value="">— Choose a guide —</option>
+                  <optgroup label="⚙ Technical Guides">
+                    <option value="dev">Infor LN Development — ₹499</option>
+                    <option value="adm">Infor LN Administration — ₹499</option>
+                    <option value="bod">Infor BOD — ₹499</option>
+                    <option value="ion">Infor ION — ₹499</option>
+                    <option value="ext">Infor LN Extensions — ₹499</option>
+                  </optgroup>
+                  <optgroup label="📊 Functional Guides">
+                    <option value="fin">Infor LN Finance — ₹499</option>
+                    <option value="scm">Infor LN SCM — ₹499</option>
+                    <option value="mfg">Infor LN Manufacturing — ₹499</option>
+                    <option value="pln">Infor LN Planning — ₹499</option>
+                    <option value="wms">Infor LN WMS — ₹499</option>
+                  </optgroup>
+                  <optgroup label="⭐ Combo Bundles">
+                    <option value="combo_tech">⚙ Combo Technical — All 5 Tech Guides — ₹1,999</option>
+                    <option value="combo_func">📊 Combo Functional — All 5 Func Guides — ₹1,999</option>
+                    <option value="combo_all">🏆 Combo Technical &amp; Functional — All 10 Guides — ₹2,999</option>
+                  </optgroup>
+                </select>
+              </div>
+              <div id="qtyWrap">
+                <span class="pay-label">Quantity</span>
+                <select class="pay-select" id="qtySelect" onchange="onQtyChange()">
+                  <option value="1">1 copy</option>
+                </select>
+              </div>
             </div>
-            <div id="qtyWrap">
-              <span class="pay-label">Quantity</span>
-              <select class="pay-select" id="qtySelect" onchange="onQtyChange()">
-                <option value="1">1 copy</option>
-              </select>
+
+            <div class="pay-amount-row" id="amountRow">
+              <div class="pa-left">
+                <div class="pa-desc">You are paying for</div>
+                <div class="pa-name" id="amountDesc">—</div>
+              </div>
+              <div class="pa-right">
+                <div class="pa-curr">INR</div>
+                <div class="pa-amt" id="amountVal">—</div>
+              </div>
+            </div>
+
+            <button class="pay-proceed" id="proceedBtn" onclick="goToStep2()">
+              👤&nbsp; Continue — Enter Your Details
+            </button>
+            <div class="upi-note" id="upiNote">Next: Enter your name, email &amp; mobile to proceed</div>
+          </div>
+
+          <!-- STEP 2: User Details -->
+          <div id="step2" style="display:none;">
+            <div class="step-header">
+              <button class="back-btn" onclick="goToStep1()">← Back</button>
+              <div class="step-title">Your Details</div>
+            </div>
+            <div class="step-summary" id="step2Summary"></div>
+            <div class="user-fields">
+              <div class="field-group">
+                <label class="pay-label">Full Name *</label>
+                <input type="text" class="pay-input" id="userName" placeholder="Enter your full name" />
+              </div>
+              <div class="field-group">
+                <label class="pay-label">Email ID *</label>
+                <input type="email" class="pay-input" id="userEmail" placeholder="Enter your email address" />
+              </div>
+              <div class="field-group">
+                <label class="pay-label">Mobile No *</label>
+                <input type="tel" class="pay-input" id="userMobile" placeholder="Enter your 10-digit mobile number" maxlength="10" />
+              </div>
+            </div>
+            <div class="field-error" id="fieldError"></div>
+            <button class="pay-proceed" style="display:flex;margin-top:6px;" onclick="goToStep3()">
+              💳&nbsp; Proceed to Payment
+            </button>
+          </div>
+
+          <!-- STEP 3: UPI App Selection -->
+          <div id="step3" style="display:none;">
+            <div class="step-header">
+              <button class="back-btn" onclick="goBackToStep2()">← Back</button>
+              <div class="step-title">Choose UPI App</div>
+            </div>
+            <div class="step-summary" id="step3Summary"></div>
+            <div class="upi-apps-grid">
+              <button class="upi-app-btn" onclick="launchUPI('paytm')">
+                <span class="upi-app-icon">
+                  <svg viewBox="0 0 48 48" width="40" height="40" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="48" height="48" rx="10" fill="#002970"/>
+                    <rect x="6" y="6" width="36" height="36" rx="7" fill="#00BAF2"/>
+                    <text x="24" y="20" text-anchor="middle" font-size="7.5" font-weight="900" fill="#002970" font-family="Arial,sans-serif">Pay</text>
+                    <text x="24" y="30" text-anchor="middle" font-size="7.5" font-weight="900" fill="#ffffff" font-family="Arial,sans-serif">tm</text>
+                    <rect x="10" y="32" width="28" height="2.5" rx="1.2" fill="#002970"/>
+                  </svg>
+                </span>
+                <span class="upi-app-name">Paytm</span>
+              </button>
+              <button class="upi-app-btn" onclick="launchUPI('gpay')">
+                <span class="upi-app-icon">
+                  <svg viewBox="0 0 48 48" width="40" height="40" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="48" height="48" rx="10" fill="#fff" stroke="#e0e0e0" stroke-width="1"/>
+                    <text x="24" y="19" text-anchor="middle" font-size="8" font-weight="700" fill="#4285F4" font-family="Arial,sans-serif">G</text>
+                    <text x="15" y="30" text-anchor="middle" font-size="6" font-weight="700" fill="#EA4335" font-family="Arial,sans-serif">o</text>
+                    <text x="21" y="30" text-anchor="middle" font-size="6" font-weight="700" fill="#FBBC05" font-family="Arial,sans-serif">o</text>
+                    <text x="27" y="30" text-anchor="middle" font-size="6" font-weight="700" fill="#34A853" font-family="Arial,sans-serif">g</text>
+                    <text x="33" y="30" text-anchor="middle" font-size="6" font-weight="700" fill="#4285F4" font-family="Arial,sans-serif">le</text>
+                    <text x="24" y="40" text-anchor="middle" font-size="6" font-weight="700" fill="#5F6368" font-family="Arial,sans-serif">Pay</text>
+                  </svg>
+                </span>
+                <span class="upi-app-name">Google Pay</span>
+              </button>
+              <button class="upi-app-btn" onclick="launchUPI('bhim')">
+                <span class="upi-app-icon">
+                  <svg viewBox="0 0 48 48" width="40" height="40" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="48" height="48" rx="10" fill="#1A237E"/>
+                    <rect x="0" y="0" width="48" height="16" rx="0" fill="#FF9933"/>
+                    <rect x="0" y="0" width="48" height="16" rx="10" fill="#FF9933"/>
+                    <rect x="0" y="16" width="48" height="16" fill="#fff"/>
+                    <rect x="0" y="32" width="48" height="16" fill="#138808"/>
+                    <rect x="0" y="32" width="48" height="16" rx="0" fill="#138808"/>
+                    <rect x="0" y="38" width="48" height="10" rx="10" fill="#138808"/>
+                    <circle cx="24" cy="24" r="6" fill="none" stroke="#000080" stroke-width="1.5"/>
+                    <text x="24" y="24.5" text-anchor="middle" dominant-baseline="middle" font-size="5" font-weight="900" fill="#000080" font-family="Arial,sans-serif">BHIM</text>
+                  </svg>
+                </span>
+                <span class="upi-app-name">BHIM</span>
+              </button>
+              <button class="upi-app-btn" onclick="launchUPI('phonepe')">
+                <span class="upi-app-icon">
+                  <svg viewBox="0 0 48 48" width="40" height="40" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="48" height="48" rx="10" fill="#5F259F"/>
+                    <circle cx="24" cy="20" r="10" fill="#fff" opacity="0.15"/>
+                    <text x="24" y="18" text-anchor="middle" font-size="13" font-weight="900" fill="#fff" font-family="Arial,sans-serif">Pe</text>
+                    <text x="24" y="34" text-anchor="middle" font-size="7" font-weight="700" fill="#fff" font-family="Arial,sans-serif" opacity="0.85">PhonePe</text>
+                  </svg>
+                </span>
+                <span class="upi-app-name">PhonePe</span>
+              </button>
+              <button class="upi-app-btn" onclick="launchUPI('whatsapp')">
+                <span class="upi-app-icon">
+                  <svg viewBox="0 0 48 48" width="40" height="40" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="48" height="48" rx="10" fill="#25D366"/>
+                    <circle cx="24" cy="22" r="11" fill="#fff"/>
+                    <path d="M24 13c-4.97 0-9 4.03-9 9 0 1.59.42 3.08 1.14 4.38L15 31l4.74-1.24A8.96 8.96 0 0024 31c4.97 0 9-4.03 9-9s-4.03-9-9-9zm4.4 12.61c-.19.53-1.1.98-1.52 1.04-.39.05-.88.07-1.42-.09-.33-.1-.75-.23-1.29-.46-2.27-.98-3.75-3.27-3.87-3.42-.12-.15-.97-1.29-.97-2.46 0-1.17.61-1.75.83-1.99.22-.24.48-.3.64-.3l.46.01c.15.01.35-.06.54.41.2.49.69 1.68.75 1.8.06.12.1.27.02.43-.08.16-.12.26-.24.4-.12.14-.25.31-.36.42-.12.12-.24.25-.1.49.14.24.61 1.01 1.31 1.63.9.8 1.66 1.05 1.9 1.17.24.12.38.1.52-.06.14-.16.59-.69.75-.93.16-.24.32-.2.54-.12.22.08 1.4.66 1.64.78.24.12.4.18.46.28.06.1.06.56-.13 1.1z" fill="#25D366"/>
+                    <text x="24" y="41" text-anchor="middle" font-size="5.5" font-weight="700" fill="#fff" font-family="Arial,sans-serif">WhatsApp Pay</text>
+                  </svg>
+                </span>
+                <span class="upi-app-name">WhatsApp Pay</span>
+              </button>
+            </div>
+            <div class="upi-manual-note">
+              After completing payment in your UPI app, come back and confirm below:
+            </div>
+            <div class="pay-confirm-btns" id="confirmBtns" style="display:none;">
+              <button class="btn-success" onclick="onPaymentSuccess()">✅ Payment Successful</button>
+              <button class="btn-failure" onclick="onPaymentFailure()">❌ Payment Failed</button>
             </div>
           </div>
 
-          <div class="pay-amount-row" id="amountRow">
-            <div class="pa-left">
-              <div class="pa-desc">You are paying for</div>
-              <div class="pa-name" id="amountDesc">—</div>
-            </div>
-            <div class="pa-right">
-              <div class="pa-curr">INR</div>
-              <div class="pa-amt" id="amountVal">—</div>
+          <!-- STEP 4: Thank You -->
+          <div id="step4" style="display:none;">
+            <div class="thankyou-wrap">
+              <div class="ty-icon">🎉</div>
+              <div class="ty-title">Thank You!</div>
+              <div class="ty-msg">Your payment was received. Here's your order summary:</div>
+              <div class="ty-order-box" id="tyOrderBox"></div>
+              <div class="ty-delivery">
+                📧 Your guide(s) will be sent shortly to <strong id="tyEmail"></strong>.<br>
+                Please check your inbox &amp; spam folder.
+              </div>
+              <div class="ty-contact">Questions? WhatsApp us at <strong>+91 63605 93122</strong></div>
             </div>
           </div>
 
-          <button class="pay-proceed" id="proceedBtn" onclick="openUPI()">
-            🔐&nbsp; Proceed to Pay via UPI
-          </button>
-          <div class="upi-note" id="upiNote">
-            Opens your default UPI app (GPay · PhonePe · Paytm · BHIM)
+          <!-- STEP 5: Payment Failed -->
+          <div id="step5" style="display:none;">
+            <div class="thankyou-wrap">
+              <div class="ty-icon">😔</div>
+              <div class="ty-title" style="color:var(--rust)">Payment Failed</div>
+              <div class="ty-msg">Don't worry — we've noted your interest and will reach out to you shortly.</div>
+              <div class="ty-order-box" id="failOrderBox"></div>
+              <div class="ty-delivery">
+                Our team will contact you at <strong id="failContact"></strong> to assist you.
+              </div>
+              <div class="ty-contact">Or reach us directly on WhatsApp: <strong>+91 63605 93122</strong></div>
+              <button class="pay-proceed" style="display:flex;margin-top:16px;" onclick="retryPayment()">🔄 Retry Payment</button>
+            </div>
           </div>
+
         </div>
       </div>
     </div>
@@ -831,8 +1266,22 @@
   </div>
 </div>
 
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
 <script>
-  /* Dust motes */
+  // ═══════════════════════════════════════════════════════════════
+  //  EMAILJS SETUP — replace the 3 values below with your own
+  //  1. Sign up FREE at https://www.emailjs.com
+  //  2. Add Email Service (Gmail) → copy Service ID
+  //  3. Create Email Template     → copy Template ID
+  //  4. Go to Account > API Keys  → copy Public Key
+  //  Template variables to use: {{to_email}} {{cust_name}} {{guide}}
+  //  {{amount}} {{order_ref}} {{cust_mobile}} {{status}} {{message}}
+  // ═══════════════════════════════════════════════════════════════
+  var EMAILJS_PUBLIC_KEY  = 'aDL0FEenlYJ8WaJne';
+  var EMAILJS_SERVICE_ID  = 'service_t9cqgtn';
+  var EMAILJS_TEMPLATE_ID = 'template_ezdle7f';
+
+  // ── Dust motes ───────────────────────────────────────────────
   (function(){
     var d=document.getElementById('dots'); if(!d) return;
     for(var i=0;i<35;i++){
@@ -843,58 +1292,246 @@
     }
   })();
 
+  // ── Guide catalogue ──────────────────────────────────────────
   var GUIDES = {
-    dev:   { name:'Infor LN Development Interview Guide',  price:499 },
-    bod:   { name:'Infor BOD Interview Guide',             price:499 },
-    ion:   { name:'Infor ION Interview Guide',             price:499 },
-    fin:   { name:'Infor LN Finance Interview Guide',      price:499 },
-    ext:   { name:'Infor LN Extensions Interview Guide',   price:499 },
-    scm:   { name:'Infor LN SCM Interview Guide',          price:499 },
-    combo: { name:'All 6 Guides — Combo Bundle',           price:1999 },
+    dev:        { name:'Infor LN Development Interview Guide',          price:499 },
+    adm:        { name:'Infor LN Administration Interview Guide',       price:499 },
+    bod:        { name:'Infor BOD Interview Guide',                     price:499 },
+    ion:        { name:'Infor ION Interview Guide',                     price:499 },
+    ext:        { name:'Infor LN Extensions Interview Guide',           price:499 },
+    fin:        { name:'Infor LN Finance Interview Guide',              price:499 },
+    scm:        { name:'Infor LN SCM Interview Guide',                  price:499 },
+    mfg:        { name:'Infor LN Manufacturing Interview Guide',        price:499 },
+    pln:        { name:'Infor LN Planning Interview Guide',             price:499 },
+    wms:        { name:'Infor LN WMS Interview Guide',                  price:499 },
+    combo_tech: { name:'Combo Technical — All 5 Tech Guides',          price:1999 },
+    combo_func: { name:'Combo Functional — All 5 Func Guides',         price:1999 },
+    combo_all:  { name:'Combo Technical & Functional — All 10 Guides', price:2999 },
   };
 
   var UPI_ID   = 'nikivernekar@okicici';
   var UPI_NAME = 'FullonBaan';
-  var selAmount = 0, selDesc = '';
 
+  // UPI app deep-link schemes
+  var UPI_APPS = {
+    paytm:    { scheme:'paytmmp://upi/pay',   label:'Paytm' },
+    gpay:     { scheme:'tez://upi/pay',        label:'Google Pay' },
+    bhim:     { scheme:'bhim://upi/pay',       label:'BHIM' },
+    phonepe:  { scheme:'phonepe://upi/pay',    label:'PhonePe' },
+    whatsapp: { scheme:'whatsapp://upi/pay',   label:'WhatsApp Pay' },
+  };
+
+  var selAmount = 0, selDesc = '', selKey = '';
+  var userData = { name:'', email:'', mobile:'' };
+  var txnRef = '';
+
+  // Toggle panel
   window.togglePay = function(){
     document.getElementById('payBtn').classList.toggle('open');
     document.getElementById('payPanel').classList.toggle('open');
   };
 
+  // Step 1: Guide selection
   window.onModuleChange = function(){
-    var key = document.getElementById('modSelect').value;
-    window.hideAmount();
-    if(!key) return;
-    var g = GUIDES[key];
+    selKey = document.getElementById('modSelect').value;
+    hideAmount();
+    if(!selKey) return;
+    var g = GUIDES[selKey];
     selAmount = g.price;
     selDesc   = g.name;
     document.getElementById('amountDesc').textContent = selDesc;
-    document.getElementById('amountVal').textContent  = '₹' + selAmount.toLocaleString('en-IN');
+    document.getElementById('amountVal').textContent  = '\u20b9' + selAmount.toLocaleString('en-IN');
     document.getElementById('amountRow').classList.add('visible');
     document.getElementById('proceedBtn').classList.add('visible');
     document.getElementById('upiNote').classList.add('visible');
   };
-
   window.onQtyChange = function(){ window.onModuleChange(); };
 
-  window.hideAmount = function(){
+  function hideAmount(){
     document.getElementById('amountRow').classList.remove('visible');
     document.getElementById('proceedBtn').classList.remove('visible');
     document.getElementById('upiNote').classList.remove('visible');
+  }
+
+  // Step 1 -> Step 2
+  window.goToStep2 = function(){
+    if(!selAmount){ alert('Please select a guide first.'); return; }
+    document.getElementById('step2Summary').textContent = selDesc + '  \u00b7  \u20b9' + selAmount.toLocaleString('en-IN');
+    showStep('step2');
   };
 
-  window.openUPI = function(){
-    if(!selAmount) return;
-    var txnRef = 'FOB' + Date.now();
-    var upiUrl = 'upi://pay?pa=' + UPI_ID
+  // Step 2 back to Step 1
+  window.goToStep1 = function(){ showStep('step1'); };
+
+  // Step 2 -> Step 3
+  window.goToStep3 = function(){
+    var name   = document.getElementById('userName').value.trim();
+    var email  = document.getElementById('userEmail').value.trim();
+    var mobile = document.getElementById('userMobile').value.trim();
+    var err    = document.getElementById('fieldError');
+
+    if(!name)                          { err.textContent='Please enter your full name.'; return; }
+    if(!email || !email.includes('@')) { err.textContent='Please enter a valid email address.'; return; }
+    if(!mobile || mobile.length < 10)  { err.textContent='Please enter a valid 10-digit mobile number.'; return; }
+
+    err.textContent = '';
+    userData = { name:name, email:email, mobile:mobile };
+
+    document.getElementById('step3Summary').innerHTML =
+      '<strong>' + name + '</strong> &nbsp;\u00b7&nbsp; ' + email +
+      ' &nbsp;\u00b7&nbsp; +91 ' + mobile +
+      '<br><span style="color:var(--rust);font-weight:600;">' + selDesc + ' \u2014 \u20b9' + selAmount.toLocaleString('en-IN') + '</span>';
+
+    showStep('step3');
+  };
+
+  // Step 3 back to Step 2
+  window.goBackToStep2 = function(){ showStep('step2'); };
+
+  // Launch UPI app
+  window.launchUPI = function(appKey){
+    txnRef = 'FOB' + Date.now();
+    var app    = UPI_APPS[appKey];
+    var params = '?pa=' + encodeURIComponent(UPI_ID)
                + '&pn=' + encodeURIComponent(UPI_NAME)
                + '&am=' + selAmount
                + '&cu=INR'
-               + '&tn=' + encodeURIComponent(selDesc)
+               + '&tn=' + encodeURIComponent(selDesc.substring(0,50))
                + '&tr=' + txnRef;
-    window.location.href = upiUrl;
+
+    window.location.href = app.scheme + params;
+
+    setTimeout(function(){
+      document.getElementById('confirmBtns').style.display = 'flex';
+    }, 2500);
   };
+
+  // Payment Success
+  window.onPaymentSuccess = function(){
+    document.getElementById('tyEmail').textContent = userData.email;
+    document.getElementById('tyOrderBox').innerHTML =
+      '<strong>Order Ref:</strong> ' + txnRef + '<br>' +
+      '<strong>Guide:</strong> ' + selDesc + '<br>' +
+      '<strong>Amount Paid:</strong> \u20b9' + selAmount.toLocaleString('en-IN') + '<br>' +
+      '<strong>Name:</strong> ' + userData.name + '<br>' +
+      '<strong>Mobile:</strong> +91 ' + userData.mobile + '<br>' +
+      '<strong>Email:</strong> ' + userData.email;
+    showStep('step4');
+    // Emails
+    sendEmail({
+      to_email:    'fullonbaan@gmail.com',
+      subject:     'New Order - ' + selDesc,
+      status:      'PAYMENT SUCCESSFUL',
+      order_ref:   txnRef,
+      guide:       selDesc,
+      amount:      'Rs.' + selAmount.toLocaleString('en-IN'),
+      cust_name:   userData.name,
+      cust_email:  userData.email,
+      cust_mobile: '+91 ' + userData.mobile,
+      message:     'A new order has been placed. Please send the guide to the customer at the earliest.',
+    });
+    sendEmail({
+      to_email:    userData.email,
+      subject:     'Your FullonBaan Order is Confirmed - ' + selDesc,
+      status:      'ORDER CONFIRMED',
+      order_ref:   txnRef,
+      guide:       selDesc,
+      amount:      'Rs.' + selAmount.toLocaleString('en-IN'),
+      cust_name:   userData.name,
+      cust_email:  userData.email,
+      cust_mobile: '+91 ' + userData.mobile,
+      message:     'Thank you for your purchase! Your Infor LN Interview Guide will be emailed to you shortly. Please check your inbox and spam folder. For queries, WhatsApp us at +91 63605 93122.',
+    });
+
+  };
+
+  // Payment Failure
+  window.onPaymentFailure = function(){
+    document.getElementById('failContact').textContent =
+      userData.email + ' / +91 ' + userData.mobile;
+    document.getElementById('failOrderBox').innerHTML =
+      '<strong>Guide:</strong> ' + selDesc + '<br>' +
+      '<strong>Amount:</strong> \u20b9' + selAmount.toLocaleString('en-IN') + '<br>' +
+      '<strong>Name:</strong> ' + userData.name + '<br>' +
+      '<strong>Mobile:</strong> +91 ' + userData.mobile + '<br>' +
+      '<strong>Email:</strong> ' + userData.email;
+    showStep('step5');
+    sendEmail({
+      to_email:    'fullonbaan@gmail.com',
+      subject:     'Payment Failed - ' + selDesc,
+      status:      'PAYMENT FAILED - Please follow up with customer',
+      order_ref:   txnRef || 'N/A',
+      guide:       selDesc,
+      amount:      'Rs.' + selAmount.toLocaleString('en-IN'),
+      cust_name:   userData.name,
+      cust_email:  userData.email,
+      cust_mobile: '+91 ' + userData.mobile,
+      message:     'Payment failed. Please reach out to the customer to assist them.',
+    });
+
+  };
+
+  window.retryPayment = function(){
+    document.getElementById('confirmBtns').style.display = 'none';
+    showStep('step3');
+  };
+
+  // ── EmailJS REST API (no SDK needed) ─────────────────────────
+  // HOW TO SET UP (5 minutes, free):
+  // 1. Go to https://www.emailjs.com and create a free account
+  // 2. Click "Add New Service" → choose Gmail → connect fullonbaan@gmail.com → copy SERVICE ID
+  // 3. Click "Email Templates" → Create Template → use variables below → copy TEMPLATE ID
+  // 4. Click "Account" → API Keys → copy PUBLIC KEY
+  // 5. Replace the 3 placeholder values below and upload this file
+  //
+  // Template variables available in your EmailJS template:
+  //   {{to_name}}      - recipient name
+  //   {{to_email}}     - recipient email (MUST set this as "To Email" in template settings)
+  //   {{status}}       - PAYMENT SUCCESSFUL / ORDER CONFIRMED / PAYMENT FAILED
+  //   {{order_ref}}    - order reference number
+  //   {{guide}}        - guide name purchased
+  //   {{amount}}       - amount paid
+  //   {{cust_name}}    - customer full name
+  //   {{cust_email}}   - customer email
+  //   {{cust_mobile}}  - customer mobile
+  //   {{message}}      - contextual message
+
+  function sendEmail(params) {
+    if (EMAILJS_PUBLIC_KEY === 'YOUR_PUBLIC_KEY') {
+      console.warn('EmailJS not configured yet. Replace YOUR_PUBLIC_KEY, YOUR_SERVICE_ID, YOUR_TEMPLATE_ID in the script.');
+      return;
+    }
+    fetch('https://api.emailjs.com/api/v1.0/email/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        service_id:      EMAILJS_SERVICE_ID,
+        template_id:     EMAILJS_TEMPLATE_ID,
+        user_id:         EMAILJS_PUBLIC_KEY,
+        template_params: params
+      })
+    })
+    .then(function(res) {
+      if (res.ok) {
+        console.log('Email sent successfully to: ' + params.to_email);
+      } else {
+        res.text().then(function(t) { console.warn('EmailJS API error:', t); });
+      }
+    })
+    .catch(function(err) {
+      console.warn('EmailJS network error:', err);
+    });
+  }
+
+
+
+  // ── Show / hide steps ─────────────────────────────────────────
+  function showStep(id) {
+    ['step1', 'step2', 'step3', 'step4', 'step5'].forEach(function(s) {
+      document.getElementById(s).style.display = (s === id) ? 'block' : 'none';
+    });
+  }
+
 </script>
 </body>
 </html>
