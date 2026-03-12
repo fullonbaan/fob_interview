@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FullonBaan — Infor LN Interview Preparation Guides</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
 <style>
   :root {
     --gold:      #A8782A;
@@ -531,7 +532,7 @@
     transition:max-height .45s cubic-bezier(0.22,1,0.36,1), opacity .3s ease;
     opacity:0;
   }
-  .pay-panel.open { max-height:520px; opacity:1; }
+  .pay-panel.open { max-height:900px; opacity:1; }
 
   .pay-inner {
     background:var(--smoke); border:1px solid var(--border);
@@ -589,6 +590,95 @@
     font-family:'DM Mono',monospace; margin-top:10px; letter-spacing:.5px; display:none;
   }
   .upi-note.visible { display:block; }
+
+  /* ── QR + UPI Section ── */
+  .upi-payment-panel {
+    display:grid; grid-template-columns:1fr 1fr;
+    gap:16px; margin:4px 0 16px;
+  }
+  @media(max-width:600px){ .upi-payment-panel { grid-template-columns:1fr; } }
+
+  .upi-qr-box {
+    background:var(--cream); border:1px solid var(--border);
+    border-radius:12px; padding:16px; text-align:center;
+  }
+  .upi-qr-box .qr-label {
+    font-family:'DM Mono',monospace; font-size:9px; letter-spacing:2px;
+    text-transform:uppercase; color:var(--gold); margin-bottom:10px; display:block;
+  }
+  .upi-qr-img {
+    width:150px; height:150px; border:1px solid var(--border-lt);
+    border-radius:8px; display:block; margin:0 auto 8px;
+  }
+  .upi-qr-hint {
+    font-size:10px; color:var(--ink-lt); line-height:1.5;
+  }
+
+  .upi-id-box {
+    background:var(--cream); border:1px solid var(--border);
+    border-radius:12px; padding:16px; display:flex;
+    flex-direction:column; justify-content:space-between;
+  }
+  .upi-id-box .upi-id-label {
+    font-family:'DM Mono',monospace; font-size:9px; letter-spacing:2px;
+    text-transform:uppercase; color:var(--gold); margin-bottom:10px; display:block;
+  }
+  .upi-id-val {
+    font-family:'DM Mono',monospace; font-size:14px; font-weight:600;
+    color:var(--ink); background:var(--gold-pale);
+    border:1px dashed rgba(168,120,42,0.4); border-radius:8px;
+    padding:10px 14px; letter-spacing:.3px;
+    display:flex; align-items:center; justify-content:space-between;
+    gap:8px; margin-bottom:10px;
+  }
+  .copy-btn {
+    background:var(--gold); border:none; border-radius:6px;
+    color:var(--cream); font-size:10px; font-weight:700;
+    padding:4px 10px; cursor:pointer; white-space:nowrap;
+    font-family:'DM Sans',sans-serif; transition:opacity .2s;
+  }
+  .copy-btn:hover { opacity:.85; }
+  .upi-id-steps {
+    font-size:10.5px; color:var(--ink-lt); line-height:1.8;
+  }
+  .upi-id-steps li { list-style:none; padding-left:0; }
+
+  .upi-divider {
+    text-align:center; font-family:'DM Mono',monospace; font-size:9px;
+    letter-spacing:2px; text-transform:uppercase; color:var(--ink-lt);
+    margin:4px 0 10px; position:relative;
+  }
+  .upi-divider::before, .upi-divider::after {
+    content:''; position:absolute; top:50%; width:42%;
+    height:1px; background:var(--border);
+  }
+  .upi-divider::before { left:0; }
+  .upi-divider::after  { right:0; }
+
+  .utr-section {
+    background:var(--gold-pale); border:1px solid rgba(168,120,42,0.25);
+    border-radius:12px; padding:16px 18px; margin-bottom:14px;
+  }
+  .utr-section .utr-label {
+    font-family:'DM Mono',monospace; font-size:9px; letter-spacing:2px;
+    text-transform:uppercase; color:var(--gold); margin-bottom:6px; display:block;
+  }
+  .utr-section .utr-desc {
+    font-size:11px; color:var(--ink-lt); margin-bottom:10px; line-height:1.5;
+  }
+  .utr-input-row { display:flex; gap:10px; align-items:stretch; }
+  .utr-input {
+    flex:1; padding:12px 14px;
+    background:var(--cream); border:1.5px solid var(--border); border-radius:8px;
+    color:var(--ink); font-family:'DM Mono',monospace; font-size:13px;
+    transition:border-color .2s, box-shadow .2s;
+    letter-spacing:.5px;
+  }
+  .utr-input:focus { outline:none; border-color:var(--gold); box-shadow:0 0 0 3px rgba(168,120,42,0.10); }
+  .utr-error {
+    font-size:11px; color:var(--rust); font-family:'DM Mono',monospace;
+    min-height:16px; margin-top:6px;
+  }
 
   /* ── Footer ── */
   .card-footer {
@@ -1238,19 +1328,48 @@
             </button>
           </div>
 
-          <!-- STEP 3: UPI App Selection -->
+          <!-- STEP 3: UPI Payment -->
           <div id="step3" style="display:none;">
             <div class="step-header">
               <button class="back-btn" onclick="goBackToStep2()">← Back</button>
-              <div class="step-title">Choose UPI App</div>
+              <div class="step-title">Complete Your Payment</div>
             </div>
             <div class="step-summary" id="step3Summary"></div>
+
+            <!-- QR + UPI ID side by side -->
+            <div class="upi-payment-panel">
+              <!-- QR Code -->
+              <div class="upi-qr-box">
+                <span class="qr-label">📱 Scan QR Code</span>
+                <img id="upiQRImg" class="upi-qr-img" src="" alt="UPI QR Code" />
+                <div class="upi-qr-hint">Open any UPI app &amp; scan<br>to pay instantly</div>
+              </div>
+              <!-- UPI ID Manual -->
+              <div class="upi-id-box">
+                <div>
+                  <span class="upi-id-label">💳 Or Pay via UPI ID</span>
+                  <div class="upi-id-val">
+                    <span>nikivernekar@okicici</span>
+                    <button class="copy-btn" onclick="copyUPIId()">Copy</button>
+                  </div>
+                  <ol class="upi-id-steps">
+                    <li>1. Open GPay / PhonePe / Paytm</li>
+                    <li>2. Tap "Send Money" → "UPI ID"</li>
+                    <li>3. Paste the UPI ID above</li>
+                    <li>4. Enter the exact amount shown</li>
+                    <li>5. Complete &amp; note your UTR</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mobile UPI App shortcuts -->
+            <div class="upi-divider">or open app directly (mobile)</div>
             <div class="upi-apps-grid">
               <button class="upi-app-btn" onclick="launchUPI('paytm')">
                 <span class="upi-app-icon">
                   <svg viewBox="0 0 48 48" width="40" height="40" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="48" height="48" rx="10" fill="#002970"/>
-                    <rect x="6" y="6" width="36" height="36" rx="7" fill="#00BAF2"/>
+                    <rect width="48" height="48" rx="10" fill="#002970"/><rect x="6" y="6" width="36" height="36" rx="7" fill="#00BAF2"/>
                     <text x="24" y="20" text-anchor="middle" font-size="7.5" font-weight="900" fill="#002970" font-family="Arial,sans-serif">Pay</text>
                     <text x="24" y="30" text-anchor="middle" font-size="7.5" font-weight="900" fill="#ffffff" font-family="Arial,sans-serif">tm</text>
                     <rect x="10" y="32" width="28" height="2.5" rx="1.2" fill="#002970"/>
@@ -1276,10 +1395,8 @@
                 <span class="upi-app-icon">
                   <svg viewBox="0 0 48 48" width="40" height="40" xmlns="http://www.w3.org/2000/svg">
                     <rect width="48" height="48" rx="10" fill="#1A237E"/>
-                    <rect x="0" y="0" width="48" height="16" rx="0" fill="#FF9933"/>
                     <rect x="0" y="0" width="48" height="16" rx="10" fill="#FF9933"/>
                     <rect x="0" y="16" width="48" height="16" fill="#fff"/>
-                    <rect x="0" y="32" width="48" height="16" fill="#138808"/>
                     <rect x="0" y="32" width="48" height="16" rx="0" fill="#138808"/>
                     <rect x="0" y="38" width="48" height="10" rx="10" fill="#138808"/>
                     <circle cx="24" cy="24" r="6" fill="none" stroke="#000080" stroke-width="1.5"/>
@@ -1311,25 +1428,32 @@
                 <span class="upi-app-name">WhatsApp Pay</span>
               </button>
             </div>
-            <div class="upi-manual-note">
-              After completing payment in your UPI app, come back and confirm below:
+
+            <!-- UTR Entry (always shown) -->
+            <div class="utr-section">
+              <span class="utr-label">🔑 Enter UTR / Transaction Reference Number</span>
+              <div class="utr-desc">After payment, your UPI app shows a 12-digit UTR (also called Transaction ID or Ref No). Enter it below to confirm your payment.</div>
+              <div class="utr-input-row">
+                <input type="text" class="utr-input" id="utrInput" placeholder="e.g. 504616234567" maxlength="30" />
+              </div>
+              <div class="utr-error" id="utrError"></div>
             </div>
-            <div class="pay-confirm-btns" id="confirmBtns" style="display:none;">
-              <button class="btn-success" onclick="onPaymentSuccess()">✅ Payment Successful</button>
-              <button class="btn-failure" onclick="onPaymentFailure()">❌ Payment Failed</button>
-            </div>
+
+            <button class="pay-proceed" style="display:flex;" onclick="onConfirmPayment()">
+              ✅&nbsp; Confirm Payment
+            </button>
           </div>
 
-          <!-- STEP 4: Thank You -->
+          <!-- STEP 4: Confirmation Pending -->
           <div id="step4" style="display:none;">
             <div class="thankyou-wrap">
-              <div class="ty-icon">🎉</div>
-              <div class="ty-title">Thank You!</div>
-              <div class="ty-msg">Your payment was received. Here's your order summary:</div>
+              <div class="ty-icon">⏳</div>
+              <div class="ty-title">Payment Submitted!</div>
+              <div class="ty-msg" style="line-height:1.7;">Your transaction is being validated. Once verified, your guide(s) will be sent to your email shortly. This usually takes a few hours on business days.</div>
               <div class="ty-order-box" id="tyOrderBox"></div>
               <div class="ty-delivery">
-                📧 Your guide(s) will be sent shortly to <strong id="tyEmail"></strong>.<br>
-                Please check your inbox &amp; spam folder.
+                📧 Guide will be delivered to <strong id="tyEmail"></strong> upon verification.<br>
+                Please check your inbox &amp; spam folder after confirmation.
               </div>
               <div class="ty-contact">Questions? WhatsApp us at <strong>+91 63605 93122</strong></div>
             </div>
@@ -1455,7 +1579,7 @@
 
   var selAmount = 0, selDesc = '', selKey = '';
   var userData = { name:'', email:'', mobile:'' };
-  var txnRef = '';
+  var txnRef = '', utrNumber = '';
 
   // Toggle panel
   window.togglePay = function(){
@@ -1508,6 +1632,21 @@
 
     err.textContent = '';
     userData = { name:name, email:email, mobile:mobile };
+    txnRef   = 'FOB' + Date.now();
+
+    // Build UPI deep link & generate QR via free API
+    var upiLink = 'upi://pay?pa=' + encodeURIComponent(UPI_ID)
+                + '&pn=' + encodeURIComponent(UPI_NAME)
+                + '&am=' + selAmount
+                + '&cu=INR'
+                + '&tn=' + encodeURIComponent(selDesc.substring(0,50))
+                + '&tr=' + txnRef;
+    document.getElementById('upiQRImg').src =
+      'https://api.qrserver.com/v1/create-qr-code/?size=150x150&margin=6&data=' + encodeURIComponent(upiLink);
+
+    // Reset UTR field and error
+    document.getElementById('utrInput').value = '';
+    document.getElementById('utrError').textContent = '';
 
     document.getElementById('step3Summary').innerHTML =
       '<strong>' + name + '</strong> &nbsp;\u00b7&nbsp; ' + email +
@@ -1517,12 +1656,24 @@
     showStep('step3');
   };
 
-  // Step 3 back to Step 2
+  /* ── Step 3 back ── */
   window.goBackToStep2 = function(){ showStep('step2'); };
 
-  // Launch UPI app
+  /* ── Copy UPI ID ── */
+  window.copyUPIId = function(){
+    navigator.clipboard.writeText(UPI_ID).then(function(){
+      var btn = document.querySelector('.copy-btn');
+      btn.textContent = 'Copied!';
+      setTimeout(function(){ btn.textContent = 'Copy'; }, 2000);
+    }).catch(function(){
+      var btn = document.querySelector('.copy-btn');
+      btn.textContent = 'Copied!';
+      setTimeout(function(){ btn.textContent = 'Copy'; }, 2000);
+    });
+  };
+
+  /* ── Launch UPI app (mobile only) ── */
   window.launchUPI = function(appKey){
-    txnRef = 'FOB' + Date.now();
     var app    = UPI_APPS[appKey];
     var params = '?pa=' + encodeURIComponent(UPI_ID)
                + '&pn=' + encodeURIComponent(UPI_NAME)
@@ -1530,54 +1681,61 @@
                + '&cu=INR'
                + '&tn=' + encodeURIComponent(selDesc.substring(0,50))
                + '&tr=' + txnRef;
-
     window.location.href = app.scheme + params;
-
-    setTimeout(function(){
-      document.getElementById('confirmBtns').style.display = 'flex';
-    }, 2500);
   };
 
-  // Payment Success
+  /* ── Confirm Payment (UTR validated) ── */
+  window.onConfirmPayment = function(){
+    var utr = document.getElementById('utrInput').value.trim();
+    var err = document.getElementById('utrError');
+    if(!utr){ err.textContent = 'Please enter your UTR / Transaction Reference Number.'; return; }
+    if(utr.length < 8){ err.textContent = 'UTR number seems too short. Please check and re-enter.'; return; }
+    err.textContent = '';
+    utrNumber = utr;
+    onPaymentSuccess();
+  };
+
+  /* ── Payment Success ── */
   window.onPaymentSuccess = function(){
     document.getElementById('tyEmail').textContent = userData.email;
     document.getElementById('tyOrderBox').innerHTML =
       '<strong>Order Ref:</strong> ' + txnRef + '<br>' +
+      '<strong>UTR / Txn Ref:</strong> ' + utrNumber + '<br>' +
       '<strong>Guide:</strong> ' + selDesc + '<br>' +
-      '<strong>Amount Paid:</strong> \u20b9' + selAmount.toLocaleString('en-IN') + '<br>' +
+      '<strong>Amount:</strong> \u20b9' + selAmount.toLocaleString('en-IN') + '<br>' +
       '<strong>Name:</strong> ' + userData.name + '<br>' +
       '<strong>Mobile:</strong> +91 ' + userData.mobile + '<br>' +
       '<strong>Email:</strong> ' + userData.email;
     showStep('step4');
-    // Emails
     sendEmail({
       to_email:    'fullonbaan@gmail.com',
-      subject:     'New Order - ' + selDesc,
-      status:      'PAYMENT SUCCESSFUL',
+      subject:     'New Order \u2014 ' + selDesc,
+      status:      'PAYMENT SUBMITTED \u2014 AWAITING VALIDATION',
       order_ref:   txnRef,
+      utr_number:  utrNumber,
       guide:       selDesc,
       amount:      'Rs.' + selAmount.toLocaleString('en-IN'),
       cust_name:   userData.name,
       cust_email:  userData.email,
       cust_mobile: '+91 ' + userData.mobile,
-      message:     'A new order has been placed. Please send the guide to the customer at the earliest.',
+      message:     'New order received. UTR: ' + utrNumber + '. Please validate the payment and deliver the guide to the customer.',
     });
     sendEmail({
       to_email:    userData.email,
-      subject:     'Your FullonBaan Order is Confirmed - ' + selDesc,
-      status:      'ORDER CONFIRMED',
+      subject:     'Your FullonBaan Order is Being Processed \u2014 ' + selDesc,
+      status:      'PAYMENT SUBMITTED \u2014 UNDER VALIDATION',
       order_ref:   txnRef,
+      utr_number:  utrNumber,
       guide:       selDesc,
       amount:      'Rs.' + selAmount.toLocaleString('en-IN'),
       cust_name:   userData.name,
       cust_email:  userData.email,
       cust_mobile: '+91 ' + userData.mobile,
-      message:     'Thank you for your purchase! Your Infor LN Interview Guide will be emailed to you shortly. Please check your inbox and spam folder. For queries, WhatsApp us at +91 63605 93122.',
+      message:     'Thank you for your order! Your payment (UTR: ' + utrNumber + ') is being validated. Once confirmed, your Infor LN Interview Guide will be sent to your email. For queries, WhatsApp us at +91 63605 93122.',
     });
-
   };
 
-  // Payment Failure
+  /* ── Payment Failure ── */
   window.onPaymentFailure = function(){
     document.getElementById('failContact').textContent =
       userData.email + ' / +91 ' + userData.mobile;
@@ -1590,8 +1748,8 @@
     showStep('step5');
     sendEmail({
       to_email:    'fullonbaan@gmail.com',
-      subject:     'Payment Failed - ' + selDesc,
-      status:      'PAYMENT FAILED - Please follow up with customer',
+      subject:     'Payment Failed \u2014 ' + selDesc,
+      status:      'PAYMENT FAILED \u2014 Please follow up with customer',
       order_ref:   txnRef || 'N/A',
       guide:       selDesc,
       amount:      'Rs.' + selAmount.toLocaleString('en-IN'),
@@ -1600,11 +1758,11 @@
       cust_mobile: '+91 ' + userData.mobile,
       message:     'Payment failed. Please reach out to the customer to assist them.',
     });
-
   };
 
   window.retryPayment = function(){
-    document.getElementById('confirmBtns').style.display = 'none';
+    document.getElementById('utrInput').value = '';
+    document.getElementById('utrError').textContent = '';
     showStep('step3');
   };
 
