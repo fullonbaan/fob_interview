@@ -1523,7 +1523,7 @@
 </div>
 
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
   // ═══════════════════════════════════════════════════════════════
   //  EMAILJS SETUP — replace the 3 values below with your own
   //  1. Sign up FREE at https://www.emailjs.com
@@ -1787,7 +1787,18 @@
       cust_name:   userData.name,
       cust_email:  userData.email,
       cust_mobile: '+91 ' + userData.mobile,
-    free):
+      message:     'Payment failed. Please reach out to the customer to assist them.',
+    });
+  };
+
+  window.retryPayment = function(){
+    document.getElementById('utrInput').value = '';
+    document.getElementById('utrError').textContent = '';
+    showStep('step3');
+  };
+
+  // ── EmailJS REST API (no SDK needed) ─────────────────────────
+  // HOW TO SET UP (5 minutes, free):
   // 1. Go to https://www.emailjs.com and create a free account
   // 2. Click "Add New Service" → choose Gmail → connect fullonbaan@gmail.com → copy SERVICE ID
   // 3. Click "Email Templates" → Create Template → use variables below → copy TEMPLATE ID
@@ -1829,27 +1840,23 @@
       }
     })
     .catch(function(err) {
-      console.warn('EmailJS network error:', err);
+      rn('EmailJS network error:', err);
     });
   }
 
-
-
   // ── Abandon Detection ────────────────────────────────────────────────────
-  // If a customer switches away from the payment screen (e.g. opens their UPI
-  // app to pay) but never returns to submit a UTR, fire a single alert email.
-  // This covers the most common drop-off: user pays on PhonePe/GPay and closes
-  // the browser without coming back to enter their UTR.
+  // Fires a single alert email if the customer switches away from the payment
+  // screen (likely to their UPI app to pay) but never returns to submit a UTR.
 
   function fireAbandonAlert() {
-    if (!paymentIntentSent) return;   // QR was never shown — nothing to track
+    if (!paymentIntentSent) return;   // QR was never shown
     if (utrSubmitted)       return;   // User properly confirmed — all good
-    if (abandonFired)       return;   // Already sent — don't duplicate
+    if (abandonFired)       return;   // Already sent — no duplicates
     abandonFired = true;
     sendEmail({
       to_email:    'fullonbaan@gmail.com',
-      subject:     '⚠️ Possible Payment — No UTR Submitted — ' + (userData ? userData.name : 'Unknown'),
-      status:      'PAYMENT LIKELY — UTR NOT SUBMITTED',
+      subject:     '\u26a0\ufe0f Possible Payment \u2014 No UTR Submitted \u2014 ' + (userData ? userData.name : 'Unknown'),
+      status:      'PAYMENT LIKELY \u2014 UTR NOT SUBMITTED',
       order_ref:   txnRef || 'N/A',
       utr_number:  '(customer did not submit UTR)',
       guide:       selDesc || 'N/A',
@@ -1857,25 +1864,20 @@
       cust_name:   userData ? userData.name   : 'N/A',
       cust_email:  userData ? userData.email  : 'N/A',
       cust_mobile: userData ? '+91 ' + userData.mobile : 'N/A',
-      message:     'Customer switched away from the payment screen (likely opened their UPI app to pay) '
+      message:     'Customer switched away from the payment screen (likely opened UPI app to pay) '
                  + 'but did NOT return to submit a UTR. '
-                 + 'Please check your UPI app for an incoming payment of Rs.' + (selAmount || '?')
-                 + ' and follow up with the customer directly. '
-                 + 'Order Ref: ' + (txnRef || 'N/A'),
+                 + 'Check your UPI app for an incoming Rs.' + (selAmount || '?') + ' from this customer '
+                 + 'and follow up directly. Order Ref: ' + (txnRef || 'N/A'),
     });
   }
 
   // Fires when user switches tab / minimises browser (e.g. to open UPI app)
   document.addEventListener('visibilitychange', function() {
-    if (document.visibilityState === 'hidden') {
-      fireAbandonAlert();
-    }
+    if (document.visibilityState === 'hidden') fireAbandonAlert();
   });
 
   // Fires when user closes tab or navigates away entirely
-  window.addEventListener('pagehide', function() {
-    fireAbandonAlert();
-  });
+  window.addEventListener('pagehide', function() { fireAbandonAlert(); });
 
   // ── Show / hide steps ───────────────────────
   function showStep(id) {
