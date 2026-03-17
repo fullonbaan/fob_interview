@@ -1227,7 +1227,7 @@
         <div class="ci-label">Call / WhatsApp</div>
         <div class="ci-val">+91 63605 93122</div>
       </a>
-      <a class="ci" href="mailto:fullonbaan@gmail.com?subject=Infor%20LN%20Interview%20Guide%20Enquiry&body=Hi%20FullonBaan%2C%20I%20am%20interested%20in%20the%20Infor%20LN%20Interview%20Preparation%20Guides.%20Please%20share%20more%20details.">
+      <a class="ci" href="mailto:fullonbaan@gmail.com?subject=Enquiry%20%E2%80%94%20Infor%20LN%20Interview%20Guide&body=Hi%20FullonBaan%20Team%2C%0A%0AI%20am%20interested%20in%20your%20Infor%20LN%20Interview%20Guide.%20Please%20share%20details.%0A%0AThank%20you.">
         <span class="ci-icon">✉️</span>
         <div class="ci-label">Email</div>
         <div class="ci-val">fullonbaan@gmail.com</div>
@@ -1523,7 +1523,7 @@
 </div>
 
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
   // ═══════════════════════════════════════════════════════════════
   //  EMAILJS SETUP — replace the 3 values below with your own
   //  1. Sign up FREE at https://www.emailjs.com
@@ -1580,6 +1580,9 @@
   var selAmount = 0, selDesc = '', selKey = '';
   var userData = { name:'', email:'', mobile:'' };
   var txnRef = '', utrNumber = '';
+  var paymentIntentSent = false;  // true once QR screen is displayed
+  var utrSubmitted      = false;  // true once Confirm Payment is clicked
+  var abandonFired      = false;  // prevent duplicate abandon alerts
 
   // Toggle panel
   window.togglePay = function(){
@@ -1654,10 +1657,37 @@
       '<br><span style="color:var(--rust);font-weight:600;">' + selDesc + ' \u2014 \u20b9' + selAmount.toLocaleString('en-IN') + '</span>';
 
     showStep('step3');
+
+    // ── Payment Intent Alert ─────────────────────────────────────────────
+    // Fires immediately when QR is displayed — BEFORE any UTR is entered.
+    // Ensures you are notified even if the user pays but never clicks Confirm.
+    paymentIntentSent = false;
+    utrSubmitted      = false;
+    abandonFired      = false;
+    sendEmail({
+      to_email:    'fullonbaan@gmail.com',
+      subject:     '⚡ Payment Intent — ' + selDesc,
+      status:      'QR SCREEN OPENED — Awaiting customer payment',
+      order_ref:   txnRef,
+      utr_number:  '(not yet submitted)',
+      guide:       selDesc,
+      amount:      'Rs.' + selAmount.toLocaleString('en-IN'),
+      cust_name:   userData.name,
+      cust_email:  userData.email,
+      cust_mobile: '+91 ' + userData.mobile,
+      message:     'Customer has reached the payment screen and the QR code has been shown. '
+                 + 'They may pay without submitting a UTR. '
+                 + 'Watch your UPI app for an incoming Rs.' + selAmount + ' from this customer. '
+                 + 'Order Ref: ' + txnRef,
+    });
+    paymentIntentSent = true;
   };
 
   /* ── Step 3 back ── */
-  window.goBackToStep2 = function(){ showStep('step2'); };
+  window.goBackToStep2 = function(){
+    utrSubmitted = true;   // suppress abandon alert on deliberate back-navigation
+    showStep('step2');
+  };
 
   /* ── Copy UPI ID ── */
   window.copyUPIId = function(){
@@ -1691,7 +1721,8 @@
     if(!utr){ err.textContent = 'Please enter your UTR / Transaction Reference Number.'; return; }
     if(utr.length < 8){ err.textContent = 'UTR number seems too short. Please check and re-enter.'; return; }
     err.textContent = '';
-    utrNumber = utr;
+    utrNumber    = utr;
+    utrSubmitted = true;
     onPaymentSuccess();
   };
 
@@ -1756,18 +1787,7 @@
       cust_name:   userData.name,
       cust_email:  userData.email,
       cust_mobile: '+91 ' + userData.mobile,
-      message:     'Payment failed. Please reach out to the customer to assist them.',
-    });
-  };
-
-  window.retryPayment = function(){
-    document.getElementById('utrInput').value = '';
-    document.getElementById('utrError').textContent = '';
-    showStep('step3');
-  };
-
-  // ── EmailJS REST API (no SDK needed) ─────────────────────────
-  // HOW TO SET UP (5 minutes, free):
+    free):
   // 1. Go to https://www.emailjs.com and create a free account
   // 2. Click "Add New Service" → choose Gmail → connect fullonbaan@gmail.com → copy SERVICE ID
   // 3. Click "Email Templates" → Create Template → use variables below → copy TEMPLATE ID
@@ -1814,6 +1834,48 @@
   }
 
 
+
+  // ── Abandon Detection ────────────────────────────────────────────────────
+  // If a customer switches away from the payment screen (e.g. opens their UPI
+  // app to pay) but never returns to submit a UTR, fire a single alert email.
+  // This covers the most common drop-off: user pays on PhonePe/GPay and closes
+  // the browser without coming back to enter their UTR.
+
+  function fireAbandonAlert() {
+    if (!paymentIntentSent) return;   // QR was never shown — nothing to track
+    if (utrSubmitted)       return;   // User properly confirmed — all good
+    if (abandonFired)       return;   // Already sent — don't duplicate
+    abandonFired = true;
+    sendEmail({
+      to_email:    'fullonbaan@gmail.com',
+      subject:     '⚠️ Possible Payment — No UTR Submitted — ' + (userData ? userData.name : 'Unknown'),
+      status:      'PAYMENT LIKELY — UTR NOT SUBMITTED',
+      order_ref:   txnRef || 'N/A',
+      utr_number:  '(customer did not submit UTR)',
+      guide:       selDesc || 'N/A',
+      amount:      selAmount ? 'Rs.' + selAmount.toLocaleString('en-IN') : 'N/A',
+      cust_name:   userData ? userData.name   : 'N/A',
+      cust_email:  userData ? userData.email  : 'N/A',
+      cust_mobile: userData ? '+91 ' + userData.mobile : 'N/A',
+      message:     'Customer switched away from the payment screen (likely opened their UPI app to pay) '
+                 + 'but did NOT return to submit a UTR. '
+                 + 'Please check your UPI app for an incoming payment of Rs.' + (selAmount || '?')
+                 + ' and follow up with the customer directly. '
+                 + 'Order Ref: ' + (txnRef || 'N/A'),
+    });
+  }
+
+  // Fires when user switches tab / minimises browser (e.g. to open UPI app)
+  document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'hidden') {
+      fireAbandonAlert();
+    }
+  });
+
+  // Fires when user closes tab or navigates away entirely
+  window.addEventListener('pagehide', function() {
+    fireAbandonAlert();
+  });
 
   // ── Show / hide steps ───────────────────────
   function showStep(id) {
