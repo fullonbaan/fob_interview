@@ -126,6 +126,7 @@
   .eco-link-train .eco-dot { background: #4CAF82; }
   .eco-link-jobs  .eco-dot { background: #E2914A; }
   .eco-link-cert  .eco-dot { background: #C084FC; }
+  .eco-link-play  .eco-dot { background: #F472B6; }
 
   /* ── Ecosystem Footer Section ── */
   .eco-footer {
@@ -836,6 +837,9 @@
       <a class="eco-link eco-link-cert"  href="https://fobexams.vercel.app/"    target="_blank" rel="noopener">
         <span class="eco-dot"></span>FOB Certification
       </a>
+      <a class="eco-link eco-link-play"  href="https://fobplaybook.vercel.app/" target="_blank" rel="noopener">
+        <span class="eco-dot"></span>Infor LN Playbook
+      </a>
     </div>
   </nav>
 
@@ -1227,7 +1231,7 @@
         <div class="ci-label">Call / WhatsApp</div>
         <div class="ci-val">+91 63605 93122</div>
       </a>
-      <a class="ci" href="mailto:fullonbaan@gmail.com?subject=Enquiry%20%E2%80%94%20Infor%20LN%20Interview%20Guide&body=Hi%20FullonBaan%20Team%2C%0A%0AI%20am%20interested%20in%20your%20Infor%20LN%20Interview%20Guide.%20Please%20share%20details.%0A%0AThank%20you.">
+      <a class="ci" href="mailto:fullonbaan@gmail.com?subject=Enquiry%20%E2%80%94%20FullonBaan&body=Hi%20FullonBaan%20Team%2C%0A%0AI%20would%20like%20to%20know%20more%20about%20your%20training%20and%20services.%0A%0ARegards">
         <span class="ci-icon">✉️</span>
         <div class="ci-label">Email</div>
         <div class="ci-val">fullonbaan@gmail.com</div>
@@ -1501,6 +1505,11 @@
           <span class="efl-icon">🏅</span>
           <span class="efl-name">FOB Certification</span>
           <span class="efl-desc">Exams &amp; Credentials</span>
+        </a>
+        <a class="eco-footer-link" href="https://fobplaybook.vercel.app/" target="_blank" rel="noopener">
+          <span class="efl-icon">📖</span>
+          <span class="efl-name">Infor LN Playbook</span>
+          <span class="efl-desc">Guides &amp; Best Practices</span>
         </a>
       </div>
     </div>
@@ -1879,15 +1888,32 @@
   // Fires when user closes tab or navigates away entirely
   window.addEventListener('pagehide', function() { fireAbandonAlert(); });
 
-  // ── Show / hide steps ───────────────────────
-  function showStep(id) {
-    var steps = ['step1', 'step2', 'step3', 'step4', 'step5'];
-    steps.forEach(function(s) {
-      var el = document.getElementById(s);
-      if (el) el.style.display = (s === id) ? 'block' : 'none';
+  function sendEmail(params){
+    if(EMAILJS_PUBLIC_KEY === 'YOUR_PUBLIC_KEY'){
+      console.warn('EmailJS not configured.');
+      return;
+    }
+    fetch('https://api.emailjs.com/api/v1.0/email/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        service_id:      EMAILJS_SERVICE_ID,
+        template_id:     EMAILJS_TEMPLATE_ID,
+        user_id:         EMAILJS_PUBLIC_KEY,
+        template_params: {
+          to_email:    params.to_email    || '',
+          subject:     params.subject     || '',
+          status:      params.status      || '',
+          order_ref:   params.order_ref   || '',
+          utr_number:  params.utr_no      || 'N/A',
+          guide:       params.guide       || '',
+          amount:      params.amount      || '',
+          cust_name:   params.cust_name   || '',
+          cust_email:  params.cust_email  || ''
+        }
+      })
     });
   }
-
-</script>
+  </script>
 </body>
 </html>
