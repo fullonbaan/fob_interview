@@ -1905,11 +1905,12 @@
           subject:     params.subject     || '',
           status:      params.status      || '',
           order_ref:   params.order_ref   || '',
-          utr_number:  params.utr_no      || 'N/A',
+          utr_number:  params.utr_number  || params.utr_no || 'N/A',
           guide:       params.guide       || '',
           amount:      params.amount      || '',
           cust_name:   params.cust_name   || '',
-          cust_email:  params.cust_email  || ''
+          cust_email:  params.cust_email  || '',
+          cust_mobile: params.cust_mobile || ''
         }
       })
     });
