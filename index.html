@@ -255,6 +255,75 @@
   .footer-links-col a:hover { color:var(--gold); }
   .footer-copy { border-top:1px solid var(--border); padding-top:24px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.1em; color:rgba(82,75,62,0.4); text-transform:uppercase; }
   @media(max-width:768px){ .footer-top{grid-template-columns:1fr;gap:40px;} .footer-links-grid{grid-template-columns:1fr 1fr;} .features,.paths-section,.guides-section,.bundles-section,.contact-section,.eco-section,.site-footer{padding-left:24px;padding-right:24px;} .hero{padding:120px 24px 60px;} }
+
+  /* ══ INTERVIEW ADMIN ══ */
+  #adm-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:#0d0d0d;overflow-y:auto;}
+  #adm-overlay.open{display:block;}
+  #adm-trigger{position:fixed;bottom:22px;right:22px;width:38px;height:38px;border-radius:10px;background:rgba(20,20,20,.9);border:1px solid rgba(201,148,62,.35);cursor:pointer;font-size:16px;color:#c9943e;display:flex;align-items:center;justify-content:center;z-index:9998;box-shadow:0 2px 12px rgba(0,0,0,.4);transition:background .2s;}
+  #adm-trigger:hover{background:rgba(40,30,10,.95);}
+  #adm-login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 20px;background:radial-gradient(ellipse at 50% 0%,rgba(201,148,62,.07) 0%,transparent 65%);}
+  .alc{background:#161616;border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:44px 36px;width:100%;max-width:380px;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.7);color:#f0ece4;font-family:'Work Sans',sans-serif;}
+  .alc-gem{width:50px;height:50px;border-radius:13px;background:linear-gradient(135deg,#1a1200,#2e2000);border:1px solid rgba(201,148,62,.4);display:flex;align-items:center;justify-content:center;font-family:'Noto Serif',serif;font-size:20px;color:#e8b86d;margin:0 auto 18px;}
+  .alc h2{font-family:'Noto Serif',serif;font-size:20px;color:#e8b86d;margin-bottom:6px;}
+  .alc p{font-size:13px;color:#6e6b65;margin-bottom:22px;line-height:1.5;}
+  .alc input{width:100%;padding:12px 16px;margin-bottom:10px;background:#1e1e1e;border:1.5px solid rgba(255,255,255,.14);border-radius:10px;color:#f0ece4;font-size:14px;font-family:'Work Sans',sans-serif;}
+  .alc input:focus{outline:none;border-color:#c9943e;}
+  .alc input.bad{border-color:#e05252;}
+  .alc-err{font-size:12px;color:#e05252;display:none;margin-bottom:10px;text-align:left;}
+  .alc-btn{width:100%;padding:12px;margin-bottom:10px;background:linear-gradient(135deg,#7a5a1a,#a87830);border:1px solid rgba(201,148,62,.4);border-radius:10px;color:#e8b86d;font-size:14px;font-weight:600;font-family:'Work Sans',sans-serif;cursor:pointer;}
+  .alc-btn:hover{opacity:.88;}
+  .alc-cancel{background:none;border:none;color:#6e6b65;font-size:12px;cursor:pointer;font-family:'Work Sans',sans-serif;}
+  .alc-cancel:hover{color:#9a9590;}
+  #adm-dash{display:none;min-height:100vh;}
+  .atb{position:sticky;top:0;z-index:100;background:rgba(13,13,13,.96);backdrop-filter:blur(10px);border-bottom:1px solid rgba(255,255,255,.08);padding:0 22px;height:52px;display:flex;align-items:center;justify-content:space-between;font-family:'Work Sans',sans-serif;}
+  .atb-brand{font-family:'Noto Serif',serif;font-size:15px;color:#e8b86d;}
+  .atb-right{display:flex;gap:8px;align-items:center;}
+  .ab{padding:6px 13px;border-radius:7px;border:1px solid rgba(255,255,255,.12);background:#1e1e1e;color:#f0ece4;font-size:12px;font-family:'Work Sans',sans-serif;cursor:pointer;}
+  .ab:hover{background:#2a2a2a;}
+  .ab.gold{border-color:rgba(201,148,62,.4);color:#e8b86d;}
+  .ab.gold:hover{background:rgba(201,148,62,.1);}
+  .async{font-size:11px;color:#6e6b65;font-family:'DM Mono',monospace;display:flex;align-items:center;gap:5px;}
+  .asyncdot{width:6px;height:6px;border-radius:50%;background:#6e6b65;}
+  .asyncdot.ok{background:#00c878;}.asyncdot.err{background:#e05252;}.asyncdot.spin{background:#f5a623;animation:asyncpulse .9s infinite;}
+  @keyframes asyncpulse{0%,100%{opacity:1}50%{opacity:.3}}
+  .awrap{max-width:900px;margin:0 auto;padding:26px 22px 80px;}
+  .astats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;}
+  .astat{background:#161616;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px 18px;}
+  .astat-v{font-size:28px;font-weight:700;color:#f0ece4;}.astat-v.i{color:#5b8def;}.astat-v.s{color:#00c878;}
+  .astat-l{font-size:10px;color:#6e6b65;text-transform:uppercase;letter-spacing:.06em;margin-top:3px;}
+  .afrow{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:13px;}
+  .afbtn{padding:5px 14px;border-radius:20px;border:1px solid rgba(255,255,255,.09);background:#161616;color:#9a9590;font-size:12px;cursor:pointer;font-family:'Work Sans',sans-serif;}
+  .afbtn:hover{color:#f0ece4;}
+  .afbtn.on{background:rgba(201,148,62,.14);border-color:rgba(201,148,62,.4);color:#e8b86d;}
+  .afbtn.on.bf{background:rgba(91,141,239,.12);border-color:rgba(91,141,239,.3);color:#5b8def;}
+  .afbtn.on.gf{background:rgba(0,200,120,.10);border-color:rgba(0,200,120,.28);color:#00c878;}
+  .asrch{width:100%;padding:10px 15px;margin-bottom:14px;background:#161616;border:1.5px solid rgba(255,255,255,.09);border-radius:10px;color:#f0ece4;font-size:13px;font-family:'Work Sans',sans-serif;}
+  .asrch:focus{outline:none;border-color:#c9943e;}.asrch::placeholder{color:#6e6b65;}
+  .ahd{font-size:10px;color:#c9943e;letter-spacing:.12em;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:10px;font-family:'DM Mono',monospace;}
+  .ahd::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.07);}
+  .aempty{padding:40px;text-align:center;color:#6e6b65;font-size:14px;}
+  .acard{background:#161616;border:1px solid rgba(255,255,255,.08);border-radius:13px;padding:17px 20px;margin-bottom:10px;font-family:'Work Sans',sans-serif;}
+  .acard:hover{border-color:rgba(255,255,255,.15);}
+  .acard-top{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
+  .acard-name{font-size:15px;font-weight:700;color:#f0ece4;}
+  .acard-email{font-size:12px;color:#9a9590;margin-top:2px;}
+  .abadge{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;}
+  .abadge.i{background:rgba(91,141,239,.12);border:1px solid rgba(91,141,239,.3);color:#5b8def;}
+  .abadge.s{background:rgba(0,200,120,.10);border:1px solid rgba(0,200,120,.28);color:#00c878;}
+  .ameta{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:7px;margin-bottom:12px;}
+  .ami{background:#1e1e1e;border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:7px 11px;}
+  .ami-v{font-size:12px;font-weight:600;color:#f0ece4;word-break:break-all;}
+  .ami-k{font-size:10px;color:#6e6b65;margin-top:2px;text-transform:uppercase;letter-spacing:.05em;}
+  .atl{border-top:1px solid rgba(255,255,255,.07);padding-top:10px;display:flex;flex-direction:column;gap:5px;}
+  .atlr{display:flex;align-items:center;gap:8px;font-size:11px;}
+  .atld{width:7px;height:7px;border-radius:50%;flex-shrink:0;}.atld.b{background:#5b8def;}.atld.g{background:#00c878;}.atld.x{background:#6e6b65;}
+  .atll{color:#9a9590;min-width:80px;}.atlv{color:#f0ece4;font-family:'DM Mono',monospace;}
+  .aacts{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px;border-top:1px solid rgba(255,255,255,.07);padding-top:10px;}
+  .acopy{padding:4px 10px;border-radius:7px;border:1px solid rgba(255,255,255,.1);background:#1e1e1e;color:#9a9590;font-size:11px;cursor:pointer;font-family:'DM Mono',monospace;}
+  .acopy:hover{border-color:rgba(201,148,62,.4);color:#e8b86d;}
+  #adm-toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(14px);background:#222;border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:9px 18px;font-size:13px;color:#f0ece4;opacity:0;transition:opacity .22s,transform .22s;pointer-events:none;z-index:99999;font-family:'Work Sans',sans-serif;white-space:nowrap;}
+  #adm-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
 </style>
 </head>
 <body>
@@ -637,11 +706,13 @@
     paymentIntentSent=false;utrSubmitted=false;abandonFired=false;
     sendEmail({to_email:'fullonbaan@gmail.com',subject:'\u26a1 Payment Intent \u2014 '+selDesc,status:'QR SCREEN OPENED',order_ref:txnRef,utr_number:'(not yet submitted)',guide:selDesc,amount:'Rs.'+selAmount.toLocaleString('en-IN'),cust_name:name,cust_email:email,cust_mobile:'+91 '+mobile,message:'Customer reached payment screen. Order Ref: '+txnRef});
     paymentIntentSent=true;
+    // Admin: record payment initiation
+    if(typeof lnPayInitiated==='function') lnPayInitiated(txnRef,userData,selDesc,selAmount);
   };
   window.goBackToStep2=function(){utrSubmitted=true;showStep('step2');};
   window.copyUPIId=function(){navigator.clipboard.writeText(UPI_ID).then(function(){var b=document.querySelector('.copy-btn');b.textContent='Copied!';setTimeout(function(){b.textContent='Copy';},2000);});};
   window.launchUPI=function(k){var a=UPI_APPS[k];window.location.href=a.scheme+'?pa='+encodeURIComponent(UPI_ID)+'&pn='+encodeURIComponent(UPI_NAME)+'&am='+selAmount+'&cu=INR&tn='+encodeURIComponent(selDesc.substring(0,50))+'&tr='+txnRef;};
-  window.onConfirmPayment=function(){var utr=document.getElementById('utrInput').value.trim(),err=document.getElementById('utrError');if(!utr){err.textContent='Please enter your UTR / Transaction Reference Number.';return;}if(utr.length<8){err.textContent='UTR number seems too short.';return;}err.textContent='';utrNumber=utr;utrSubmitted=true;onPaymentSuccess();if(typeof gtag!=='undefined'){gtag('event','conversion',{send_to:'AW-18000254476/purchase',value:selAmount,currency:'INR',transaction_id:txnRef});}};
+  window.onConfirmPayment=function(){var utr=document.getElementById('utrInput').value.trim(),err=document.getElementById('utrError');if(!utr){err.textContent='Please enter your UTR / Transaction Reference Number.';return;}if(utr.length<8){err.textContent='UTR number seems too short.';return;}err.textContent='';utrNumber=utr;utrSubmitted=true;onPaymentSuccess();if(typeof gtag!=='undefined'){gtag('event','conversion',{send_to:'AW-18000254476/purchase',value:selAmount,currency:'INR',transaction_id:txnRef});}if(typeof lnPaySubmitted==='function')lnPaySubmitted(txnRef,utr);};
   window.onPaymentSuccess=function(){document.getElementById('tyEmail').textContent=userData.email;document.getElementById('tyOrderBox').innerHTML='<strong>Order Ref:</strong> '+txnRef+'<br><strong>UTR:</strong> '+utrNumber+'<br><strong>Guide:</strong> '+selDesc+'<br><strong>Amount:</strong> \u20b9'+selAmount.toLocaleString('en-IN')+'<br><strong>Name:</strong> '+userData.name+'<br><strong>Email:</strong> '+userData.email;showStep('step4');sendEmail({to_email:'fullonbaan@gmail.com',subject:'New Order \u2014 '+selDesc,status:'PAYMENT SUBMITTED \u2014 AWAITING VALIDATION',order_ref:txnRef,utr_number:utrNumber,guide:selDesc,amount:'Rs.'+selAmount.toLocaleString('en-IN'),cust_name:userData.name,cust_email:userData.email,cust_mobile:'+91 '+userData.mobile,message:'New order received. UTR: '+utrNumber});sendEmail({to_email:userData.email,subject:'Your FullonBaan Order is Being Processed \u2014 '+selDesc,status:'PAYMENT SUBMITTED \u2014 UNDER VALIDATION',order_ref:txnRef,utr_number:utrNumber,guide:selDesc,amount:'Rs.'+selAmount.toLocaleString('en-IN'),cust_name:userData.name,cust_email:userData.email,cust_mobile:'+91 '+userData.mobile,message:'Thank you! Your payment (UTR: '+utrNumber+') is being validated. Your guide will be sent to your email once confirmed. For queries, WhatsApp +91 63605 93122.'});};
   window.onPaymentFailure=function(){document.getElementById('failContact').textContent=userData.email+' / +91 '+userData.mobile;document.getElementById('failOrderBox').innerHTML='<strong>Guide:</strong> '+selDesc+'<br><strong>Amount:</strong> \u20b9'+selAmount.toLocaleString('en-IN')+'<br><strong>Name:</strong> '+userData.name+'<br><strong>Email:</strong> '+userData.email;showStep('step5');sendEmail({to_email:'fullonbaan@gmail.com',subject:'Payment Failed \u2014 '+selDesc,status:'PAYMENT FAILED',order_ref:txnRef||'N/A',guide:selDesc,amount:'Rs.'+selAmount.toLocaleString('en-IN'),cust_name:userData.name,cust_email:userData.email,cust_mobile:'+91 '+userData.mobile,message:'Payment failed.'});};
   window.retryPayment=function(){document.getElementById('utrInput').value='';document.getElementById('utrError').textContent='';showStep('step3');};
@@ -650,5 +721,85 @@
   window.addEventListener('pagehide',function(){fireAbandonAlert();});
   function sendEmail(params){if(EMAILJS_PUBLIC_KEY==='YOUR_PUBLIC_KEY'){console.warn('EmailJS not configured.');return;}fetch('https://api.emailjs.com/api/v1.0/email/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({service_id:EMAILJS_SERVICE_ID,template_id:EMAILJS_TEMPLATE_ID,user_id:EMAILJS_PUBLIC_KEY,template_params:params})}).then(function(r){if(r.ok)console.log('Email sent');else console.warn('Email failed',r.status);}).catch(function(e){console.warn('Email error',e);});}
 </script>
+
+<!-- ══ ADMIN TRIGGER ══ -->
+<button id="adm-trigger" onclick="admOpen()" title="Admin">🛡</button>
+<!-- ══ ADMIN OVERLAY ══ -->
+<div id="adm-overlay">
+  <div id="adm-login">
+    <div class="alc">
+      <div class="alc-gem">F</div>
+      <h2>Interview Payment Admin</h2>
+      <p>FullonBaan · Infor LN Interview Guides<br>Payment tracking dashboard</p>
+      <input type="password" id="adm-pw" placeholder="Admin password" onkeydown="if(event.key==='Enter')admLogin()" oninput="this.classList.remove('bad');document.getElementById('adm-err').style.display='none'">
+      <div id="adm-err" class="alc-err">⚠️ Incorrect password.</div>
+      <button class="alc-btn" onclick="admLogin()">Sign In →</button><br>
+      <button class="alc-cancel" onclick="admClose()">Cancel</button>
+    </div>
+  </div>
+  <div id="adm-dash">
+    <div class="atb">
+      <div class="atb-brand">Interview Payments</div>
+      <div class="atb-right">
+        <div class="async"><div class="asyncdot" id="adot"></div><span id="aslbl">—</span></div>
+        <button class="ab gold" onclick="admRefresh()">↻ Refresh</button>
+        <button class="ab" onclick="admClose()">✕ Close</button>
+      </div>
+    </div>
+    <div class="awrap">
+      <div class="astats">
+        <div class="astat"><div class="astat-v" id="ast-all">—</div><div class="astat-l">Total</div></div>
+        <div class="astat"><div class="astat-v i" id="ast-init">—</div><div class="astat-l">Initiated</div></div>
+        <div class="astat"><div class="astat-v s" id="ast-sub">—</div><div class="astat-l">Submitted</div></div>
+      </div>
+      <div class="afrow">
+        <button class="afbtn on" onclick="admFilt('all',this)">All</button>
+        <button class="afbtn on bf" onclick="admFilt('initiated',this)">Initiated</button>
+        <button class="afbtn on gf" onclick="admFilt('submitted',this)">Submitted</button>
+      </div>
+      <input class="asrch" id="asrch" placeholder="Search name, email, mobile, guide…" oninput="admRender()">
+      <div class="ahd">Payment Records</div>
+      <div id="alist"><div class="aempty">⏳ Loading…</div></div>
+    </div>
+  </div>
+</div>
+<div id="adm-toast"></div>
+
+<script>
+var ADM_PW='Admin@M3Pay2025';
+var ADM_FILE='payments/interview_payments.json';
+var ADM_API='/api/github?path='+ADM_FILE;
+var admRecs=[],admFl='all';
+
+function admOpen(){document.getElementById('adm-overlay').classList.add('open');document.getElementById('adm-login').style.display='flex';document.getElementById('adm-dash').style.display='none';document.body.style.overflow='hidden';setTimeout(function(){document.getElementById('adm-pw').focus();},50);}
+function admClose(){document.getElementById('adm-overlay').classList.remove('open');document.body.style.overflow='';}
+document.addEventListener('keydown',function(e){if(e.key==='Escape')admClose();});
+
+(function(){if(window.location.hash==='#admin'||window.location.pathname==='/admin'){history.replaceState(null,'','/');admOpen();}})();
+window.addEventListener('hashchange',function(){if(window.location.hash==='#admin'){history.replaceState(null,'',window.location.pathname);admOpen();}});
+
+function admLogin(){var pw=document.getElementById('adm-pw').value;if(pw===ADM_PW){document.getElementById('adm-pw').value='';document.getElementById('adm-login').style.display='none';document.getElementById('adm-dash').style.display='block';admRefresh();}else{document.getElementById('adm-err').style.display='block';document.getElementById('adm-pw').classList.add('bad');}}
+
+async function admGhRead(){var r=await fetch(ADM_API,{headers:{'Content-Type':'application/json'}});if(r.status===404)return{records:[],sha:null};if(!r.ok)throw new Error('GH '+r.status);var d=await r.json();return{records:JSON.parse(atob(d.content.replace(/\n/g,''))),sha:d.sha};}
+async function admGhUpsert(rec){try{admSync('spin','Syncing…');var gh=await admGhRead();var i=gh.records.findIndex(function(x){return x.orderId===rec.orderId;});if(i>=0)gh.records[i]=Object.assign({},gh.records[i],rec);else gh.records.push(rec);var body={message:'intpay:'+rec.status+' '+rec.orderId,content:btoa(unescape(encodeURIComponent(JSON.stringify(gh.records,null,2))))};if(gh.sha)body.sha=gh.sha;var w=await fetch(ADM_API,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});if(!w.ok)throw new Error('GH write '+w.status);localStorage.setItem('interview_payments',JSON.stringify(gh.records));admSync('ok','Synced');}catch(e){admSync('err','Offline');console.warn(e);}}
+async function admGhMerge(){var gh=[];try{var r=await admGhRead();gh=r.records;admSync('ok','Synced');}catch(e){admSync('err','Offline');}var lo=JSON.parse(localStorage.getItem('interview_payments')||'[]');var m=gh.slice();lo.forEach(function(l){if(!m.find(function(x){return x.orderId===l.orderId;}))m.push(l);});localStorage.setItem('interview_payments',JSON.stringify(m));return m;}
+
+window.lnPayInitiated=function(txnRefVal,userDataVal,selDescVal,selAmountVal){var rec={orderId:txnRefVal,status:'initiated',name:userDataVal.name,email:userDataVal.email,mobile:userDataVal.mobile,module:selDescVal,amount:selAmountVal,initiatedAt:new Date().toISOString(),submittedAt:null,utr:null};var lo=JSON.parse(localStorage.getItem('interview_payments')||'[]');var i=lo.findIndex(function(x){return x.orderId===txnRefVal;});if(i>=0)lo[i]=Object.assign({},lo[i],rec);else lo.push(rec);localStorage.setItem('interview_payments',JSON.stringify(lo));admGhUpsert(rec);};
+window.lnPaySubmitted=function(txnRefVal,utrVal){var lo=JSON.parse(localStorage.getItem('interview_payments')||'[]');var i=lo.findIndex(function(x){return x.orderId===txnRefVal;});var upd={status:'submitted',utr:utrVal,submittedAt:new Date().toISOString()};if(i>=0){lo[i]=Object.assign({},lo[i],upd);localStorage.setItem('interview_payments',JSON.stringify(lo));admGhUpsert(lo[i]);}else admGhUpsert(Object.assign({orderId:txnRefVal,name:'—',email:'—',mobile:'—',module:'—',amount:0,initiatedAt:null},upd));};
+
+async function admRefresh(){document.getElementById('alist').innerHTML='<div class="aempty">⏳ Syncing with GitHub…</div>';admSync('spin','Syncing…');try{admRecs=await admGhMerge();}catch(e){admRecs=JSON.parse(localStorage.getItem('interview_payments')||'[]');admSync('err','Offline');}admStats();admRender();}
+function admStats(){var i=admRecs.filter(function(r){return r.status==='initiated';}).length;var s=admRecs.filter(function(r){return r.status==='submitted';}).length;document.getElementById('ast-all').textContent=admRecs.length;document.getElementById('ast-init').textContent=i;document.getElementById('ast-sub').textContent=s;}
+function admFilt(f,btn){admFl=f;document.querySelectorAll('.afbtn').forEach(function(b){b.classList.remove('on');});btn.classList.add('on');admRender();}
+function admRender(){var q=(document.getElementById('asrch').value||'').toLowerCase();var r=admFl==='all'?admRecs:admRecs.filter(function(x){return x.status===admFl;});if(q)r=r.filter(function(x){return['name','email','mobile','module','orderId','utr'].some(function(k){return(x[k]||'').toLowerCase().includes(q);});});r=r.slice().sort(function(a,b){if(a.status!==b.status)return a.status==='submitted'?-1:1;return new Date(b.submittedAt||b.initiatedAt||0)-new Date(a.submittedAt||a.initiatedAt||0);});var el=document.getElementById('alist');if(!r.length){el.innerHTML='<div class="aempty">No records found.</div>';return;}el.innerHTML=r.map(admCard).join('');}
+function admCard(r){var s=r.status==='submitted';function ft(d){return d?new Date(d).toLocaleString('en-IN',{timeZone:'Asia/Kolkata',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'—';}var acts='';if(r.email)acts+='<button class="acopy" onclick="admCp(\''+aE(r.email)+'\',\'Email\')">📧 Email</button>';if(r.utr)acts+='<button class="acopy" onclick="admCp(\''+aE(r.utr)+'\',\'UTR\')">🔑 UTR</button>';if(r.mobile)acts+='<button class="acopy" onclick="admCp(\'+91'+aE(r.mobile)+'\',\'Mobile\')">📱 Mobile</button>';acts+='<button class="acopy" onclick="admCp(\''+aE(r.orderId)+'\',\'Ref\')">📋 Ref</button>';return'<div class="acard"><div class="acard-top"><div><div class="acard-name">'+aH(r.name||'—')+'</div><div class="acard-email">'+aH(r.email||'—')+(r.mobile?' · +91 '+aH(r.mobile):'')+'</div></div><span class="abadge '+(s?'s':'i')+'">'+(s?'✅ Submitted':'💳 Initiated')+'</span></div><div class="ameta"><div class="ami"><div class="ami-v">'+aH(r.module||'—')+'</div><div class="ami-k">Guide</div></div><div class="ami"><div class="ami-v">'+(r.amount?'₹'+Number(r.amount).toLocaleString('en-IN'):'—')+'</div><div class="ami-k">Amount</div></div><div class="ami"><div class="ami-v">'+aH(r.orderId||'—')+'</div><div class="ami-k">Order Ref</div></div><div class="ami"><div class="ami-v">'+(r.utr?aH(r.utr):'<span style="color:#6e6b65">Not yet</span>')+'</div><div class="ami-k">UTR</div></div></div><div class="atl"><div class="atlr"><div class="atld b"></div><div class="atll">Initiated</div><div class="atlv">'+ft(r.initiatedAt)+'</div></div><div class="atlr"><div class="atld '+(s?'g':'x')+'"></div><div class="atll">Submitted</div><div class="atlv">'+(s?ft(r.submittedAt):'<span style="color:#6e6b65">Awaiting…</span>')+'</div></div></div><div class="aacts">'+acts+'</div></div>';}
+
+function admSync(st,lb){var d=document.getElementById('adot'),l=document.getElementById('aslbl');if(d)d.className='asyncdot '+st;if(l&&lb)l.textContent=lb;}
+function admCp(t,lb){navigator.clipboard.writeText(t).then(function(){admToast('📋 Copied '+lb);}).catch(function(){admToast(lb+': '+t);});}
+var _att;function admToast(m){var el=document.getElementById('adm-toast');if(!el)return;el.textContent=m;el.classList.add('show');clearTimeout(_att);_att=setTimeout(function(){el.classList.remove('show');},2800);}
+function aH(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function aE(s){return String(s||'').replace(/'/g,"\\'");}
+(function(){var lo=JSON.parse(localStorage.getItem('interview_payments')||'[]');if(lo.length){admRecs=lo;admStats();}})();
+</script>
+
 </body>
 </html>
