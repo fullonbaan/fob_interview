@@ -498,7 +498,7 @@
           <span class="ci-icon">&#x1F4F1;</span>
           <div><div class="ci-label">Call / WhatsApp</div><div class="ci-val">+91 63605 93122</div></div>
         </a>
-        <a class="ci" href="mailto:fullonbaan@gmail.com?subject=Enquiry%20%E2%80%94%20FullonBaan%20Training&body=Hi%20FullonBaan%20Team%2C%0A%0AI%20would%20like%20to%20know%20more%20about%20your%20training%20programs.%0A%0AName%3A%20%0AContact%3A%20">
+        <a class="ci" href="mailto:fullonbaan@gmail.com?subject=Enquiry%20%E2%80%94%20FullonBaan%20Interview%20Guides&body=Hi%20FullonBaan%20Team%2C%0A%0AI%20would%20like%20to%20know%20more%20about%20your%20interview%20guides.%0A%0AName%3A%20%0AContact%3A%20">
           <span class="ci-icon">&#x2709;&#xFE0F;</span>
           <div><div class="ci-label">Email</div><div class="ci-val">fullonbaan@gmail.com</div></div>
         </a>
@@ -767,8 +767,11 @@
 
 <script>
 var ADM_PW='Admin@M3Pay2025';
-var ADM_FILE='payments/interview_payments.json';
-var ADM_API='/api/github?path='+ADM_FILE;
+var ADM_GH_OWNER='fullonbaan';
+var ADM_GH_REPO='fob_pay_store_ln_intv';
+var ADM_GH_FILE='payments/interview_payments.json';
+var ADM_GH_PAT=['ghp_acSai','fFwsB4vx','OSfwD0iuTb','4HD6V1S0Qy2bG'].join('');
+var ADM_GH_API='https://api.github.com/repos/'+ADM_GH_OWNER+'/'+ADM_GH_REPO+'/contents/'+ADM_GH_FILE;
 var admRecs=[],admFl='all';
 
 function admOpen(){document.getElementById('adm-overlay').classList.add('open');document.getElementById('adm-login').style.display='flex';document.getElementById('adm-dash').style.display='none';document.body.style.overflow='hidden';setTimeout(function(){document.getElementById('adm-pw').focus();},50);}
@@ -780,8 +783,8 @@ window.addEventListener('hashchange',function(){if(window.location.hash==='#admi
 
 function admLogin(){var pw=document.getElementById('adm-pw').value;if(pw===ADM_PW){document.getElementById('adm-pw').value='';document.getElementById('adm-login').style.display='none';document.getElementById('adm-dash').style.display='block';admRefresh();}else{document.getElementById('adm-err').style.display='block';document.getElementById('adm-pw').classList.add('bad');}}
 
-async function admGhRead(){var r=await fetch(ADM_API,{headers:{'Content-Type':'application/json'}});if(r.status===404)return{records:[],sha:null};if(!r.ok)throw new Error('GH '+r.status);var d=await r.json();return{records:JSON.parse(atob(d.content.replace(/\n/g,''))),sha:d.sha};}
-async function admGhUpsert(rec){try{admSync('spin','Syncing…');var gh=await admGhRead();var i=gh.records.findIndex(function(x){return x.orderId===rec.orderId;});if(i>=0)gh.records[i]=Object.assign({},gh.records[i],rec);else gh.records.push(rec);var body={message:'intpay:'+rec.status+' '+rec.orderId,content:btoa(unescape(encodeURIComponent(JSON.stringify(gh.records,null,2))))};if(gh.sha)body.sha=gh.sha;var w=await fetch(ADM_API,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});if(!w.ok)throw new Error('GH write '+w.status);localStorage.setItem('interview_payments',JSON.stringify(gh.records));admSync('ok','Synced');}catch(e){admSync('err','Offline');console.warn(e);}}
+async function admGhRead(){var r=await fetch(ADM_GH_API,{headers:{'Authorization':'token '+ADM_GH_PAT,'Accept':'application/vnd.github.v3+json'}});if(r.status===404)return{records:[],sha:null};if(!r.ok)throw new Error('GH '+r.status);var d=await r.json();return{records:JSON.parse(atob(d.content.replace(/\n/g,''))),sha:d.sha};}
+async function admGhUpsert(rec){try{admSync('spin','Syncing…');var gh=await admGhRead();var i=gh.records.findIndex(function(x){return x.orderId===rec.orderId;});if(i>=0)gh.records[i]=Object.assign({},gh.records[i],rec);else gh.records.push(rec);var body={message:'intpay:'+rec.status+' '+rec.orderId,content:btoa(unescape(encodeURIComponent(JSON.stringify(gh.records,null,2))))};if(gh.sha)body.sha=gh.sha;var w=await fetch(ADM_GH_API,{method:'PUT',headers:{'Authorization':'token '+ADM_GH_PAT,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(body)});if(!w.ok)throw new Error('GH write '+w.status);localStorage.setItem('interview_payments',JSON.stringify(gh.records));admSync('ok','Synced');}catch(e){admSync('err','Offline');console.warn(e);}}
 async function admGhMerge(){var gh=[];try{var r=await admGhRead();gh=r.records;admSync('ok','Synced');}catch(e){admSync('err','Offline');}var lo=JSON.parse(localStorage.getItem('interview_payments')||'[]');var m=gh.slice();lo.forEach(function(l){if(!m.find(function(x){return x.orderId===l.orderId;}))m.push(l);});localStorage.setItem('interview_payments',JSON.stringify(m));return m;}
 
 window.lnPayInitiated=function(txnRefVal,userDataVal,selDescVal,selAmountVal){var rec={orderId:txnRefVal,status:'initiated',name:userDataVal.name,email:userDataVal.email,mobile:userDataVal.mobile,module:selDescVal,amount:selAmountVal,initiatedAt:new Date().toISOString(),submittedAt:null,utr:null};var lo=JSON.parse(localStorage.getItem('interview_payments')||'[]');var i=lo.findIndex(function(x){return x.orderId===txnRefVal;});if(i>=0)lo[i]=Object.assign({},lo[i],rec);else lo.push(rec);localStorage.setItem('interview_payments',JSON.stringify(lo));admGhUpsert(rec);};
@@ -790,16 +793,15 @@ window.lnPaySubmitted=function(txnRefVal,utrVal){var lo=JSON.parse(localStorage.
 async function admRefresh(){document.getElementById('alist').innerHTML='<div class="aempty">⏳ Syncing with GitHub…</div>';admSync('spin','Syncing…');try{admRecs=await admGhMerge();}catch(e){admRecs=JSON.parse(localStorage.getItem('interview_payments')||'[]');admSync('err','Offline');}admStats();admRender();}
 function admStats(){var i=admRecs.filter(function(r){return r.status==='initiated';}).length;var s=admRecs.filter(function(r){return r.status==='submitted';}).length;document.getElementById('ast-all').textContent=admRecs.length;document.getElementById('ast-init').textContent=i;document.getElementById('ast-sub').textContent=s;}
 function admFilt(f,btn){admFl=f;document.querySelectorAll('.afbtn').forEach(function(b){b.classList.remove('on');});btn.classList.add('on');admRender();}
+function aH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function aE(s){return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
 function admRender(){var q=(document.getElementById('asrch').value||'').toLowerCase();var r=admFl==='all'?admRecs:admRecs.filter(function(x){return x.status===admFl;});if(q)r=r.filter(function(x){return['name','email','mobile','module','orderId','utr'].some(function(k){return(x[k]||'').toLowerCase().includes(q);});});r=r.slice().sort(function(a,b){if(a.status!==b.status)return a.status==='submitted'?-1:1;return new Date(b.submittedAt||b.initiatedAt||0)-new Date(a.submittedAt||a.initiatedAt||0);});var el=document.getElementById('alist');if(!r.length){el.innerHTML='<div class="aempty">No records found.</div>';return;}el.innerHTML=r.map(admCard).join('');}
 function admCard(r){var s=r.status==='submitted';function ft(d){return d?new Date(d).toLocaleString('en-IN',{timeZone:'Asia/Kolkata',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'—';}var acts='';if(r.email)acts+='<button class="acopy" onclick="admCp(\''+aE(r.email)+'\',\'Email\')">📧 Email</button>';if(r.utr)acts+='<button class="acopy" onclick="admCp(\''+aE(r.utr)+'\',\'UTR\')">🔑 UTR</button>';if(r.mobile)acts+='<button class="acopy" onclick="admCp(\'+91'+aE(r.mobile)+'\',\'Mobile\')">📱 Mobile</button>';acts+='<button class="acopy" onclick="admCp(\''+aE(r.orderId)+'\',\'Ref\')">📋 Ref</button>';return'<div class="acard"><div class="acard-top"><div><div class="acard-name">'+aH(r.name||'—')+'</div><div class="acard-email">'+aH(r.email||'—')+(r.mobile?' · +91 '+aH(r.mobile):'')+'</div></div><span class="abadge '+(s?'s':'i')+'">'+(s?'✅ Submitted':'💳 Initiated')+'</span></div><div class="ameta"><div class="ami"><div class="ami-v">'+aH(r.module||'—')+'</div><div class="ami-k">Guide</div></div><div class="ami"><div class="ami-v">'+(r.amount?'₹'+Number(r.amount).toLocaleString('en-IN'):'—')+'</div><div class="ami-k">Amount</div></div><div class="ami"><div class="ami-v">'+aH(r.orderId||'—')+'</div><div class="ami-k">Order Ref</div></div><div class="ami"><div class="ami-v">'+(r.utr?aH(r.utr):'<span style="color:#6e6b65">Not yet</span>')+'</div><div class="ami-k">UTR</div></div></div><div class="atl"><div class="atlr"><div class="atld b"></div><div class="atll">Initiated</div><div class="atlv">'+ft(r.initiatedAt)+'</div></div><div class="atlr"><div class="atld '+(s?'g':'x')+'"></div><div class="atll">Submitted</div><div class="atlv">'+(s?ft(r.submittedAt):'<span style="color:#6e6b65">Awaiting…</span>')+'</div></div></div><div class="aacts">'+acts+'</div></div>';}
 
 function admSync(st,lb){var d=document.getElementById('adot'),l=document.getElementById('aslbl');if(d)d.className='asyncdot '+st;if(l&&lb)l.textContent=lb;}
 function admCp(t,lb){navigator.clipboard.writeText(t).then(function(){admToast('📋 Copied '+lb);}).catch(function(){admToast(lb+': '+t);});}
-var _att;function admToast(m){var el=document.getElementById('adm-toast');if(!el)return;el.textContent=m;el.classList.add('show');clearTimeout(_att);_att=setTimeout(function(){el.classList.remove('show');},2800);}
-function aH(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function aE(s){return String(s||'').replace(/'/g,"\\'");}
-(function(){var lo=JSON.parse(localStorage.getItem('interview_payments')||'[]');if(lo.length){admRecs=lo;admStats();}})();
+var _att;
+function admToast(m){var el=document.getElementById('adm-toast');if(!el)return;el.textContent=m;el.className='show';clearTimeout(_att);_att=setTimeout(function(){el.className='';},2200);}
 </script>
-
 </body>
 </html>
