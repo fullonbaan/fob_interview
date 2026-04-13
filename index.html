@@ -1247,7 +1247,7 @@
   var UPI_APPS={paytm:{scheme:'paytmmp://upi/pay'},gpay:{scheme:'tez://upi/pay'},bhim:{scheme:'bhim://upi/pay'},phonepe:{scheme:'phonepe://upi/pay'},whatsapp:{scheme:'whatsapp://upi/pay'}};
   var selAmount=0,selDesc='',selKey='';
   var userData={name:'',email:'',mobile:''};
-  var txnRef='',utrNumber='',paymentIntentSent=false,utrSubmitted=false,abandonFired=false;
+  var txnRef='',utrNumber='',paymentIntentSent=false,utrSubmitted=false,abandonFired=false,successFired=false,failureFired=false;
 
   window.selectGuide=function(key){
     var pp=document.getElementById('payPanel'),pb=document.getElementById('payBtn'),ms=document.getElementById('modSelect');
@@ -1291,11 +1291,7 @@
     err.textContent='';
     userData={name:name,email:email,mobile:mobile};
     txnRef='FOB'+Date.now();
-    paymentIntentSent=false;utrSubmitted=false;abandonFired=false;
-
-    // Notify admin that checkout was opened
-    sendEmail({to_email:'fullonbaan@gmail.com',subject:'\u26a1 Payment Intent \u2014 '+selDesc,status:'RAZORPAY CHECKOUT OPENED',order_ref:txnRef,utr_number:'(Razorpay \u2014 pending)',guide:selDesc,amount:'Rs.'+selAmount.toLocaleString('en-IN'),cust_name:name,cust_email:email,cust_mobile:mobile?('+91 '+mobile):'(not provided)',message:'Customer opened Razorpay checkout. Order Ref: '+txnRef});
-    paymentIntentSent=true;
+    paymentIntentSent=false;utrSubmitted=false;abandonFired=false;successFired=false;failureFired=false;
 
     // Google Ads: begin_checkout event
     if(typeof gtag!=='undefined'){gtag('event','begin_checkout',{value:selAmount,currency:'INR',items:[{item_name:selDesc,price:selAmount,quantity:1}]});}
@@ -1341,10 +1337,11 @@
   window.launchUPI=function(k){var a=UPI_APPS[k];if(typeof gtag!=='undefined'){gtag('event','add_payment_info',{value:selAmount,currency:'INR',payment_type:'UPI_'+k,items:[{item_name:selDesc,price:selAmount,quantity:1}]});}window.location.href=a.scheme+'?pa='+encodeURIComponent(UPI_ID)+'&pn='+encodeURIComponent(UPI_NAME)+'&am='+selAmount+'&cu=INR&tn='+encodeURIComponent(selDesc.substring(0,50))+'&tr='+txnRef;};
   window.onConfirmPayment=function(){var utr=document.getElementById('utrInput').value.trim(),err=document.getElementById('utrError');if(!utr){err.textContent='Please enter your UTR / Transaction Reference Number.';return;}if(utr.length<8){err.textContent='UTR number seems too short.';return;}err.textContent='';utrNumber=utr;utrSubmitted=true;onPaymentSuccess();if(typeof gtag!=='undefined'){gtag('event','conversion',{send_to:'AW-18000254476/GinaCJyVroQcEIysmIdD',value:selAmount,currency:'INR',transaction_id:txnRef});}if(typeof lnPaySubmitted==='function')lnPaySubmitted(txnRef,utr);};
   window.onPaymentSuccess=function(pid){
+    if(successFired)return; successFired=true;
     var payId=pid||utrNumber||'N/A';
     var gd=calcGST(selAmount);
     // pendingInvNo is set by lnPayInitiated (async GitHub counter fetch)
-    var invNo=pendingInvNo||('FOB'+String(Date.now()).slice(-7));
+    var invNo=pendingInvNo||('FOBCL'+String(Date.now()).slice(-7));
     pendingInvNo=null; // reset for next transaction
     var today=new Date();
     var fmt=function(d){return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();};
@@ -1372,7 +1369,7 @@
     // Customer confirmation
     sendEmail({to_email:userData.email,subject:'Your FullonBaan Tax Invoice \u2014 '+invNo,status:'PAYMENT CONFIRMED',order_ref:txnRef,utr_number:payId,guide:selDesc,amount:'Rs.'+selAmount.toLocaleString('en-IN'),cust_name:userData.name,cust_email:userData.email,cust_mobile:userData.mobile?('+91 '+userData.mobile):'(not provided)',message:'Thank you! Your payment (ID: '+payId+') was successful. Invoice No: '+invNo+'. Your guide will be delivered to your email shortly. Download your GST invoice from the confirmation page or contact us at fullonbaan@gmail.com.'});
   };
-  window.onPaymentFailure=function(){document.getElementById('failContact').textContent=userData.email+' / +91 '+userData.mobile;document.getElementById('failOrderBox').innerHTML='<strong>Guide:</strong> '+selDesc+'<br><strong>Amount:</strong> \u20b9'+selAmount.toLocaleString('en-IN')+'<br><strong>Name:</strong> '+userData.name+'<br><strong>Email:</strong> '+userData.email;showStep('step5');sendEmail({to_email:'fullonbaan@gmail.com',subject:'Payment Failed \u2014 '+selDesc,status:'PAYMENT FAILED',order_ref:txnRef||'N/A',guide:selDesc,amount:'Rs.'+selAmount.toLocaleString('en-IN'),cust_name:userData.name,cust_email:userData.email,cust_mobile:'+91 '+userData.mobile,message:'Payment failed.'});};
+  window.onPaymentFailure=function(){if(failureFired)return;failureFired=true;document.getElementById('failContact').textContent=userData.email+' / +91 '+userData.mobile;document.getElementById('failOrderBox').innerHTML='<strong>Guide:</strong> '+selDesc+'<br><strong>Amount:</strong> \u20b9'+selAmount.toLocaleString('en-IN')+'<br><strong>Name:</strong> '+userData.name+'<br><strong>Email:</strong> '+userData.email;showStep('step5');sendEmail({to_email:'fullonbaan@gmail.com',subject:'Payment Failed \u2014 '+selDesc,status:'PAYMENT FAILED',order_ref:txnRef||'N/A',guide:selDesc,amount:'Rs.'+selAmount.toLocaleString('en-IN'),cust_name:userData.name,cust_email:userData.email,cust_mobile:'+91 '+userData.mobile,message:'Payment failed.'});};
   window.retryPayment=function(){document.getElementById('utrInput').value='';document.getElementById('utrError').textContent='';showStep('step3');};
   function fireAbandonAlert(){if(!paymentIntentSent||utrSubmitted||abandonFired)return;abandonFired=true;sendEmail({to_email:'fullonbaan@gmail.com',subject:'\u26a0\ufe0f Possible Payment \u2014 No UTR \u2014 '+(userData?userData.name:'Unknown'),status:'PAYMENT LIKELY \u2014 UTR NOT SUBMITTED',order_ref:txnRef||'N/A',utr_number:'(not submitted)',guide:selDesc||'N/A',amount:selAmount?'Rs.'+selAmount.toLocaleString('en-IN'):'N/A',cust_name:userData?userData.name:'N/A',cust_email:userData?userData.email:'N/A',cust_mobile:userData?'+91 '+userData.mobile:'N/A',message:'Customer opened UPI screen but did not submit UTR. Order Ref: '+(txnRef||'N/A')});}
   document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')fireAbandonAlert();});
@@ -1389,356 +1386,270 @@
     return w.replace(/\s+/g,' ');
   }
 
-  /* ── GST Invoice PDF Generator ─────────────────────────────────────── */
+  /* ── GST Invoice PDF Generator (Premium Theme) ─────────────────────── */
   /* inv: { invNo, invDate, dueDate, name, email, mobile, guide,
             baseAmt, gstAmt, totalAmt, paymentId, orderRef }               */
+  var FOB_LOGO_B64 = 'data:image/jpeg;base64,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';
   function generateGSTInvoice(inv){
     var doc=new window.jspdf.jsPDF({unit:'pt',format:'a4'});
-    var W=doc.internal.pageSize.getWidth();
-    var H=doc.internal.pageSize.getHeight();
-    var TEAL=[0,168,160]; var INK=[30,30,30]; var GREY=[120,120,120]; var LGREY=[240,240,240];
+    var W=doc.internal.pageSize.getWidth();   // 595
+    var H=doc.internal.pageSize.getHeight();  // 842
+
+    /* ── Palette ── */
+    var NAVY =[10,32,68];      // #0A2044
+    var GOLD =[192,140,52];    // #C08C34
+    var GOLD2=[240,210,140];   // pale gold
+    var WHITE=[255,255,255];
+    var INK  =[25,25,35];
+    var GREY =[110,110,125];
+    var LGREY=[245,245,248];
+    var MGREY=[210,210,218];
+
     var fmt2=function(v){return v.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});};
+    var PAD=32; // left/right margin
 
-    // ── Header teal band ──
-    doc.setFillColor(TEAL[0],TEAL[1],TEAL[2]);
-    doc.rect(0,0,W,48,'F');
-    doc.setFillColor(TEAL[0],TEAL[1],TEAL[2]);
-    doc.ellipse(W/2,50,W/2,16,'F');
-    doc.setTextColor(255,255,255);
+    /* ════════════════════════════════════════════════
+       HEADER  (0 → 96)
+    ════════════════════════════════════════════════ */
+    // Navy background
+    doc.setFillColor(NAVY[0],NAVY[1],NAVY[2]);
+    doc.rect(0,0,W,96,'F');
+
+    // Logo in white card
+    var logoW=70, logoH=52;
+    doc.setFillColor(255,255,255);
+    doc.roundedRect(PAD-4,10,logoW+8,logoH+8,4,4,'F');
+    try{ doc.addImage(FOB_LOGO_B64,'JPEG',PAD,14,logoW,logoH); }catch(e){}
+
+    // "TAX INVOICE" gold
     doc.setFont('helvetica','bold');
-    doc.setFontSize(16);
-    doc.text('FullonBaan',44,28);
+    doc.setFontSize(26);
+    doc.setTextColor(GOLD[0],GOLD[1],GOLD[2]);
+    doc.text('TAX INVOICE',W-PAD,44,{align:'right'});
+
+    // Invoice No + Date in white
     doc.setFont('helvetica','normal');
+    doc.setFontSize(9.5);
+    doc.setTextColor(WHITE[0],WHITE[1],WHITE[2]);
+    doc.text('Invoice No: '+inv.invNo,W-PAD,60,{align:'right'});
+    doc.text('Date: '+inv.invDate,W-PAD,74,{align:'right'});
+
+    /* Gold separator stripe */
+    doc.setFillColor(GOLD[0],GOLD[1],GOLD[2]);
+    doc.rect(0,96,W,4,'F');
+
+    /* ════════════════════════════════════════════════
+       ROW 1: Seller (left) | Balance Due + Meta (right)   102 → 220
+    ════════════════════════════════════════════════ */
+    var r1Y=106, r1H=112, midX=W/2+10;
+
+    // Seller box
+    doc.setFillColor(LGREY[0],LGREY[1],LGREY[2]);
+    doc.rect(PAD,r1Y,midX-PAD-8,r1H,'F');
+    doc.setDrawColor(GOLD[0],GOLD[1],GOLD[2]);
+    doc.setLineWidth(0.8);
+    doc.rect(PAD,r1Y,midX-PAD-8,r1H,'S');
+
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(9.5);
+    doc.setTextColor(NAVY[0],NAVY[1],NAVY[2]);
+    doc.text('FULLONBAAN CONSULTING SERVICE LLP',PAD+10,r1Y+16);
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(INK[0],INK[1],INK[2]);
+    var sellerLines=[
+      '172, Shree, 1st Floor, 5th Main, 5th Cross',
+      'Mico Layout, BTM 2nd Stage',
+      'BANGALORE Karnataka 560076, India',
+      'TAN: BLRF03997A   |   PAN: AAFFF1528H',
+      'GSTIN: 29AAFFF1528H1ZH'
+    ];
+    sellerLines.forEach(function(l,i){doc.text(l,PAD+10,r1Y+30+i*15);});
+
+    // Balance Due box
+    doc.setFillColor(NAVY[0],NAVY[1],NAVY[2]);
+    doc.rect(midX,r1Y,W-midX-PAD,r1H,'F');
+
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(9);
+    doc.setTextColor(GOLD2[0],GOLD2[1],GOLD2[2]);
+    doc.text('BALANCE DUE',W-PAD-8,r1Y+16,{align:'right'});
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(22);
+    doc.setTextColor(GOLD[0],GOLD[1],GOLD[2]);
+    doc.text('Rs. '+fmt2(inv.totalAmt),W-PAD-8,r1Y+42,{align:'right'});
+
+    doc.setLineWidth(0.5);
+    doc.setDrawColor(GOLD[0],GOLD[1],GOLD[2]);
+    doc.line(midX+10,r1Y+50,W-PAD-8,r1Y+50);
+
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(8.5);
+    var metaL=['Invoice Date:','Terms:','Due Date:'];
+    var metaV=[inv.invDate,'Immediate',inv.dueDate];
+    metaL.forEach(function(l,i){
+      doc.setTextColor(GOLD2[0],GOLD2[1],GOLD2[2]);
+      doc.text(l,midX+12,r1Y+64+i*15);
+      doc.setTextColor(WHITE[0],WHITE[1],WHITE[2]);
+      doc.text(metaV[i],W-PAD-8,r1Y+64+i*15,{align:'right'});
+    });
+
+    /* ════════════════════════════════════════════════
+       ROW 2: Bill To (left) | SAC/GST info (right)   228 → 318
+    ════════════════════════════════════════════════ */
+    var r2Y=r1Y+r1H+10, r2H=88;
+
+    // Bill To
+    doc.setFillColor(WHITE[0],WHITE[1],WHITE[2]);
+    doc.setDrawColor(MGREY[0],MGREY[1],MGREY[2]);
+    doc.setLineWidth(0.6);
+    doc.rect(PAD,r2Y,midX-PAD-8,r2H,'FD');
+
+    doc.setFont('helvetica','bold');
     doc.setFontSize(8);
-    doc.text('one stop destination for IT solutions',44,40);
-
-    // ── TAX INVOICE label (right) ──
-    doc.setTextColor(TEAL[0],TEAL[1],TEAL[2]);
-    doc.setFont('helvetica','bold');
-    doc.setFontSize(24);
-    doc.text('TAX INVOICE',W-44,88,{align:'right'});
-    doc.setFontSize(10);
-    doc.text('Invoice No - '+inv.invNo,W-44,104,{align:'right'});
-
-    // ── Balance Due ──
-    doc.setFontSize(10);
-    doc.setFont('helvetica','normal');
     doc.setTextColor(GREY[0],GREY[1],GREY[2]);
-    doc.text('Balance Due',W-44,124,{align:'right'});
-    doc.setFont('helvetica','bold');
-    doc.setFontSize(18);
-    doc.setTextColor(INK[0],INK[1],INK[2]);
-    doc.text('Rs. '+fmt2(inv.totalAmt),W-44,146,{align:'right'});
-
-    // ── Seller block ──
-    doc.setFontSize(10);
-    doc.setFont('helvetica','bold');
-    doc.setTextColor(INK[0],INK[1],INK[2]);
-    doc.text('FULLONBAAN CONSULTING SERVICE LLP',44,88);
-    doc.setFont('helvetica','normal');
-    doc.setFontSize(9);
-    doc.setTextColor(INK[0],INK[1],INK[2]);
-    var sellerLines=['172, Shree, 1st Floor, 5th Main, 5th Cross','Mico Layout, BTM 2nd Stage','BANGALORE Karnataka 560076','India','TAN - BLRF03997A   |   PAN - AAFFF1528H','GSTIN - 29AAFFF1528H1ZH'];
-    sellerLines.forEach(function(l,i){doc.text(l,44,100+i*13);});
-
-    // ── Divider ──
-    doc.setDrawColor(200,200,200);
-    doc.line(44,190,W-44,190);
-
-    // ── Bill To ──
-    var bY=210;
-    doc.setFontSize(9);
-    doc.setFont('helvetica','normal');
-    doc.setTextColor(GREY[0],GREY[1],GREY[2]);
-    doc.text('Bill To',44,bY);
+    doc.text('BILL TO',PAD+10,r2Y+14);
     doc.setFont('helvetica','bold');
     doc.setFontSize(11);
-    doc.setTextColor(INK[0],INK[1],INK[2]);
-    doc.text(inv.name,44,bY+16);
+    doc.setTextColor(NAVY[0],NAVY[1],NAVY[2]);
+    doc.text(inv.name,PAD+10,r2Y+30);
     doc.setFont('helvetica','normal');
     doc.setFontSize(9);
     doc.setTextColor(INK[0],INK[1],INK[2]);
-    doc.text(inv.email,44,bY+30);
-    if(inv.mobile)doc.text('+91 '+inv.mobile,44,bY+43);
+    doc.text(inv.email,PAD+10,r2Y+46);
+    if(inv.mobile)doc.text('+91 '+inv.mobile,PAD+10,r2Y+61);
 
-    // ── Invoice meta (right side) ──
-    var mX=360;
-    doc.setFontSize(9);
-    doc.setTextColor(GREY[0],GREY[1],GREY[2]);
-    doc.text('Invoice Date :',mX,bY+16);
-    doc.text('Terms :',mX,bY+30);
-    doc.text('Due Date :',mX,bY+44);
-    doc.text('Payment ID :',mX,bY+58);
-    doc.setTextColor(INK[0],INK[1],INK[2]);
+    // SAC / GST info box
+    doc.setFillColor(LGREY[0],LGREY[1],LGREY[2]);
+    doc.setDrawColor(MGREY[0],MGREY[1],MGREY[2]);
+    doc.rect(midX,r2Y,W-midX-PAD,r2H,'FD');
+
     doc.setFont('helvetica','bold');
-    doc.text(inv.invDate,W-44,bY+16,{align:'right'});
-    doc.text('Immediate',W-44,bY+30,{align:'right'});
-    doc.text(inv.dueDate,W-44,bY+44,{align:'right'});
+    doc.setFontSize(8);
+    doc.setTextColor(GREY[0],GREY[1],GREY[2]);
+    doc.text('SERVICE DETAILS',midX+12,r2Y+14);
     doc.setFont('helvetica','normal');
-    doc.text(inv.paymentId,W-44,bY+58,{align:'right'});
+    doc.setFontSize(9);
+    doc.setTextColor(INK[0],INK[1],INK[2]);
+    doc.text('SAC Code: 998431',midX+12,r2Y+30);
+    doc.text('Tax Type: IGST @ 18%',midX+12,r2Y+46);
+    doc.text('Payment Ref: '+inv.paymentId.slice(0,22),midX+12,r2Y+61);
+    doc.text('Order Ref: '+inv.orderRef,midX+12,r2Y+76);
 
-    // ── Table ──
-    var tY=bY+80;
+    /* ════════════════════════════════════════════════
+       TABLE   r2Y+r2H+10 → auto
+    ════════════════════════════════════════════════ */
+    var tY=r2Y+r2H+12;
     doc.autoTable({
       startY:tY,
       head:[['Sr. No','Item & Description','Qty','Rate (INR)','Amount (INR)']],
-      body:[['1',inv.guide+'\n\nSAC: 998313','1',fmt2(inv.baseAmt),fmt2(inv.baseAmt)]],
+      body:[['1',inv.guide+'\n\nSAC: 998431','1',fmt2(inv.baseAmt),fmt2(inv.baseAmt)]],
       theme:'plain',
-      headStyles:{fillColor:TEAL,textColor:[255,255,255],fontStyle:'bold',fontSize:9,halign:'center'},
-      bodyStyles:{fontSize:9,textColor:INK},
-      columnStyles:{0:{cellWidth:44,halign:'center'},1:{cellWidth:250},2:{cellWidth:36,halign:'center'},3:{cellWidth:90,halign:'right'},4:{cellWidth:90,halign:'right'}},
-      margin:{left:44,right:44},
-      alternateRowStyles:{fillColor:[250,250,250]}
+      headStyles:{fillColor:NAVY,textColor:WHITE,fontStyle:'bold',fontSize:9,halign:'center',cellPadding:9},
+      bodyStyles:{fontSize:9,textColor:INK,cellPadding:{top:14,right:8,bottom:14,left:8}},
+      columnStyles:{
+        0:{cellWidth:44,halign:'center'},
+        1:{cellWidth:'auto'},
+        2:{cellWidth:40,halign:'center'},
+        3:{cellWidth:95,halign:'right'},
+        4:{cellWidth:95,halign:'right'}
+      },
+      margin:{left:PAD,right:PAD},
+      alternateRowStyles:{fillColor:LGREY},
+      tableLineColor:MGREY,tableLineWidth:0.5
     });
 
-    // ── Totals ──
-    var fY=doc.lastAutoTable.finalY+18;
-    var rX=W-44;
-    doc.setDrawColor(220,220,220);
-    doc.line(rX-175,fY-4,rX,fY-4);
-    doc.setFontSize(10);
-    doc.setFont('helvetica','normal');
-    doc.setTextColor(GREY[0],GREY[1],GREY[2]);
-    doc.text('Sub Total',rX-130,fY+10);
-    doc.setTextColor(INK[0],INK[1],INK[2]);
-    doc.text(fmt2(inv.baseAmt),rX,fY+10,{align:'right'});
-    doc.setTextColor(GREY[0],GREY[1],GREY[2]);
-    doc.text('IGST18 (18%)',rX-130,fY+26);
-    doc.setTextColor(INK[0],INK[1],INK[2]);
-    doc.text(fmt2(inv.gstAmt),rX,fY+26,{align:'right'});
-    doc.line(rX-175,fY+32,rX,fY+32);
+    /* ════════════════════════════════════════════════
+       TOTALS   (right-aligned dark box)
+    ════════════════════════════════════════════════ */
+    var fY=doc.lastAutoTable.finalY+14;
+    var totW=260, totX=W-PAD-totW;
+
+    // Sub Total row
     doc.setFillColor(LGREY[0],LGREY[1],LGREY[2]);
-    doc.rect(rX-175,fY+34,175,24,'F');
+    doc.rect(totX,fY,totW,30,'F');
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(9.5);
+    doc.setTextColor(GREY[0],GREY[1],GREY[2]);
+    doc.text('Sub Total',totX+14,fY+19);
+    doc.setTextColor(INK[0],INK[1],INK[2]);
+    doc.text(fmt2(inv.baseAmt),W-PAD-8,fY+19,{align:'right'});
+
+    // GST row
+    doc.setFillColor(WHITE[0],WHITE[1],WHITE[2]);
+    doc.rect(totX,fY+30,totW,30,'F');
+    doc.setTextColor(GREY[0],GREY[1],GREY[2]);
+    doc.text('IGST18 (18%)',totX+14,fY+49);
+    doc.setTextColor(INK[0],INK[1],INK[2]);
+    doc.text(fmt2(inv.gstAmt),W-PAD-8,fY+49,{align:'right'});
+
+    // Total row — navy
+    doc.setFillColor(NAVY[0],NAVY[1],NAVY[2]);
+    doc.rect(totX,fY+60,totW,38,'F');
     doc.setFont('helvetica','bold');
     doc.setFontSize(11);
-    doc.setTextColor(INK[0],INK[1],INK[2]);
-    doc.text('Total',rX-130,fY+50);
-    doc.text(fmt2(inv.totalAmt),rX,fY+50,{align:'right'});
+    doc.setTextColor(GOLD[0],GOLD[1],GOLD[2]);
+    doc.text('TOTAL',totX+14,fY+84);
+    doc.setTextColor(WHITE[0],WHITE[1],WHITE[2]);
+    doc.text('INR '+fmt2(inv.totalAmt),W-PAD-8,fY+84,{align:'right'});
 
-    // ── Total in words ──
-    doc.setFont('helvetica','normal');
-    doc.setFontSize(9);
-    doc.setTextColor(GREY[0],GREY[1],GREY[2]);
-    doc.text('Total In Words:',44,fY+50);
-    doc.setFont('helvetica','bolditalic');
-    doc.setTextColor(INK[0],INK[1],INK[2]);
-    var words=doc.splitTextToSize(numToWords(inv.totalAmt),265);
-    doc.text(words,145,fY+50);
+    // Border around totals block
+    doc.setDrawColor(GOLD[0],GOLD[1],GOLD[2]);
+    doc.setLineWidth(0.8);
+    doc.rect(totX,fY,totW,98,'S');
 
-    // ── Terms ──
-    var tcY=fY+80;
-    doc.setFont('helvetica','bold');
-    doc.setFontSize(10);
-    doc.setTextColor(INK[0],INK[1],INK[2]);
-    doc.text('Terms & Conditions',44,tcY);
+    /* ════════════════════════════════════════════════
+       TOTAL IN WORDS
+    ════════════════════════════════════════════════ */
+    var wY=fY+112;
+    doc.setFillColor(LGREY[0],LGREY[1],LGREY[2]);
+    doc.setDrawColor(GOLD[0],GOLD[1],GOLD[2]);
+    doc.setLineWidth(0.8);
+    doc.rect(PAD,wY,W-2*PAD,48,'FD');
     doc.setFont('helvetica','normal');
     doc.setFontSize(8.5);
-    doc.setTextColor(80,80,80);
-    doc.text(['* This is a computer-generated invoice for a digital product (PDF guide).','* Any discrepancy must be reported within 7 days of purchase to fullonbaan@gmail.com.','* For queries, contact us at fullonbaan@gmail.com or WhatsApp +91 63605 93122.'],44,tcY+14,{lineHeightFactor:1.65});
+    doc.setTextColor(GREY[0],GREY[1],GREY[2]);
+    doc.text('Amount in Words:',PAD+10,wY+16);
+    doc.setFont('helvetica','bolditalic');
+    doc.setFontSize(9);
+    doc.setTextColor(NAVY[0],NAVY[1],NAVY[2]);
+    var words=doc.splitTextToSize(numToWords(inv.totalAmt),W-2*PAD-130);
+    doc.text(words,PAD+120,wY+16);
 
-    // ── Footer band ──
-    doc.setFillColor(TEAL[0],TEAL[1],TEAL[2]);
-    doc.rect(0,H-28,W,28,'F');
-    doc.setTextColor(255,255,255);
+    /* ════════════════════════════════════════════════
+       TERMS & CONDITIONS
+    ════════════════════════════════════════════════ */
+    var tcY=wY+62;
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(9);
+    doc.setTextColor(NAVY[0],NAVY[1],NAVY[2]);
+    doc.text('Terms & Conditions',PAD,tcY+2);
+    doc.setDrawColor(GOLD[0],GOLD[1],GOLD[2]);
+    doc.setLineWidth(0.6);
+    doc.line(PAD,tcY+6,W-PAD,tcY+6);
     doc.setFont('helvetica','normal');
-    doc.setFontSize(8);
-    doc.text('www.fullonbaan.com   |   fullonbaan@gmail.com   |   +91 63605 93122',W/2,H-11,{align:'center'});
+    doc.setFontSize(8.5);
+    doc.setTextColor(GREY[0],GREY[1],GREY[2]);
+    doc.text([
+      '* This is a computer-generated tax invoice for a digital product (PDF guide).',
+      '* SAC Code 998431 — Online content delivery services.',
+      '* For queries or disputes, contact fullonbaan@gmail.com within 7 days of purchase.',
+      '* WhatsApp: +91 63605 93122   |   www.fullonbaan.com'
+    ],PAD,tcY+20,{lineHeightFactor:1.75});
+
+    /* ════════════════════════════════════════════════
+       FOOTER (pinned to bottom)
+    ════════════════════════════════════════════════ */
+    doc.setFillColor(NAVY[0],NAVY[1],NAVY[2]);
+    doc.rect(0,H-38,W,38,'F');
+    doc.setFillColor(GOLD[0],GOLD[1],GOLD[2]);
+    doc.rect(0,H-42,W,4,'F');
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(GOLD2[0],GOLD2[1],GOLD2[2]);
+    doc.text('www.fullonbaan.com   \u2022   fullonbaan@gmail.com   \u2022   +91 63605 93122',W/2,H-16,{align:'center'});
 
     return doc;
   }
 
-  /* ── Download current invoice ──────────────────────────────────────── */
-  window.downloadInvoice=function(invData){
-    var d=invData||currentInvData;
-    if(!d){alert('No invoice data available.');return;}
-    try{
-      var doc=generateGSTInvoice(d);
-      doc.save('Invoice-'+d.invNo+'.pdf');
-    }catch(e){console.error('Invoice generation failed',e);alert('Could not generate invoice. Please contact support.');}
-  };
-</script>
-
-<!-- STICKY BAR -->
-<div class="sticky-bar" id="stickyBar">
-  <span class="sticky-bar-text">Guides from <strong>&#x20B9;699</strong> &nbsp;&#183;&nbsp; Bundles up to <strong>57% off</strong></span>
-  <a class="sticky-bar-btn" href="#contact" onclick="var pb=document.getElementById('payBtn'),pp=document.getElementById('payPanel');if(!pp.classList.contains('open')){pb.classList.add('open');pp.classList.add('open');}">Buy Now</a>
-</div>
-<script>
-(function(){
-  var bar=document.getElementById('stickyBar'),hero=document.querySelector('.hero'),contact=document.getElementById('contact');
-  if(!bar||!hero)return;
-  var io=new IntersectionObserver(function(entries){
-    var heroVisible=false,contactVisible=false;
-    entries.forEach(function(e){
-      if(e.target===hero)heroVisible=e.isIntersecting;
-      if(e.target===contact)contactVisible=e.isIntersecting;
-    });
-    // Recalc both
-    var hV=hero.getBoundingClientRect(),cV=contact.getBoundingClientRect();
-    var heroInView=hV.bottom>0&&hV.top<window.innerHeight;
-    var contactInView=cV.top<window.innerHeight&&cV.bottom>0;
-    if(!heroInView&&!contactInView)bar.classList.add('visible');
-    else bar.classList.remove('visible');
-  },{threshold:0});
-  io.observe(hero);
-  if(contact)io.observe(contact);
-  // Also check on scroll for smoother response
-  var ticking=false;
-  window.addEventListener('scroll',function(){
-    if(!ticking){requestAnimationFrame(function(){
-      var hV=hero.getBoundingClientRect(),cV=contact?contact.getBoundingClientRect():{top:9999,bottom:9999};
-      var heroInView=hV.bottom>0&&hV.top<window.innerHeight;
-      var contactInView=cV.top<window.innerHeight&&cV.bottom>0;
-      if(!heroInView&&!contactInView)bar.classList.add('visible');
-      else bar.classList.remove('visible');
-      ticking=false;
-    });ticking=true;}
-  },{passive:true});
-})();
-</script>
-
-<!-- ══ ADMIN TRIGGER ══ -->
-<button id="adm-trigger" onclick="admOpen()" title="Admin">🛡</button>
-<!-- ══ ADMIN OVERLAY ══ -->
-<div id="adm-overlay">
-  <div id="adm-login">
-    <div class="alc">
-      <div class="alc-gem">F</div>
-      <h2>Interview Payment Admin</h2>
-      <p>FullonBaan · Infor LN Interview Guides<br>Payment tracking dashboard</p>
-      <input type="password" id="adm-pw" placeholder="Admin password" onkeydown="if(event.key==='Enter')admLogin()" oninput="this.classList.remove('bad');document.getElementById('adm-err').style.display='none'">
-      <div id="adm-err" class="alc-err">⚠️ Incorrect password.</div>
-      <button class="alc-btn" onclick="admLogin()">Sign In →</button><br>
-      <button class="alc-cancel" onclick="admClose()">Cancel</button>
-    </div>
-  </div>
-  <div id="adm-dash">
-    <div class="atb">
-      <div class="atb-brand">Interview Payments</div>
-      <div class="atb-right">
-        <div class="async"><div class="asyncdot" id="adot"></div><span id="aslbl">—</span></div>
-        <button class="ab gold" onclick="admRefresh()">↻ Refresh</button>
-        <button class="ab" onclick="admClose()">✕ Close</button>
-      </div>
-    </div>
-    <div class="awrap">
-      <div class="astats">
-        <div class="astat"><div class="astat-v" id="ast-all">—</div><div class="astat-l">Total</div></div>
-        <div class="astat"><div class="astat-v i" id="ast-init">—</div><div class="astat-l">Initiated</div></div>
-        <div class="astat"><div class="astat-v s" id="ast-sub">—</div><div class="astat-l">Submitted</div></div>
-      </div>
-      <div class="afrow">
-        <button class="afbtn on" onclick="admFilt('all',this)">All</button>
-        <button class="afbtn on bf" onclick="admFilt('initiated',this)">Initiated</button>
-        <button class="afbtn on gf" onclick="admFilt('submitted',this)">Submitted</button>
-      </div>
-      <input class="asrch" id="asrch" placeholder="Search name, email, mobile, guide…" oninput="admRender()">
-      <div class="ahd">Payment Records</div>
-      <div id="alist"><div class="aempty">⏳ Loading…</div></div>
-    </div>
-  </div>
-</div>
-<div id="adm-toast"></div>
-
-<script>
-var ADM_PW='Admin@M3Pay2025';
-var ADM_GH_OWNER='fullonbaan';
-var ADM_GH_REPO='fob_pay_store_ln_intv';
-var ADM_GH_FILE='payments/interview_payments.json';
-var ADM_GH_PAT=['ghp_acSai','fFwsB4vx','OSfwD0iuTb','4HD6V1S0Qy2bG'].join('');
-var ADM_GH_API='https://api.github.com/repos/'+ADM_GH_OWNER+'/'+ADM_GH_REPO+'/contents/'+ADM_GH_FILE;
-
-/* ── GitHub Invoice Counter ─────────────────────────────────────────────
-   Reads/writes  payments/invoice_counter.json  →  { "counter": 1001 }
-   Called by lnPayInitiated before Razorpay opens; result parked in
-   pendingInvNo so onPaymentSuccess can use it synchronously.
-   ──────────────────────────────────────────────────────────────────── */
-var ADM_GH_INV_API='https://api.github.com/repos/'+ADM_GH_OWNER+'/'+ADM_GH_REPO+'/contents/payments/invoice_counter.json';
-
-async function genInvoiceNoGH(){
-  try{
-    var r=await fetch(ADM_GH_INV_API,{headers:{'Authorization':'token '+ADM_GH_PAT,'Accept':'application/vnd.github.v3+json'}});
-    var current=1000,sha=null;
-    if(r.ok){
-      var d=await r.json();
-      var data=JSON.parse(atob(d.content.replace(/\n/g,'')));
-      current=data.counter||1000;
-      sha=d.sha;
-    }
-    var next=current+1;
-    var body={message:'inv-counter:'+next,content:btoa(JSON.stringify({counter:next},null,2))};
-    if(sha)body.sha=sha;
-    await fetch(ADM_GH_INV_API,{method:'PUT',headers:{'Authorization':'token '+ADM_GH_PAT,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(body)});
-    return 'FOB'+String(next).padStart(7,'0');
-  }catch(e){
-    console.warn('Invoice counter GitHub error — using timestamp fallback:',e);
-    return 'FOB'+String(Date.now()).slice(-7);
-  }
-}
-
-var admRecs=[],admFl='all';
-
-function admOpen(){document.getElementById('adm-overlay').classList.add('open');document.getElementById('adm-login').style.display='flex';document.getElementById('adm-dash').style.display='none';document.body.style.overflow='hidden';setTimeout(function(){document.getElementById('adm-pw').focus();},50);}
-function admClose(){document.getElementById('adm-overlay').classList.remove('open');document.body.style.overflow='';}
-document.addEventListener('keydown',function(e){if(e.key==='Escape')admClose();});
-
-(function(){if(window.location.hash==='#admin'||window.location.pathname==='/admin'){history.replaceState(null,'','/');admOpen();}})();
-window.addEventListener('hashchange',function(){if(window.location.hash==='#admin'){history.replaceState(null,'',window.location.pathname);admOpen();}});
-
-function admLogin(){var pw=document.getElementById('adm-pw').value;if(pw===ADM_PW){document.getElementById('adm-pw').value='';document.getElementById('adm-login').style.display='none';document.getElementById('adm-dash').style.display='block';admRefresh();}else{document.getElementById('adm-err').style.display='block';document.getElementById('adm-pw').classList.add('bad');}}
-
-async function admGhRead(){var r=await fetch(ADM_GH_API,{headers:{'Authorization':'token '+ADM_GH_PAT,'Accept':'application/vnd.github.v3+json'}});if(r.status===404)return{records:[],sha:null};if(!r.ok)throw new Error('GH '+r.status);var d=await r.json();return{records:JSON.parse(atob(d.content.replace(/\n/g,''))),sha:d.sha};}
-async function admGhUpsert(rec){try{admSync('spin','Syncing…');var gh=await admGhRead();var i=gh.records.findIndex(function(x){return x.orderId===rec.orderId;});if(i>=0)gh.records[i]=Object.assign({},gh.records[i],rec);else gh.records.push(rec);var body={message:'intpay:'+rec.status+' '+rec.orderId,content:btoa(unescape(encodeURIComponent(JSON.stringify(gh.records,null,2))))};if(gh.sha)body.sha=gh.sha;var w=await fetch(ADM_GH_API,{method:'PUT',headers:{'Authorization':'token '+ADM_GH_PAT,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(body)});if(!w.ok)throw new Error('GH write '+w.status);localStorage.setItem('interview_payments',JSON.stringify(gh.records));admSync('ok','Synced');}catch(e){admSync('err','Offline');console.warn(e);}}
-async function admGhMerge(){var gh=[];try{var r=await admGhRead();gh=r.records;admSync('ok','Synced');}catch(e){admSync('err','Offline');}var lo=JSON.parse(localStorage.getItem('interview_payments')||'[]');var m=gh.slice();lo.forEach(function(l){if(!m.find(function(x){return x.orderId===l.orderId;}))m.push(l);});localStorage.setItem('interview_payments',JSON.stringify(m));return m;}
-
-window.lnPayInitiated=async function(txnRefVal,userDataVal,selDescVal,selAmountVal){
-  var gd=calcGST(selAmountVal);
-  // Fetch sequential invoice number from GitHub — no localStorage
-  var invNoVal=await genInvoiceNoGH();
-  pendingInvNo=invNoVal; // park for onPaymentSuccess
-  var today=new Date();
-  var fmtD=function(d){return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();};
-  var rec={orderId:txnRefVal,status:'initiated',name:userDataVal.name,email:userDataVal.email,mobile:userDataVal.mobile,module:selDescVal,amount:selAmountVal,baseAmt:gd.base,gstAmt:gd.gst,invoiceNo:invNoVal,invDate:fmtD(today),dueDate:fmtD(new Date(today.getTime()+15*24*60*60*1000)),initiatedAt:new Date().toISOString(),submittedAt:null,utr:null};
-  // Source of truth: GitHub only (admGhUpsert also updates localStorage cache)
-  admGhUpsert(rec);
-};
-window.lnPaySubmitted=function(txnRefVal,utrVal){var lo=JSON.parse(localStorage.getItem('interview_payments')||'[]');var i=lo.findIndex(function(x){return x.orderId===txnRefVal;});var upd={status:'submitted',utr:utrVal,submittedAt:new Date().toISOString()};if(i>=0){lo[i]=Object.assign({},lo[i],upd);localStorage.setItem('interview_payments',JSON.stringify(lo));admGhUpsert(lo[i]);}else admGhUpsert(Object.assign({orderId:txnRefVal,name:'—',email:'—',mobile:'—',module:'—',amount:0,initiatedAt:null},upd));};
-
-async function admRefresh(){document.getElementById('alist').innerHTML='<div class="aempty">⏳ Syncing with GitHub…</div>';admSync('spin','Syncing…');try{admRecs=await admGhMerge();}catch(e){admRecs=JSON.parse(localStorage.getItem('interview_payments')||'[]');admSync('err','Offline');}admStats();admRender();}
-function admStats(){var i=admRecs.filter(function(r){return r.status==='initiated';}).length;var s=admRecs.filter(function(r){return r.status==='submitted';}).length;document.getElementById('ast-all').textContent=admRecs.length;document.getElementById('ast-init').textContent=i;document.getElementById('ast-sub').textContent=s;}
-function admFilt(f,btn){admFl=f;document.querySelectorAll('.afbtn').forEach(function(b){b.classList.remove('on');});btn.classList.add('on');admRender();}
-function aH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function aE(s){return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
-function admRender(){var q=(document.getElementById('asrch').value||'').toLowerCase();var r=admFl==='all'?admRecs:admRecs.filter(function(x){return x.status===admFl;});if(q)r=r.filter(function(x){return['name','email','mobile','module','orderId','utr'].some(function(k){return(x[k]||'').toLowerCase().includes(q);});});r=r.slice().sort(function(a,b){if(a.status!==b.status)return a.status==='submitted'?-1:1;return new Date(b.submittedAt||b.initiatedAt||0)-new Date(a.submittedAt||a.initiatedAt||0);});var el=document.getElementById('alist');if(!r.length){el.innerHTML='<div class="aempty">No records found.</div>';return;}el.innerHTML=r.map(admCard).join('');}
-function admCard(r){var s=r.status==='submitted';function ft(d){return d?new Date(d).toLocaleString('en-IN',{timeZone:'Asia/Kolkata',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'—';}
-  var gstLine='';
-  if(r.baseAmt&&r.gstAmt){gstLine='<div class="ami"><div class="ami-v" style="color:#00c878">Rs.'+Number(r.baseAmt).toFixed(2)+' + GST Rs.'+Number(r.gstAmt).toFixed(2)+'</div><div class="ami-k">GST Breakdown</div></div>';}
-  var invLine='';
-  if(r.invoiceNo){invLine='<div class="ami"><div class="ami-v" style="color:#e8b86d">'+aH(r.invoiceNo)+'</div><div class="ami-k">Invoice No</div></div>';}
-  var acts='';
-  if(r.email)acts+='<button class="acopy" onclick="admCp(\''+aE(r.email)+'\',\'Email\')">📧 Email</button>';
-  if(r.utr)acts+='<button class="acopy" onclick="admCp(\''+aE(r.utr)+'\',\'Payment ID\')">🔑 Payment ID</button>';
-  if(r.mobile)acts+='<button class="acopy" onclick="admCp(\'+91'+aE(r.mobile)+'\',\'Mobile\')">📱 Mobile</button>';
-  acts+='<button class="acopy" onclick="admCp(\''+aE(r.orderId)+'\',\'Ref\')">📋 Ref</button>';
-  if(r.utr&&r.invoiceNo){acts+='<button class="acopy inv-dl" onclick="admDownloadInvoice(\''+aE(r.orderId)+'\')">📄 GST Invoice</button>';}
-  return'<div class="acard"><div class="acard-top"><div><div class="acard-name">'+aH(r.name||'—')+'</div><div class="acard-email">'+aH(r.email||'—')+(r.mobile?' · +91 '+aH(r.mobile):'')+'</div></div><span class="abadge '+(s?'s':'i')+'">'+(s?'✅ Confirmed':'💳 Initiated')+'</span></div><div class="ameta"><div class="ami"><div class="ami-v">'+aH(r.module||'—')+'</div><div class="ami-k">Guide</div></div><div class="ami"><div class="ami-v">'+(r.amount?'Rs.'+Number(r.amount).toLocaleString('en-IN'):'—')+'</div><div class="ami-k">Total Amount</div></div><div class="ami"><div class="ami-v">'+aH(r.orderId||'—')+'</div><div class="ami-k">Order Ref</div></div><div class="ami"><div class="ami-v">'+(r.utr?aH(r.utr):'<span style="color:#6e6b65">Not yet</span>')+'</div><div class="ami-k">Payment ID</div></div>'+gstLine+invLine+'</div><div class="atl"><div class="atlr"><div class="atld b"></div><div class="atll">Initiated</div><div class="atlv">'+ft(r.initiatedAt)+'</div></div><div class="atlr"><div class="atld '+(s?'g':'x')+'"></div><div class="atll">Confirmed</div><div class="atlv">'+(s?ft(r.submittedAt):'<span style="color:#6e6b65">Awaiting…</span>')+'</div></div></div><div class="aacts">'+acts+'</div></div>';}
-
-function admSync(st,lb){var d=document.getElementById('adot'),l=document.getElementById('aslbl');if(d)d.className='asyncdot '+st;if(l&&lb)l.textContent=lb;}
-function admCp(t,lb){navigator.clipboard.writeText(t).then(function(){admToast('📋 Copied '+lb);}).catch(function(){admToast(lb+': '+t);});}
-var _att;
-function admToast(m){var el=document.getElementById('adm-toast');if(!el)return;el.textContent=m;el.className='show';clearTimeout(_att);_att=setTimeout(function(){el.className='';},2200);}
-
-function admDownloadInvoice(orderId){
-  var rec=admRecs.find(function(x){return x.orderId===orderId;});
-  if(!rec){admToast('Record not found.');return;}
-  if(!rec.invoiceNo){admToast('Invoice data unavailable for this record.');return;}
-  try{
-    var gd={base:rec.baseAmt||Math.round(rec.amount/1.18*100)/100,gst:rec.gstAmt||Math.round((rec.amount-rec.amount/1.18)*100)/100,total:rec.amount};
-    var invData={invNo:rec.invoiceNo,invDate:rec.invDate||'—',dueDate:rec.dueDate||'—',name:rec.name,email:rec.email,mobile:rec.mobile||'',guide:rec.module,baseAmt:gd.base,gstAmt:gd.gst,totalAmt:gd.total,paymentId:rec.utr||'—',orderRef:rec.orderId};
-    downloadInvoice(invData);
-    admToast('📄 Invoice downloading…');
-  }catch(e){console.error(e);admToast('Invoice generation failed.');}
-}
-</script>
-</body>
-</html>
+  /* ── Download current invoice
