@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18000254476"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'AW-18000254476');
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact Us — FullOnBaan Interview</title>
+  <meta name="description" content="Get in touch with FullOnBaan Interview for queries about Infor LN ERP interview guides, purchases, refunds, or any support needs.">
+  <link rel="canonical" href="https://fobinterview.vercel.app/contact.html">
+  <meta name="robots" content="index, follow">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Work+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+  :root {
+    --gold:#A8782A; --gold-mid:#C9943E; --gold-lt:#E2B96A; --gold-pale:#F7EDD8;
+    --gold-faint:rgba(168,120,42,0.08); --ink:#1A160F; --ink-mid:#524B3E;
+    --ink-lt:#8C8070; --bg:#FDFCFB; --surface:#ffffff; --surface-lo:#F9F6F1;
+    --surface-hi:#F2EBE1; --border:#E8E2D9; --rust:#7B3210; --green:#2E7D4F;
+    --cream:#FFFDF8;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body { background:var(--bg); color:var(--ink); font-family:'Work Sans',sans-serif; min-height:100vh; }
+
+  /* NAV */
+  .site-nav { position:fixed; top:0; width:100%; z-index:100; background:rgba(253,252,251,0.88); backdrop-filter:blur(20px); border-bottom:1px solid rgba(232,226,217,0.45); }
+  .nav-inner { max-width:1280px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; padding:0 48px; height:80px; }
+  .nav-brand { font-family:'Noto Serif',serif; font-size:20px; font-weight:700; color:var(--ink); text-decoration:none; }
+  .nav-brand span { color:var(--gold); }
+  .nav-links { display:flex; align-items:center; gap:36px; }
+  .nav-links a { font-size:11px; font-weight:700; letter-spacing:.2em; text-transform:uppercase; color:var(--ink-mid); text-decoration:none; transition:color .2s; }
+  .nav-links a:hover { color:var(--gold); }
+  .nav-cta { padding:11px 28px; background:var(--ink); color:#fff; border:none; font-family:'Work Sans',sans-serif; font-size:11px; font-weight:700; letter-spacing:.2em; text-transform:uppercase; cursor:pointer; text-decoration:none; display:inline-block; transition:background .2s; }
+  .nav-cta:hover { background:var(--gold); }
+  @media(max-width:900px){ .nav-links { display:none; } .nav-inner { padding:0 24px; } }
+
+  /* HERO */
+  .contact-hero { padding:140px 48px 60px; background:var(--surface-lo); border-bottom:1px solid var(--border); }
+  .contact-hero-inner { max-width:820px; margin:0 auto; }
+  .contact-eyebrow { font-family:'DM Mono',monospace; font-size:10px; font-weight:700; letter-spacing:.3em; text-transform:uppercase; color:var(--gold); margin-bottom:16px; }
+  .contact-hero-title { font-family:'Noto Serif',serif; font-size:48px; font-weight:900; color:var(--ink); line-height:1.1; margin-bottom:16px; }
+  .contact-hero-desc { font-size:16px; color:var(--ink-mid); font-weight:300; line-height:1.8; max-width:560px; }
+
+  /* CONTACT BODY */
+  .contact-body { padding:72px 48px 96px; }
+  .contact-body-inner { max-width:1100px; margin:0 auto; display:grid; grid-template-columns:1fr 1.4fr; gap:80px; align-items:flex-start; }
+
+  /* LEFT — INFO */
+  .contact-info-block { margin-bottom:40px; }
+  .ci-label { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--gold); display:block; margin-bottom:6px; }
+  .ci-value { font-size:16px; font-weight:500; color:var(--ink); }
+  .ci-value a { color:var(--ink); text-decoration:none; transition:color .2s; }
+  .ci-value a:hover { color:var(--gold); }
+  .ci-sub { font-size:13px; color:var(--ink-lt); font-weight:300; margin-top:4px; }
+
+  .contact-hours { background:var(--surface-hi); border:1px solid var(--border); padding:24px 28px; margin-top:40px; }
+  .contact-hours-title { font-family:'DM Mono',monospace; font-size:9px; font-weight:700; letter-spacing:.25em; text-transform:uppercase; color:var(--gold); margin-bottom:16px; }
+  .hours-row { display:flex; justify-content:space-between; font-size:13px; color:var(--ink-mid); font-weight:300; padding:6px 0; border-bottom:1px solid var(--border); }
+  .hours-row:last-child { border-bottom:none; }
+  .hours-row span:first-child { font-weight:500; color:var(--ink); }
+
+  /* RIGHT — FORM */
+  .contact-form-wrap { background:var(--surface); border:1px solid var(--border); padding:48px; }
+  .form-title { font-family:'Noto Serif',serif; font-size:22px; font-weight:700; color:var(--ink); margin-bottom:8px; }
+  .form-subtitle { font-size:13px; color:var(--ink-lt); font-weight:300; margin-bottom:32px; }
+
+  .form-group { margin-bottom:20px; }
+  .form-label { font-family:'DM Mono',monospace; font-size:9px; font-weight:700; letter-spacing:.2em; text-transform:uppercase; color:var(--ink-mid); display:block; margin-bottom:8px; }
+  .form-input, .form-textarea, .form-select {
+    width:100%; padding:12px 14px; background:var(--surface-lo);
+    border:1px solid var(--border); color:var(--ink);
+    font-family:'Work Sans',sans-serif; font-size:14px; font-weight:300;
+    transition:border-color .2s; appearance:none;
+  }
+  .form-input:focus, .form-textarea:focus, .form-select:focus { outline:none; border-color:var(--gold); background:var(--cream); }
+  .form-textarea { resize:vertical; min-height:140px; }
+  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+
+  .form-submit { width:100%; padding:16px 24px; background:var(--ink); border:none; color:#fff; font-family:'Work Sans',sans-serif; font-size:11px; font-weight:700; letter-spacing:.2em; text-transform:uppercase; cursor:pointer; transition:background .2s; margin-top:8px; }
+  .form-submit:hover { background:var(--gold); }
+  .form-submit:disabled { background:var(--ink-lt); cursor:not-allowed; }
+
+  .form-success { display:none; text-align:center; padding:32px 24px; }
+  .form-success-icon { font-size:40px; margin-bottom:16px; }
+  .form-success-title { font-family:'Noto Serif',serif; font-size:20px; font-weight:700; color:var(--green); margin-bottom:8px; }
+  .form-success-msg { font-size:14px; color:var(--ink-mid); font-weight:300; line-height:1.7; }
+
+  /* QUICK LINKS */
+  .quick-links-section { padding:0 48px 96px; }
+  .quick-links-inner { max-width:1100px; margin:0 auto; }
+  .quick-links-title { font-family:'DM Mono',monospace; font-size:10px; font-weight:700; letter-spacing:.3em; text-transform:uppercase; color:var(--gold); margin-bottom:24px; }
+  .quick-links-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  .quick-link-card { border:1px solid var(--border); padding:24px 28px; text-decoration:none; transition:border-color .2s,transform .2s,box-shadow .2s; display:block; }
+  .quick-link-card:hover { border-color:var(--gold); transform:translateY(-2px); box-shadow:0 6px 20px rgba(168,120,42,0.1); }
+  .qlc-label { font-family:'DM Mono',monospace; font-size:9px; font-weight:700; letter-spacing:.25em; text-transform:uppercase; color:var(--gold); margin-bottom:8px; }
+  .qlc-title { font-family:'Noto Serif',serif; font-size:16px; font-weight:700; color:var(--ink); margin-bottom:6px; }
+  .qlc-desc { font-size:12px; color:var(--ink-lt); font-weight:300; line-height:1.6; }
+
+  /* FOOTER */
+  .site-footer { background:var(--bg); border-top:1px solid var(--border); padding:72px 48px 40px; }
+  .footer-inner { max-width:1280px; margin:0 auto; }
+  .footer-top { display:grid; grid-template-columns:1fr 1fr; gap:80px; margin-bottom:56px; }
+  .footer-brand-name { font-family:'Noto Serif',serif; font-size:24px; font-weight:700; color:var(--ink); margin-bottom:12px; }
+  .footer-brand-name span { color:var(--gold); }
+  .footer-brand-desc { font-size:13px; color:var(--ink-lt); font-weight:300; line-height:1.8; max-width:360px; }
+  .footer-links-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:32px; }
+  .footer-links-col-label { font-family:'DM Mono',monospace; font-size:9px; font-weight:700; letter-spacing:.3em; text-transform:uppercase; color:var(--gold); margin-bottom:20px; display:block; }
+  .footer-links-col a { display:block; font-size:12px; font-weight:500; color:var(--ink-mid); text-decoration:none; margin-bottom:12px; transition:color .18s; }
+  .footer-links-col a:hover { color:var(--gold); }
+  .footer-copy { border-top:1px solid var(--border); padding-top:24px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.1em; color:rgba(82,75,62,0.4); text-transform:uppercase; }
+  @media(max-width:900px){
+    .contact-body-inner { grid-template-columns:1fr; gap:40px; }
+    .quick-links-grid { grid-template-columns:1fr 1fr; }
+    .form-row { grid-template-columns:1fr; }
+  }
+  @media(max-width:768px){
+    .footer-top{grid-template-columns:1fr;gap:40px;} .footer-links-grid{grid-template-columns:1fr 1fr;}
+    .contact-hero,.contact-body,.quick-links-section,.site-footer{padding-left:24px;padding-right:24px;}
+    .contact-hero-title{font-size:36px;} .contact-form-wrap{padding:28px 20px;}
+    .quick-links-grid{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<nav class="site-nav" role="navigation">
+  <div class="nav-inner">
+    <a class="nav-brand" href="/">FullonBaan <span>Interview</span></a>
+    <div class="nav-links">
+      <a href="/#guides">Guides</a>
+      <a href="/#features">Features</a>
+      <a href="/contact.html" style="color:var(--gold)">Contact</a>
+    </div>
+    <a class="nav-cta" href="/#contact">Buy Now</a>
+  </div>
+</nav>
+
+<main>
+  <section class="contact-hero">
+    <div class="contact-hero-inner">
+      <div class="contact-eyebrow">Get in Touch</div>
+      <h1 class="contact-hero-title">Contact Us</h1>
+      <p class="contact-hero-desc">Have a question about our guides, your order, or anything else? We're here to help — reach out via email, WhatsApp, or the form below.</p>
+    </div>
+  </section>
+
+  <div class="contact-body">
+    <div class="contact-body-inner">
+
+      <!-- LEFT: contact info -->
+      <div>
+        <div class="contact-info-block">
+          <span class="ci-label">Email</span>
+          <div class="ci-value"><a href="mailto:fullonbaan@gmail.com">fullonbaan@gmail.com</a></div>
+          <div class="ci-sub">We respond to all emails within 1 business day</div>
+        </div>
+
+        <div class="contact-info-block">
+          <span class="ci-label">WhatsApp</span>
+          <div class="ci-value"><a href="https://wa.me/916360593122" target="_blank" rel="noopener">+91 63605 93122</a></div>
+          <div class="ci-sub">Fastest response — usually within a few hours</div>
+        </div>
+
+        <div class="contact-info-block">
+          <span class="ci-label">Address</span>
+          <div class="ci-value">FullOnBaan IT Solutions</div>
+          <div class="ci-sub">Bangalore, Karnataka, India</div>
+        </div>
+
+        <div class="contact-info-block">
+          <span class="ci-label">Social</span>
+          <div class="ci-value">
+            <a href="https://linkedin.com/company/fullonbaan/" target="_blank" rel="noopener">LinkedIn</a> &nbsp;·&nbsp;
+            <a href="https://www.instagram.com/fullonbaan/" target="_blank" rel="noopener">Instagram</a> &nbsp;·&nbsp;
+            <a href="https://www.facebook.com/p/FullonBaaN-100067220493183/" target="_blank" rel="noopener">Facebook</a>
+          </div>
+        </div>
+
+        <div class="contact-hours">
+          <div class="contact-hours-title">Support Hours (IST)</div>
+          <div class="hours-row"><span>Monday – Friday</span><span>9:00 AM – 6:00 PM</span></div>
+          <div class="hours-row"><span>Saturday</span><span>10:00 AM – 4:00 PM</span></div>
+          <div class="hours-row"><span>Sunday</span><span>Closed</span></div>
+        </div>
+      </div>
+
+      <!-- RIGHT: form -->
+      <div class="contact-form-wrap">
+        <div id="contactFormContainer">
+          <div class="form-title">Send Us a Message</div>
+          <p class="form-subtitle">Fill in the form below and we'll get back to you within 1 business day.</p>
+
+          <form id="contactForm" novalidate>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="cf_name">Full Name *</label>
+                <input class="form-input" type="text" id="cf_name" name="from_name" placeholder="Your name" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="cf_email">Email Address *</label>
+                <input class="form-input" type="email" id="cf_email" name="reply_to" placeholder="your@email.com" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="cf_subject">Subject *</label>
+              <select class="form-select" id="cf_subject" name="subject" required>
+                <option value="">Select a topic…</option>
+                <option value="Order / Purchase Query">Order / Purchase Query</option>
+                <option value="Guide Delivery Issue">Guide Delivery Issue</option>
+                <option value="Refund Request">Refund Request</option>
+                <option value="Guide Content Question">Guide Content Question</option>
+                <option value="Corporate / Bulk Purchase">Corporate / Bulk Purchase</option>
+                <option value="Technical Issue">Technical Issue</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="cf_message">Message *</label>
+              <textarea class="form-textarea" id="cf_message" name="message" placeholder="Describe your query in detail…" required></textarea>
+            </div>
+
+            <button type="submit" class="form-submit" id="cfSubmit">Send Message</button>
+          </form>
+        </div>
+
+        <div class="form-success" id="formSuccess">
+          <div class="form-success-icon">&#10003;</div>
+          <div class="form-success-title">Message Sent!</div>
+          <p class="form-success-msg">Thank you for reaching out. We'll get back to you at the email you provided within 1 business day. For urgent queries, please WhatsApp us at +91 63605 93122.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Quick Links -->
+  <div class="quick-links-section">
+    <div class="quick-links-inner">
+      <div class="quick-links-title">Helpful Links</div>
+      <div class="quick-links-grid">
+        <a class="quick-link-card" href="/cancellation.html">
+          <div class="qlc-label">Policy</div>
+          <div class="qlc-title">Cancellation &amp; Refund</div>
+          <div class="qlc-desc">7-day satisfaction guarantee — understand our refund terms.</div>
+        </a>
+        <a class="quick-link-card" href="/shipping.html">
+          <div class="qlc-label">Policy</div>
+          <div class="qlc-title">Shipping &amp; Exchange</div>
+          <div class="qlc-desc">Digital delivery timelines and what to do if your guide doesn't arrive.</div>
+        </a>
+        <a class="quick-link-card" href="/terms.html">
+          <div class="qlc-label">Legal</div>
+          <div class="qlc-title">Terms &amp; Conditions</div>
+          <div class="qlc-desc">Your rights and responsibilities when using our products.</div>
+        </a>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer" role="contentinfo">
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div>
+        <div class="footer-brand-name">FullonBaan <span>Interview</span></div>
+        <p class="footer-brand-desc">The definitive source for Infor LN interview preparation — practitioner-authored guides for the next generation of ERP professionals.</p>
+      </div>
+      <div class="footer-links-grid">
+        <div class="footer-links-col"><span class="footer-links-col-label">Resources</span><a href="https://fobrepo.vercel.app/" target="_blank">Documentation</a><a href="https://fobexams.vercel.app/" target="_blank">Certification</a><a href="https://fobtraining.vercel.app/" target="_blank">Training</a></div>
+        <div class="footer-links-col"><span class="footer-links-col-label">Legal</span><a href="/terms.html">Terms &amp; Conditions</a><a href="/privacy.html">Privacy Policy</a><a href="/cancellation.html">Cancellation &amp; Refund</a><a href="/shipping.html">Shipping &amp; Exchange</a></div>
+        <div class="footer-links-col"><span class="footer-links-col-label">Contact</span><a href="/contact.html">Contact Us</a><a href="mailto:fullonbaan@gmail.com">fullonbaan@gmail.com</a><a href="https://wa.me/916360593122" target="_blank">+91 63605 93122</a></div>
+      </div>
+    </div>
+    <div class="footer-copy"><span>&copy; <script>document.write(new Date().getFullYear())</script> FullOnBaan IT Solutions. The Definitive Standard.</span><span>Bangalore, India</span></div>
+  </div>
+</footer>
+
+<script>
+  var EMAILJS_PUBLIC_KEY  = 'aDL0FEenlYJ8WaJne';
+  var EMAILJS_SERVICE_ID  = 'service_t9cqgtn';
+  var EMAILJS_TEMPLATE_ID = 'template_ezdle7f';
+
+  (function(){ emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY }); })();
+
+  document.getElementById('contactForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    var btn = document.getElementById('cfSubmit');
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+
+    var params = {
+      from_name: document.getElementById('cf_name').value,
+      reply_to:  document.getElementById('cf_email').value,
+      subject:   document.getElementById('cf_subject').value,
+      message:   document.getElementById('cf_message').value
+    };
+
+    emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, params)
+      .then(function() {
+        document.getElementById('contactFormContainer').style.display = 'none';
+        document.getElementById('formSuccess').style.display = 'block';
+      }, function(err) {
+        btn.disabled = false;
+        btn.textContent = 'Send Message';
+        alert('There was an issue sending your message. Please email us directly at fullonbaan@gmail.com or WhatsApp +91 63605 93122.');
+      });
+  });
+</script>
+
+</body>
+</html>

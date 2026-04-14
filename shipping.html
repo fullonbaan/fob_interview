@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shipping and Exchange Policy — FullOnBaan Interview</title>
+  <meta name="description" content="Shipping and Exchange Policy for FullOnBaan Interview Guides — digital delivery timelines and product exchange terms.">
+  <link rel="canonical" href="https://fobinterview.vercel.app/shipping.html">
+  <meta name="robots" content="index, follow">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Work+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold:#A8782A; --gold-mid:#C9943E; --gold-lt:#E2B96A; --gold-pale:#F7EDD8;
+    --gold-faint:rgba(168,120,42,0.08); --ink:#1A160F; --ink-mid:#524B3E;
+    --ink-lt:#8C8070; --bg:#FDFCFB; --surface:#ffffff; --surface-lo:#F9F6F1;
+    --surface-hi:#F2EBE1; --border:#E8E2D9; --rust:#7B3210; --green:#2E7D4F;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body { background:var(--bg); color:var(--ink); font-family:'Work Sans',sans-serif; min-height:100vh; }
+  .site-nav { position:fixed; top:0; width:100%; z-index:100; background:rgba(253,252,251,0.88); backdrop-filter:blur(20px); border-bottom:1px solid rgba(232,226,217,0.45); }
+  .nav-inner { max-width:1280px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; padding:0 48px; height:80px; }
+  .nav-brand { font-family:'Noto Serif',serif; font-size:20px; font-weight:700; color:var(--ink); text-decoration:none; }
+  .nav-brand span { color:var(--gold); }
+  .nav-links { display:flex; align-items:center; gap:36px; }
+  .nav-links a { font-size:11px; font-weight:700; letter-spacing:.2em; text-transform:uppercase; color:var(--ink-mid); text-decoration:none; transition:color .2s; }
+  .nav-links a:hover { color:var(--gold); }
+  .nav-cta { padding:11px 28px; background:var(--ink); color:#fff; border:none; font-family:'Work Sans',sans-serif; font-size:11px; font-weight:700; letter-spacing:.2em; text-transform:uppercase; cursor:pointer; text-decoration:none; display:inline-block; transition:background .2s; }
+  .nav-cta:hover { background:var(--gold); }
+  @media(max-width:900px){ .nav-links { display:none; } .nav-inner { padding:0 24px; } }
+  .policy-hero { padding:140px 48px 60px; background:var(--surface-lo); border-bottom:1px solid var(--border); }
+  .policy-hero-inner { max-width:820px; margin:0 auto; }
+  .policy-eyebrow { font-family:'DM Mono',monospace; font-size:10px; font-weight:700; letter-spacing:.3em; text-transform:uppercase; color:var(--gold); margin-bottom:16px; }
+  .policy-title { font-family:'Noto Serif',serif; font-size:48px; font-weight:900; color:var(--ink); line-height:1.1; margin-bottom:16px; }
+  .policy-meta { font-family:'DM Mono',monospace; font-size:11px; color:var(--ink-lt); letter-spacing:.05em; }
+  .policy-body { padding:72px 48px 96px; }
+  .policy-body-inner { max-width:820px; margin:0 auto; }
+  .policy-section { margin-bottom:48px; }
+  .policy-section h2 { font-family:'Noto Serif',serif; font-size:22px; font-weight:700; color:var(--ink); margin-bottom:16px; padding-bottom:12px; border-bottom:1px solid var(--border); }
+  .policy-section p { font-size:15px; color:var(--ink-mid); line-height:1.8; font-weight:300; margin-bottom:14px; }
+  .policy-section ul { margin:12px 0 14px 20px; }
+  .policy-section ul li { font-size:15px; color:var(--ink-mid); line-height:1.8; font-weight:300; margin-bottom:6px; }
+  .policy-section a { color:var(--gold); text-decoration:none; }
+  .policy-section a:hover { text-decoration:underline; }
+  .policy-callout { background:var(--gold-pale); border-left:3px solid var(--gold); padding:20px 24px; margin:24px 0; border-radius:0 4px 4px 0; }
+  .policy-callout p { font-size:14px; color:var(--ink); font-weight:500; margin:0; line-height:1.7; }
+  .delivery-table { width:100%; border-collapse:collapse; margin:24px 0; font-size:14px; }
+  .delivery-table th { background:var(--surface-hi); padding:12px 16px; text-align:left; font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.15em; text-transform:uppercase; color:var(--ink-mid); border-bottom:2px solid var(--border); }
+  .delivery-table td { padding:14px 16px; border-bottom:1px solid var(--border); color:var(--ink-mid); font-weight:300; }
+  .delivery-table tr:last-child td { border-bottom:none; }
+  .site-footer { background:var(--bg); border-top:1px solid var(--border); padding:72px 48px 40px; }
+  .footer-inner { max-width:1280px; margin:0 auto; }
+  .footer-top { display:grid; grid-template-columns:1fr 1fr; gap:80px; margin-bottom:56px; }
+  .footer-brand-name { font-family:'Noto Serif',serif; font-size:24px; font-weight:700; color:var(--ink); margin-bottom:12px; }
+  .footer-brand-name span { color:var(--gold); }
+  .footer-brand-desc { font-size:13px; color:var(--ink-lt); font-weight:300; line-height:1.8; max-width:360px; }
+  .footer-links-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:32px; }
+  .footer-links-col-label { font-family:'DM Mono',monospace; font-size:9px; font-weight:700; letter-spacing:.3em; text-transform:uppercase; color:var(--gold); margin-bottom:20px; display:block; }
+  .footer-links-col a { display:block; font-size:12px; font-weight:500; color:var(--ink-mid); text-decoration:none; margin-bottom:12px; transition:color .18s; }
+  .footer-links-col a:hover { color:var(--gold); }
+  .footer-copy { border-top:1px solid var(--border); padding-top:24px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.1em; color:rgba(82,75,62,0.4); text-transform:uppercase; }
+  @media(max-width:768px){ .footer-top{grid-template-columns:1fr;gap:40px;} .footer-links-grid{grid-template-columns:1fr 1fr;} .policy-hero,.policy-body{padding-left:24px;padding-right:24px;} .policy-title{font-size:36px;} }
+</style>
+</head>
+<body>
+
+<nav class="site-nav" role="navigation">
+  <div class="nav-inner">
+    <a class="nav-brand" href="/">FullonBaan <span>Interview</span></a>
+    <div class="nav-links">
+      <a href="/#guides">Guides</a>
+      <a href="/#features">Features</a>
+      <a href="/#contact">Contact</a>
+    </div>
+    <a class="nav-cta" href="/#contact">Buy Now</a>
+  </div>
+</nav>
+
+<main>
+  <section class="policy-hero">
+    <div class="policy-hero-inner">
+      <div class="policy-eyebrow">Legal</div>
+      <h1 class="policy-title">Shipping &amp; Exchange Policy</h1>
+      <p class="policy-meta">Last updated: April 2026 &nbsp;·&nbsp; Effective immediately</p>
+    </div>
+  </section>
+
+  <div class="policy-body">
+    <div class="policy-body-inner">
+
+      <div class="policy-callout">
+        <p>All FullOnBaan Interview products are digital goods (PDF guides) delivered electronically. There is no physical shipping involved. Your guide is delivered to your email address within 24 hours of confirmed payment.</p>
+      </div>
+
+      <div class="policy-section">
+        <h2>1. Digital Delivery</h2>
+        <p>FullOnBaan Interview sells exclusively digital products. We do not sell or ship any physical merchandise. Upon successful payment verification, your purchased guide(s) will be sent as a PDF attachment or secure download link to the email address you provided at checkout.</p>
+        <p>There are no shipping charges, courier fees, or physical delivery timelines applicable to our products.</p>
+      </div>
+
+      <div class="policy-section">
+        <h2>2. Delivery Timelines</h2>
+        <p>Our standard delivery schedule is as follows:</p>
+        <table class="delivery-table">
+          <thead>
+            <tr>
+              <th>Payment Method</th>
+              <th>Typical Delivery Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>UPI (Google Pay, PhonePe, Paytm, etc.)</td><td>Within a few hours; up to 24 hours</td></tr>
+            <tr><td>Debit / Credit Card</td><td>Within 24 hours of payment confirmation</td></tr>
+            <tr><td>Net Banking</td><td>Within 24 hours of payment confirmation</td></tr>
+            <tr><td>Wallets</td><td>Within 24 hours of payment confirmation</td></tr>
+          </tbody>
+        </table>
+        <p>In most cases, delivery is faster than the maximum timeframe stated. If you do not receive your guide within 24 hours of payment, please check your spam/junk folder and then contact us.</p>
+      </div>
+
+      <div class="policy-section">
+        <h2>3. Non-Delivery</h2>
+        <p>If you have not received your guide within 24 hours of a confirmed payment, please contact us at <a href="mailto:fullonbaan@gmail.com">fullonbaan@gmail.com</a> or via WhatsApp at <a href="https://wa.me/916360593122">+91 63605 93122</a>. Please include:</p>
+        <ul>
+          <li>The email address used at checkout.</li>
+          <li>Your Razorpay payment transaction ID or reference number.</li>
+          <li>The name of the guide(s) purchased.</li>
+        </ul>
+        <p>We will resend the guide or investigate the issue within 1 business day.</p>
+      </div>
+
+      <div class="policy-section">
+        <h2>4. Wrong Email Address</h2>
+        <p>If you provided an incorrect email address at the time of purchase and have not received your guide, please contact us with proof of payment. We will resend the guide to your correct email address at no additional charge, provided the request is made within 30 days of purchase.</p>
+      </div>
+
+      <div class="policy-section">
+        <h2>5. Product Exchange</h2>
+        <p>Since our products are digital, exchanges function differently from physical goods. We offer exchanges in the following scenarios:</p>
+        <ul>
+          <li><strong>Wrong guide delivered:</strong> If you received a different guide from the one you ordered, we will immediately send the correct guide at no charge.</li>
+          <li><strong>Corrupted or unreadable file:</strong> If the PDF file you received is corrupted or cannot be opened, we will resend a working copy within 1 business day.</li>
+          <li><strong>Updated version:</strong> If a significantly updated version of a guide you purchased is released within 30 days of your purchase, we will send the updated version free of charge upon request.</li>
+        </ul>
+        <p>To request an exchange, please contact us with your order details and a description of the issue.</p>
+      </div>
+
+      <div class="policy-section">
+        <h2>6. Accessing Your Guide</h2>
+        <p>Our guides are delivered as standard PDF files compatible with all major PDF readers including Adobe Acrobat Reader, PDF-XChange, Foxit Reader, and the built-in PDF viewers on Windows, macOS, iOS, and Android.</p>
+        <p>If you have difficulty opening your guide, please ensure you have a PDF reader installed and that the file download is complete. If problems persist, contact our support team.</p>
+      </div>
+
+      <div class="policy-section">
+        <h2>7. Contact</h2>
+        <p>For any delivery or exchange issues, please contact our support team:</p>
+        <ul>
+          <li>Email: <a href="mailto:fullonbaan@gmail.com">fullonbaan@gmail.com</a></li>
+          <li>WhatsApp: <a href="https://wa.me/916360593122">+91 63605 93122</a></li>
+          <li>Hours: Monday – Saturday, 9:00 AM – 6:00 PM IST</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer" role="contentinfo">
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div>
+        <div class="footer-brand-name">FullonBaan <span>Interview</span></div>
+        <p class="footer-brand-desc">The definitive source for Infor LN interview preparation — practitioner-authored guides for the next generation of ERP professionals.</p>
+      </div>
+      <div class="footer-links-grid">
+        <div class="footer-links-col"><span class="footer-links-col-label">Resources</span><a href="https://fobrepo.vercel.app/" target="_blank">Documentation</a><a href="https://fobexams.vercel.app/" target="_blank">Certification</a><a href="https://fobtraining.vercel.app/" target="_blank">Training</a></div>
+        <div class="footer-links-col"><span class="footer-links-col-label">Legal</span><a href="/terms.html">Terms &amp; Conditions</a><a href="/privacy.html">Privacy Policy</a><a href="/cancellation.html">Cancellation &amp; Refund</a><a href="/shipping.html">Shipping &amp; Exchange</a></div>
+        <div class="footer-links-col"><span class="footer-links-col-label">Contact</span><a href="/contact.html">Contact Us</a><a href="mailto:fullonbaan@gmail.com">fullonbaan@gmail.com</a><a href="https://wa.me/916360593122" target="_blank">+91 63605 93122</a></div>
+      </div>
+    </div>
+    <div class="footer-copy"><span>&copy; <script>document.write(new Date().getFullYear())</script> FullOnBaan IT Solutions. The Definitive Standard.</span><span>Bangalore, India</span></div>
+  </div>
+</footer>
+
+</body>
+</html>

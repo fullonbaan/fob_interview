@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy — FullOnBaan Interview</title>
+  <meta name="description" content="Privacy Policy for FullOnBaan Interview Guides — how we collect, use, and protect your personal information.">
+  <link rel="canonical" href="https://fobinterview.vercel.app/privacy.html">
+  <meta name="robots" content="index, follow">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Work+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold:#A8782A; --gold-mid:#C9943E; --gold-lt:#E2B96A; --gold-pale:#F7EDD8;
+    --gold-faint:rgba(168,120,42,0.08); --ink:#1A160F; --ink-mid:#524B3E;
+    --ink-lt:#8C8070; --bg:#FDFCFB; --surface:#ffffff; --surface-lo:#F9F6F1;
+    --surface-hi:#F2EBE1; --border:#E8E2D9; --rust:#7B3210; --green:#2E7D4F;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body { background:var(--bg); color:var(--ink); font-family:'Work Sans',sans-serif; min-height:100vh; }
+  .site-nav { position:fixed; top:0; width:100%; z-index:100; background:rgba(253,252,251,0.88); backdrop-filter:blur(20px); border-bottom:1px solid rgba(232,226,217,0.45); }
+  .nav-inner { max-width:1280px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; padding:0 48px; height:80px; }
+  .nav-brand { font-family:'Noto Serif',serif; font-size:20px; font-weight:700; color:var(--ink); text-decoration:none; }
+  .nav-brand span { color:var(--gold); }
+  .nav-links { display:flex; align-items:center; gap:36px; }
+  .nav-links a { font-size:11px; font-weight:700; letter-spacing:.2em; text-transform:uppercase; color:var(--ink-mid); text-decoration:none; transition:color .2s; }
+  .nav-links a:hover { color:var(--gold); }
+  .nav-cta { padding:11px 28px; background:var(--ink); color:#fff; border:none; font-family:'Work Sans',sans-serif; font-size:11px; font-weight:700; letter-spacing:.2em; text-transform:uppercase; cursor:pointer; text-decoration:none; display:inline-block; transition:background .2s; }
+  .nav-cta:hover { background:var(--gold); }
+  @media(max-width:900px){ .nav-links { display:none; } .nav-inner { padding:0 24px; } }
+  .policy-hero { padding:140px 48px 60px; background:var(--surface-lo); border-bottom:1px solid var(--border); }
+  .policy-hero-inner { max-width:820px; margin:0 auto; }
+  .policy-eyebrow { font-family:'DM Mono',monospace; font-size:10px; font-weight:700; letter-spacing:.3em; text-transform:uppercase; color:var(--gold); margin-bottom:16px; }
+  .policy-title { font-family:'Noto Serif',serif; font-size:48px; font-weight:900; color:var(--ink); line-height:1.1; margin-bottom:16px; }
+  .policy-meta { font-family:'DM Mono',monospace; font-size:11px; color:var(--ink-lt); letter-spacing:.05em; }
+  .policy-body { padding:72px 48px 96px; }
+  .policy-body-inner { max-width:820px; margin:0 auto; }
+  .policy-section { margin-bottom:48px; }
+  .policy-section h2 { font-family:'Noto Serif',serif; font-size:22px; font-weight:700; color:var(--ink); margin-bottom:16px; padding-bottom:12px; border-bottom:1px solid var(--border); }
+  .policy-section p { font-size:15px; color:var(--ink-mid); line-height:1.8; font-weight:300; margin-bottom:14px; }
+  .policy-section ul { margin:12px 0 14px 20px; }
+  .policy-section ul li { font-size:15px; color:var(--ink-mid); line-height:1.8; font-weight:300; margin-bottom:6px; }
+  .policy-section a { color:var(--gold); text-decoration:none; }
+  .policy-section a:hover { text-decoration:underline; }
+  .policy-callout { background:var(--gold-pale); border-left:3px solid var(--gold); padding:20px 24px; margin:24px 0; border-radius:0 4px 4px 0; }
+  .policy-callout p { font-size:14px; color:var(--ink); font-weight:500; margin:0; line-height:1.7; }
+  .site-footer { background:var(--bg); border-top:1px solid var(--border); padding:72px 48px 40px; }
+  .footer-inner { max-width:1280px; margin:0 auto; }
+  .footer-top { display:grid; grid-template-columns:1fr 1fr; gap:80px; margin-bottom:56px; }
+  .footer-brand-name { font-family:'Noto Serif',serif; font-size:24px; font-weight:700; color:var(--ink); margin-bottom:12px; }
+  .footer-brand-name span { color:var(--gold); }
+  .footer-brand-desc { font-size:13px; color:var(--ink-lt); font-weight:300; line-height:1.8; max-width:360px; }
+  .footer-links-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:32px; }
+  .footer-links-col-label { font-family:'DM Mono',monospace; font-size:9px; font-weight:700; letter-spacing:.3em; text-transform:uppercase; color:var(--gold); margin-bottom:20px; display:block; }
+  .footer-links-col a { display:block; font-size:12px; font-weight:500; color:var(--ink-mid); text-decoration:none; margin-bottom:12px; transition:color .18s; }
+  .footer-links-col a:hover { color:var(--gold); }
+  .footer-copy { border-top:1px solid var(--border); padding-top:24px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.1em; color:rgba(82,75,62,0.4); text-transform:uppercase; }
+  @media(max-width:768px){ .footer-top{grid-template-columns:1fr;gap:40px;} .footer-links-grid{grid-template-columns:1fr 1fr;} .policy-hero,.policy-body{padding-left:24px;padding-right:24px;} .policy-title{font-size:36px;} }
+</style>
+</head>
+<body>
+
+<nav class="site-nav" role="navigation">
+  <div class="nav-inner">
+    <a class="nav-brand" href="/">FullonBaan <span>Interview</span></a>
+    <div class="nav-links">
+      <a href="/#guides">Guides</a>
+      <a href="/#features">Features</a>
+      <a href="/#contact">Contact</a>
+    </div>
+    <a class="nav-cta" href="/#contact">Buy Now</a>
+  </div>
+</nav>
+
+<main>
+  <section class="policy-hero">
+    <div class="policy-hero-inner">
+      <div class="policy-eyebrow">Legal</div>
+      <h1 class="policy-title">Privacy Policy</h1>
+      <p class="policy-meta">Last updated: April 2026 &nbsp;·&nbsp; Effective immediately</p>
+    </div>
+  </section>
+
+  <div class="policy-body">
+    <div class="policy-body-inner">
+
+      <div class="policy-callout">
+        <p>FullOnBaan IT Solutions respects your privacy and is committed to protecting your personal information. This Policy explains what data we collect, why we collect it, and how we handle it.</p>
+      </div>
+
+      <div class="policy-section">
+        <h2>1. Who We Are</h2>
+        <p>FullOnBaan IT Solutions ("FullOnBaan", "we", "us", or "our") operates <strong>fobinterview.vercel.app</strong> and related FullOnBaan Ecosystem websites. We are located in Bangalore, Karnataka, India.</p>
+        <p>Data controller contact: <a href="mailto:fullonbaan@gmail.com">fullonbaan@gmail.com</a></p>
+      </div>
+
+      <div class="policy-section">
+        <h2>2. Information We Collect</h2>
+        <p>We collect the following types of information when you use our website or purchase our products:</p>
+        <ul>
+          <li><strong>Personal identification information:</strong> Name, email address, phone number — provided by you when placing an order or filling in the contact form.</li>
+          <li><strong>Payment information:</strong> Payments are processed entirely by Razorpay. We do not collect or store your card, bank account, or UPI details. Razorpay may collect and process this data under their own privacy policy.</li>
+          <li><strong>Usage data:</strong> IP address, browser type, pages visited, time spent on pages — collected automatically via Google Analytics and Google Tag Manager to understand site performance.</li>
+          <li><strong>Communications data:</strong> Any messages you send us via email, WhatsApp, or the contact form.</li>
+        </ul>
+      </div>
+
+      <div class="policy-section">
+        <h2>3. How We Use Your Information</h2>
+        <p>We use the information we collect to:</p>
+        <ul>
+          <li>Process and fulfil your orders, including delivering digital guides to your email.</li>
+          <li>Respond to your queries and provide customer support.</li>
+          <li>Send transactional emails related to your purchase (order confirmation, guide delivery).</li>
+          <li>Improve our website and products based on usage analytics.</li>
+          <li>Comply with legal obligations under Indian law.</li>
+        </ul>
+        <p>We do not sell, rent, or trade your personal data to third parties for their marketing purposes.</p>
+      </div>
+
+      <div class="policy-section">
+        <h2>4. Cookies and Tracking</h2>
+        <p>Our website uses cookies and similar technologies to improve your browsing experience and to analyse site traffic. These include:</p>
+        <ul>
+          <li><strong>Essential cookies:</strong> Required for the website to function correctly.</li>
+          <li><strong>Analytics cookies:</strong> Google Analytics cookies that help us understand how visitors use our site (anonymised data).</li>
+          <li><strong>Marketing cookies:</strong> Google Ads conversion tracking to measure the effectiveness of our advertising.</li>
+        </ul>
+        <p>You may disable cookies through your browser settings, though this may affect certain site functionality.</p>
+      </div>
+
+      <div class="policy-section">
+        <h2>5. Data Sharing</h2>
+        <p>We share your personal data only with the following trusted service providers, and only to the extent necessary to operate our services:</p>
+        <ul>
+          <li><strong>Razorpay:</strong> Payment processing. Governed by Razorpay's Privacy Policy.</li>
+          <li><strong>Google (Analytics &amp; Ads):</strong> Website analytics and advertising measurement.</li>
+          <li><strong>EmailJS:</strong> Delivery of contact form submissions to our inbox.</li>
+        </ul>
+        <p>We do not share your data with any other third party without your explicit consent, except when required by law.</p>
+      </div>
+
+      <div class="policy-section">
+        <h2>6. Data Retention</h2>
+        <p>We retain your personal information for as long as necessary to fulfil the purposes set out in this Policy, and as required by applicable law. Order-related data is retained for a minimum of 7 years for accounting and tax compliance under Indian law. You may request deletion of your data at any time (subject to legal retention requirements) by contacting us.</p>
+      </div>
+
+      <div class="policy-section">
+        <h2>7. Your Rights</h2>
+        <p>You have the right to:</p>
+        <ul>
+          <li>Request access to the personal data we hold about you.</li>
+          <li>Request correction of inaccurate data.</li>
+          <li>Request deletion of your data (where not required by law to retain it).</li>
+          <li>Withdraw consent for marketing communications at any time.</li>
+          <li>Lodge a complaint with the relevant data protection authority.</li>
+        </ul>
+        <p>To exercise any of these rights, please contact us at <a href="mailto:fullonbaan@gmail.com">fullonbaan@gmail.com</a>.</p>
+      </div>
+
+      <div class="policy-section">
+        <h2>8. Security</h2>
+        <p>We take reasonable technical and organisational measures to protect your personal data against unauthorised access, loss, or misuse. However, no internet transmission is completely secure, and we cannot guarantee absolute security.</p>
+      </div>
+
+      <div class="policy-section">
+        <h2>9. Children's Privacy</h2>
+        <p>Our services are not directed at individuals under the age of 18. We do not knowingly collect personal data from minors. If you believe a minor has submitted data to us, please contact us and we will delete it promptly.</p>
+      </div>
+
+      <div class="policy-section">
+        <h2>10. Changes to This Policy</h2>
+        <p>We may update this Privacy Policy periodically. Changes will be posted on this page with a revised date. Your continued use of our site after changes constitutes acceptance of the updated Policy.</p>
+      </div>
+
+      <div class="policy-section">
+        <h2>11. Contact Us</h2>
+        <p>For any privacy-related queries or requests, please contact:</p>
+        <ul>
+          <li>Email: <a href="mailto:fullonbaan@gmail.com">fullonbaan@gmail.com</a></li>
+          <li>WhatsApp: <a href="https://wa.me/916360593122">+91 63605 93122</a></li>
+          <li>Address: Bangalore, Karnataka, India</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer" role="contentinfo">
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div>
+        <div class="footer-brand-name">FullonBaan <span>Interview</span></div>
+        <p class="footer-brand-desc">The definitive source for Infor LN interview preparation — practitioner-authored guides for the next generation of ERP professionals.</p>
+      </div>
+      <div class="footer-links-grid">
+        <div class="footer-links-col"><span class="footer-links-col-label">Resources</span><a href="https://fobrepo.vercel.app/" target="_blank">Documentation</a><a href="https://fobexams.vercel.app/" target="_blank">Certification</a><a href="https://fobtraining.vercel.app/" target="_blank">Training</a></div>
+        <div class="footer-links-col"><span class="footer-links-col-label">Legal</span><a href="/terms.html">Terms &amp; Conditions</a><a href="/privacy.html">Privacy Policy</a><a href="/cancellation.html">Cancellation &amp; Refund</a><a href="/shipping.html">Shipping &amp; Exchange</a></div>
+        <div class="footer-links-col"><span class="footer-links-col-label">Contact</span><a href="/contact.html">Contact Us</a><a href="mailto:fullonbaan@gmail.com">fullonbaan@gmail.com</a><a href="https://wa.me/916360593122" target="_blank">+91 63605 93122</a></div>
+      </div>
+    </div>
+    <div class="footer-copy"><span>&copy; <script>document.write(new Date().getFullYear())</script> FullOnBaan IT Solutions. The Definitive Standard.</span><span>Bangalore, India</span></div>
+  </div>
+</footer>
+
+</body>
+</html>
