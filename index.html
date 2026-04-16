@@ -1317,18 +1317,13 @@
       config:{
         display:{
           blocks:{
-            preferred_banks:{
-              name:'Suggested Banks',
-              instruments:[
-                {method:'netbanking',bank:'ICIC'},
-                {method:'netbanking',bank:'HDFC'},
-                {method:'netbanking',bank:'UTIB'},
-                {method:'netbanking',bank:'SBIN'},
-                {method:'netbanking',bank:'IDFB'}
-              ]
-            }
+            nb_icici:{name:'ICICI Bank',   instruments:[{method:'netbanking',bank:'ICIC'}]},
+            nb_hdfc: {name:'HDFC Bank',    instruments:[{method:'netbanking',bank:'HDFC'}]},
+            nb_axis: {name:'Axis Bank',    instruments:[{method:'netbanking',bank:'UTIB'}]},
+            nb_sbi:  {name:'SBI',          instruments:[{method:'netbanking',bank:'SBIN'}]},
+            nb_idfc: {name:'IDFC First Bank', instruments:[{method:'netbanking',bank:'IDFB'}]}
           },
-          sequence:['block.preferred_banks'],
+          sequence:['block.nb_icici','block.nb_hdfc','block.nb_axis','block.nb_sbi','block.nb_idfc'],
           preferences:{show_default_blocks:true}
         }
       },
