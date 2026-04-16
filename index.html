@@ -1313,6 +1313,42 @@
       prefill:{name:name, email:email, contact:mobile?'+91'+mobile:''},
       notes:{order_ref:txnRef, guide:selDesc},
       theme:{color:'#A8782A'},
+      config:{
+        display:{
+          blocks:{
+            cards:{
+              name:'Pay via Card',
+              instruments:[
+                {method:'card',networks:['Visa']},
+                {method:'card',networks:['MasterCard']},
+                {method:'card',networks:['RuPay']},
+                {method:'card',networks:['Amex']}
+              ]
+            },
+            intl_cards:{
+              name:'International Cards',
+              instruments:[
+                {method:'card',networks:['Maestro']},
+                {method:'card',networks:['DinersClub']},
+                {method:'card',networks:['Discover']},
+                {method:'card',networks:['UnionPay']}
+              ]
+            },
+            apple_pay:{
+              name:'Apple Pay',
+              instruments:[
+                {method:'app',providers:['apple_pay']}
+              ]
+            },
+            emi:{
+              name:'Pay via EMI',
+              instruments:[{method:'emi'}]
+            }
+          },
+          sequence:['block.cards','block.intl_cards','block.apple_pay','block.emi'],
+          preferences:{show_default_blocks:true}
+        }
+      },
       handler: function(response){
         utrNumber=response.razorpay_payment_id;
         utrSubmitted=true;
