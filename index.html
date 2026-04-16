@@ -333,6 +333,56 @@
   .ty-contact { font-size:12px; color:var(--ink-lt); font-family:'DM Mono',monospace; }
   @media(max-width:560px){ .upi-apps-grid{grid-template-columns:repeat(3,1fr);} }
 
+  /* ── Nykaa-style Payment Layout ─────────────────────────────────── */
+  .pay-panel.open { max-height:2600px; }
+  .nyk-payment-wrap { margin:-28px -24px -24px; border-top:1px solid var(--border); }
+  .nyk-top-bar { display:flex; align-items:center; justify-content:space-between; padding:11px 18px; border-bottom:1px solid var(--border); background:var(--surface-lo); flex-wrap:wrap; gap:8px; }
+  .nyk-top-left { display:flex; align-items:center; gap:10px; }
+  .nyk-top-title { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink-mid); font-weight:600; }
+  .nyk-top-summary { font-size:10.5px; color:var(--ink-mid); font-family:'DM Mono',monospace; background:var(--gold-pale); border:1px solid rgba(168,120,42,0.2); padding:4px 10px; }
+  .nyk-body { display:grid; grid-template-columns:1fr 220px; }
+  @media(max-width:680px){ .nyk-body { grid-template-columns:1fr; } }
+  .nyk-left { display:grid; grid-template-columns:155px 1fr; border-right:1px solid var(--border); min-height:400px; }
+  @media(max-width:680px){ .nyk-left { grid-template-columns:1fr; min-height:auto; border-right:none; } }
+  .nyk-tab-list { background:var(--surface-lo); border-right:1px solid var(--border); }
+  @media(max-width:680px){ .nyk-tab-list { display:flex; overflow-x:auto; border-right:none; border-bottom:1px solid var(--border); } }
+  .nyk-tab { width:100%; display:flex; align-items:center; gap:9px; padding:14px 11px; background:transparent; border:none; border-bottom:1px solid var(--border); cursor:pointer; text-align:left; transition:background .15s; position:relative; }
+  @media(max-width:680px){ .nyk-tab { flex-direction:column; align-items:center; min-width:72px; padding:10px 6px; border-bottom:none; border-right:1px solid var(--border); } }
+  .nyk-tab:hover { background:var(--gold-pale); }
+  .nyk-tab.active { background:#fff; border-left:3px solid var(--gold); }
+  @media(max-width:680px){ .nyk-tab.active { border-left:none; border-bottom:3px solid var(--gold); } }
+  .nyk-radio { width:13px; height:13px; border-radius:50%; border:2px solid #ccc; flex-shrink:0; position:relative; transition:border-color .15s; }
+  .nyk-tab.active .nyk-radio { border-color:var(--gold); }
+  .nyk-tab.active .nyk-radio::after { content:''; position:absolute; inset:2px; background:var(--gold); border-radius:50%; }
+  @media(max-width:680px){ .nyk-radio { display:none; } }
+  .nyk-tab-info { flex:1; min-width:0; }
+  @media(max-width:680px){ .nyk-tab-info { text-align:center; } }
+  .nyk-tab-name { font-size:11px; font-weight:600; color:var(--ink); font-family:'Work Sans',sans-serif; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .nyk-tab-sub { font-size:8.5px; color:var(--ink-lt); margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  @media(max-width:680px){ .nyk-tab-sub { display:none; } }
+  .nyk-pane-area { background:#fff; padding:18px 16px; overflow-y:auto; }
+  .nyk-pane { display:none; }
+  .nyk-pane.active { display:block; }
+  .nyk-pane-title { font-size:13px; font-weight:700; color:var(--ink); margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid var(--border); font-family:'Work Sans',sans-serif; }
+  .nyk-method-desc { font-size:12px; color:var(--ink-mid); margin-bottom:12px; line-height:1.7; }
+  .nyk-logos { display:flex; gap:6px; flex-wrap:wrap; margin:8px 0 14px; }
+  .nyk-logo { border:1px solid var(--border); padding:3px 7px; font-size:9px; font-weight:700; color:var(--ink-mid); background:var(--surface-lo); border-radius:2px; letter-spacing:.04em; }
+  .nyk-pay-now { width:100%; padding:13px; background:var(--gold); border:none; color:var(--cream); font-family:'Work Sans',sans-serif; font-weight:700; font-size:11px; letter-spacing:.18em; text-transform:uppercase; cursor:pointer; transition:background .2s; display:flex; align-items:center; justify-content:center; gap:8px; margin-top:14px; }
+  .nyk-pay-now:hover { background:var(--ink); }
+  .nyk-right { background:var(--surface-lo); }
+  @media(max-width:680px){ .nyk-right { border-top:1px solid var(--border); } }
+  .nyk-sum-hdr { padding:11px 14px; border-bottom:1px solid var(--border); font-family:'DM Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink-mid); font-weight:600; }
+  .nyk-sum-item { padding:14px; border-bottom:1px solid var(--border); display:flex; align-items:flex-start; gap:10px; }
+  .nyk-sum-icon { font-size:26px; line-height:1; flex-shrink:0; }
+  .nyk-sum-name { font-size:11px; font-weight:600; color:var(--ink); line-height:1.5; font-family:'Work Sans',sans-serif; }
+  .nyk-sum-price { font-size:18px; font-weight:700; color:var(--gold); margin-top:5px; font-family:'Noto Serif',serif; }
+  .nyk-breakdown { padding:12px 14px; border-bottom:1px solid var(--border); }
+  .nyk-brow { display:flex; justify-content:space-between; font-size:10.5px; color:var(--ink-mid); padding:3px 0; font-family:'DM Mono',monospace; }
+  .nyk-brow.nyk-total { font-weight:700; color:var(--ink); font-size:12px; padding-top:8px; border-top:1px dashed rgba(168,120,42,0.3); margin-top:5px; }
+  .nyk-badges { padding:10px 14px; display:flex; flex-direction:column; gap:9px; }
+  .nyk-badge { display:flex; align-items:center; gap:8px; font-size:10.5px; color:var(--ink-mid); font-family:'Work Sans',sans-serif; }
+  .nyk-badge-icon { font-size:13px; flex-shrink:0; }
+
   /* ECOSYSTEM */
   .eco-section { padding:72px 48px; background:var(--surface-hi); border-top:1px solid var(--border); }
   .eco-inner { max-width:1280px; margin:0 auto; }
@@ -1111,33 +1161,125 @@
               <button class="pay-proceed" style="display:flex;margin-top:6px;" onclick="goToStep3()">&#x1F4B3;&nbsp; Proceed to Payment</button>
             </div>
             <div id="step3" style="display:none;">
-              <div class="step-header"><button class="back-btn" onclick="goBackToStep2()">&#x2190; Back</button><div class="step-title">Complete Your Payment</div></div>
-              <div class="step-summary" id="step3Summary"></div>
-              <div class="upi-payment-panel">
-                <div class="upi-qr-box"><span class="qr-label">&#x1F4F1; Scan QR Code</span><img loading="lazy" id="upiQRImg" class="upi-qr-img" src="" alt="UPI QR Code" /><div class="upi-qr-hint">Open any UPI app &amp; scan<br>to pay instantly</div></div>
-                <div class="upi-id-box">
-                  <div>
-                    <span class="upi-id-label">&#x1F4B3; Or Pay via UPI ID</span>
-                    <div class="upi-id-val"><span>nikivernekar@okicici</span><button class="copy-btn" onclick="copyUPIId()">Copy</button></div>
-                    <ol class="upi-id-steps"><li>1. Open GPay / PhonePe / Paytm</li><li>2. Tap "Send Money" &rarr; "UPI ID"</li><li>3. Paste the UPI ID above</li><li>4. Enter the exact amount shown</li><li>5. Complete &amp; note your UTR</li></ol>
+              <div class="nyk-payment-wrap">
+                <!-- Top bar -->
+                <div class="nyk-top-bar">
+                  <div class="nyk-top-left">
+                    <button class="back-btn" onclick="goBackToStep2()">&#x2190; Back</button>
+                    <span class="nyk-top-title">Payment Options</span>
+                  </div>
+                  <span class="nyk-top-summary" id="step3Summary"></span>
+                </div>
+                <!-- Body -->
+                <div class="nyk-body">
+                  <!-- LEFT: tabs + panes -->
+                  <div class="nyk-left">
+                    <!-- Tab sidebar -->
+                    <div class="nyk-tab-list">
+                      <button class="nyk-tab active" id="tab-upi" onclick="switchPayTab('upi')">
+                        <span class="nyk-radio"></span>
+                        <div class="nyk-tab-info"><div class="nyk-tab-name">UPI</div><div class="nyk-tab-sub">GPay · PhonePe · Paytm</div></div>
+                      </button>
+                      <button class="nyk-tab" id="tab-card" onclick="switchPayTab('card')">
+                        <span class="nyk-radio"></span>
+                        <div class="nyk-tab-info"><div class="nyk-tab-name">Credit / Debit Card</div><div class="nyk-tab-sub">Visa · MC · RuPay · Amex</div></div>
+                      </button>
+                      <button class="nyk-tab" id="tab-netbank" onclick="switchPayTab('netbank')">
+                        <span class="nyk-radio"></span>
+                        <div class="nyk-tab-info"><div class="nyk-tab-name">Net Banking</div><div class="nyk-tab-sub">All major banks</div></div>
+                      </button>
+                      <button class="nyk-tab" id="tab-wallet" onclick="switchPayTab('wallet')">
+                        <span class="nyk-radio"></span>
+                        <div class="nyk-tab-info"><div class="nyk-tab-name">Wallets</div><div class="nyk-tab-sub">Paytm · PhonePe</div></div>
+                      </button>
+                      <button class="nyk-tab" id="tab-emi" onclick="switchPayTab('emi')">
+                        <span class="nyk-radio"></span>
+                        <div class="nyk-tab-info"><div class="nyk-tab-name">EMI</div><div class="nyk-tab-sub">Easy instalments</div></div>
+                      </button>
+                    </div>
+                    <!-- Pane content -->
+                    <div class="nyk-pane-area">
+                      <!-- UPI pane -->
+                      <div class="nyk-pane active" id="pane-upi">
+                        <div class="nyk-pane-title">&#x1F4F1; Pay via UPI</div>
+                        <div class="upi-payment-panel">
+                          <div class="upi-qr-box"><span class="qr-label">&#x1F4F1; Scan QR Code</span><img loading="lazy" id="upiQRImg" class="upi-qr-img" src="" alt="UPI QR Code" /><div class="upi-qr-hint">Open any UPI app &amp; scan<br>to pay instantly</div></div>
+                          <div class="upi-id-box">
+                            <div>
+                              <span class="upi-id-label">&#x1F4B3; Or Pay via UPI ID</span>
+                              <div class="upi-id-val"><span>nikivernekar@okicici</span><button class="copy-btn" onclick="copyUPIId()">Copy</button></div>
+                              <ol class="upi-id-steps"><li>1. Open GPay / PhonePe / Paytm</li><li>2. Tap "Send Money" &rarr; "UPI ID"</li><li>3. Paste the UPI ID above</li><li>4. Enter the exact amount shown</li><li>5. Complete &amp; note your UTR</li></ol>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="upi-divider">or open app directly (mobile)</div>
+                        <div class="upi-apps-grid">
+                          <button class="upi-app-btn" onclick="launchUPI('paytm')"><span class="upi-app-icon"><svg viewBox="0 0 48 48" width="40" height="40" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="48" rx="10" fill="#002970"/><rect x="6" y="6" width="36" height="36" rx="7" fill="#00BAF2"/><text x="24" y="20" text-anchor="middle" font-size="7.5" font-weight="900" fill="#002970" font-family="Arial,sans-serif">Pay</text><text x="24" y="30" text-anchor="middle" font-size="7.5" font-weight="900" fill="#ffffff" font-family="Arial,sans-serif">tm</text><rect x="10" y="32" width="28" height="2.5" rx="1.2" fill="#002970"/></svg></span><span class="upi-app-name">Paytm</span></button>
+                          <button class="upi-app-btn" onclick="launchUPI('gpay')"><span class="upi-app-icon"><svg viewBox="0 0 48 48" width="40" height="40" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="48" rx="10" fill="#fff" stroke="#e0e0e0" stroke-width="1"/><text x="24" y="19" text-anchor="middle" font-size="8" font-weight="700" fill="#4285F4" font-family="Arial,sans-serif">G</text><text x="15" y="30" text-anchor="middle" font-size="6" font-weight="700" fill="#EA4335" font-family="Arial,sans-serif">o</text><text x="21" y="30" text-anchor="middle" font-size="6" font-weight="700" fill="#FBBC05" font-family="Arial,sans-serif">o</text><text x="27" y="30" text-anchor="middle" font-size="6" font-weight="700" fill="#34A853" font-family="Arial,sans-serif">g</text><text x="33" y="30" text-anchor="middle" font-size="6" font-weight="700" fill="#4285F4" font-family="Arial,sans-serif">le</text><text x="24" y="40" text-anchor="middle" font-size="6" font-weight="700" fill="#5F6368" font-family="Arial,sans-serif">Pay</text></svg></span><span class="upi-app-name">Google Pay</span></button>
+                          <button class="upi-app-btn" onclick="launchUPI('bhim')"><span class="upi-app-icon"><svg viewBox="0 0 48 48" width="40" height="40" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="48" rx="10" fill="#1A237E"/><rect x="0" y="0" width="48" height="16" rx="10" fill="#FF9933"/><rect x="0" y="16" width="48" height="16" fill="#fff"/><rect x="0" y="32" width="48" height="16" fill="#138808"/><rect x="0" y="38" width="48" height="10" rx="10" fill="#138808"/><circle cx="24" cy="24" r="6" fill="none" stroke="#000080" stroke-width="1.5"/><text x="24" y="24.5" text-anchor="middle" dominant-baseline="middle" font-size="5" font-weight="900" fill="#000080" font-family="Arial,sans-serif">BHIM</text></svg></span><span class="upi-app-name">BHIM</span></button>
+                          <button class="upi-app-btn" onclick="launchUPI('phonepe')"><span class="upi-app-icon"><svg viewBox="0 0 48 48" width="40" height="40" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="48" rx="10" fill="#5F259F"/><circle cx="24" cy="20" r="10" fill="#fff" opacity="0.15"/><text x="24" y="18" text-anchor="middle" font-size="13" font-weight="900" fill="#fff" font-family="Arial,sans-serif">Pe</text><text x="24" y="34" text-anchor="middle" font-size="7" font-weight="700" fill="#fff" font-family="Arial,sans-serif" opacity="0.85">PhonePe</text></svg></span><span class="upi-app-name">PhonePe</span></button>
+                          <button class="upi-app-btn" onclick="launchUPI('whatsapp')"><span class="upi-app-icon"><svg viewBox="0 0 48 48" width="40" height="40" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="48" rx="10" fill="#25D366"/><circle cx="24" cy="22" r="11" fill="#fff"/><path d="M24 13c-4.97 0-9 4.03-9 9 0 1.59.42 3.08 1.14 4.38L15 31l4.74-1.24A8.96 8.96 0 0024 31c4.97 0 9-4.03 9-9s-4.03-9-9-9zm4.4 12.61c-.19.53-1.1.98-1.52 1.04-.39.05-.88.07-1.42-.09-.33-.1-.75-.23-1.29-.46-2.27-.98-3.75-3.27-3.87-3.42-.12-.15-.97-1.29-.97-2.46 0-1.17.61-1.75.83-1.99.22-.24.48-.3.64-.3l.46.01c.15.01.35-.06.54.41.2.49.69 1.68.75 1.8.06.12.1.27.02.43-.08.16-.12.26-.24.4-.12.14-.25.31-.36.42-.12.12-.24.25-.1.49.14.24.61 1.01 1.31 1.63.9.8 1.66 1.05 1.9 1.17.24.12.38.1.52-.06.14-.16.59-.69.75-.93.16-.24.32-.2.54-.12.22.08 1.4.66 1.64.78.24.12.4.18.46.28.06.1.06.56-.13 1.1z" fill="#25D366"/><text x="24" y="41" text-anchor="middle" font-size="5.5" font-weight="700" fill="#fff" font-family="Arial,sans-serif">WhatsApp Pay</text></svg></span><span class="upi-app-name">WhatsApp Pay</span></button>
+                        </div>
+                        <div class="utr-section">
+                          <span class="utr-label">&#x1F511; Enter UTR / Transaction Reference Number</span>
+                          <div class="utr-desc">After payment, your UPI app shows a 12-digit UTR. Enter it below to confirm your payment.</div>
+                          <div class="utr-input-row"><input type="text" class="utr-input" id="utrInput" placeholder="e.g. 504616234567" maxlength="30" /></div>
+                          <div class="utr-error" id="utrError"></div>
+                        </div>
+                        <button class="nyk-pay-now" onclick="onConfirmPayment()">&#x2705;&nbsp; Confirm UPI Payment</button>
+                      </div>
+                      <!-- Card pane -->
+                      <div class="nyk-pane" id="pane-card">
+                        <div class="nyk-pane-title">&#x1F4B3; Credit / Debit Card</div>
+                        <p class="nyk-method-desc">Pay securely with your Credit or Debit card. All major card networks supported. 3D Secure verified &amp; powered by Razorpay.</p>
+                        <div class="nyk-logos">
+                          <span class="nyk-logo">VISA</span><span class="nyk-logo">MASTERCARD</span><span class="nyk-logo">RUPAY</span><span class="nyk-logo">AMEX</span><span class="nyk-logo">MAESTRO</span><span class="nyk-logo">DINERS</span>
+                        </div>
+                        <button class="nyk-pay-now" onclick="openRazorpayCheckout()">&#x1F512;&nbsp; Pay &#x20B9;<span id="cardPayAmt">—</span> Securely</button>
+                      </div>
+                      <!-- Net Banking pane -->
+                      <div class="nyk-pane" id="pane-netbank">
+                        <div class="nyk-pane-title">&#x1F3E6; Net Banking</div>
+                        <p class="nyk-method-desc">Pay directly from your bank account. All major Indian banks supported — SBI, HDFC, ICICI, Axis, Kotak, Canara and more via Razorpay.</p>
+                        <button class="nyk-pay-now" onclick="openRazorpayCheckout()">&#x1F512;&nbsp; Proceed with Net Banking</button>
+                      </div>
+                      <!-- Wallets pane -->
+                      <div class="nyk-pane" id="pane-wallet">
+                        <div class="nyk-pane-title">&#x1F45B; Wallets</div>
+                        <p class="nyk-method-desc">Pay using your preferred digital wallet. Paytm, PhonePe, Freecharge, MobiKwik and more are supported via Razorpay.</p>
+                        <button class="nyk-pay-now" onclick="openRazorpayCheckout()">&#x1F512;&nbsp; Proceed with Wallet</button>
+                      </div>
+                      <!-- EMI pane -->
+                      <div class="nyk-pane" id="pane-emi">
+                        <div class="nyk-pane-title">&#x1F4C5; EMI</div>
+                        <p class="nyk-method-desc">Convert your payment into easy monthly instalments. Available on select Credit and Debit cards via Razorpay.</p>
+                        <button class="nyk-pay-now" onclick="openRazorpayCheckout()">&#x1F512;&nbsp; Proceed with EMI</button>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- RIGHT: order summary -->
+                  <div class="nyk-right">
+                    <div class="nyk-sum-hdr">Order Summary</div>
+                    <div class="nyk-sum-item">
+                      <span class="nyk-sum-icon">&#x1F4D8;</span>
+                      <div>
+                        <div class="nyk-sum-name" id="nykGuideName">—</div>
+                        <div class="nyk-sum-price" id="nykGuideTotal">—</div>
+                      </div>
+                    </div>
+                    <div class="nyk-breakdown">
+                      <div class="nyk-brow"><span>Base Price</span><span id="nykSumBase">—</span></div>
+                      <div class="nyk-brow"><span>IGST @ 18%</span><span id="nykSumGst">—</span></div>
+                      <div class="nyk-brow nyk-total"><span>Total</span><span id="nykSumTotal">—</span></div>
+                    </div>
+                    <div class="nyk-badges">
+                      <div class="nyk-badge"><span class="nyk-badge-icon">&#x1F512;</span>100% Secure Payments</div>
+                      <div class="nyk-badge"><span class="nyk-badge-icon">&#x1F6E1;&#xFE0F;</span>7-Day Satisfaction Guarantee</div>
+                      <div class="nyk-badge"><span class="nyk-badge-icon">&#x1F4C4;</span>GST Invoice Provided</div>
+                    </div>
                   </div>
                 </div>
               </div>
-              <div class="upi-divider">or open app directly (mobile)</div>
-              <div class="upi-apps-grid">
-                <button class="upi-app-btn" onclick="launchUPI('paytm')"><span class="upi-app-icon"><svg viewBox="0 0 48 48" width="40" height="40" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="48" rx="10" fill="#002970"/><rect x="6" y="6" width="36" height="36" rx="7" fill="#00BAF2"/><text x="24" y="20" text-anchor="middle" font-size="7.5" font-weight="900" fill="#002970" font-family="Arial,sans-serif">Pay</text><text x="24" y="30" text-anchor="middle" font-size="7.5" font-weight="900" fill="#ffffff" font-family="Arial,sans-serif">tm</text><rect x="10" y="32" width="28" height="2.5" rx="1.2" fill="#002970"/></svg></span><span class="upi-app-name">Paytm</span></button>
-                <button class="upi-app-btn" onclick="launchUPI('gpay')"><span class="upi-app-icon"><svg viewBox="0 0 48 48" width="40" height="40" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="48" rx="10" fill="#fff" stroke="#e0e0e0" stroke-width="1"/><text x="24" y="19" text-anchor="middle" font-size="8" font-weight="700" fill="#4285F4" font-family="Arial,sans-serif">G</text><text x="15" y="30" text-anchor="middle" font-size="6" font-weight="700" fill="#EA4335" font-family="Arial,sans-serif">o</text><text x="21" y="30" text-anchor="middle" font-size="6" font-weight="700" fill="#FBBC05" font-family="Arial,sans-serif">o</text><text x="27" y="30" text-anchor="middle" font-size="6" font-weight="700" fill="#34A853" font-family="Arial,sans-serif">g</text><text x="33" y="30" text-anchor="middle" font-size="6" font-weight="700" fill="#4285F4" font-family="Arial,sans-serif">le</text><text x="24" y="40" text-anchor="middle" font-size="6" font-weight="700" fill="#5F6368" font-family="Arial,sans-serif">Pay</text></svg></span><span class="upi-app-name">Google Pay</span></button>
-                <button class="upi-app-btn" onclick="launchUPI('bhim')"><span class="upi-app-icon"><svg viewBox="0 0 48 48" width="40" height="40" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="48" rx="10" fill="#1A237E"/><rect x="0" y="0" width="48" height="16" rx="10" fill="#FF9933"/><rect x="0" y="16" width="48" height="16" fill="#fff"/><rect x="0" y="32" width="48" height="16" fill="#138808"/><rect x="0" y="38" width="48" height="10" rx="10" fill="#138808"/><circle cx="24" cy="24" r="6" fill="none" stroke="#000080" stroke-width="1.5"/><text x="24" y="24.5" text-anchor="middle" dominant-baseline="middle" font-size="5" font-weight="900" fill="#000080" font-family="Arial,sans-serif">BHIM</text></svg></span><span class="upi-app-name">BHIM</span></button>
-                <button class="upi-app-btn" onclick="launchUPI('phonepe')"><span class="upi-app-icon"><svg viewBox="0 0 48 48" width="40" height="40" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="48" rx="10" fill="#5F259F"/><circle cx="24" cy="20" r="10" fill="#fff" opacity="0.15"/><text x="24" y="18" text-anchor="middle" font-size="13" font-weight="900" fill="#fff" font-family="Arial,sans-serif">Pe</text><text x="24" y="34" text-anchor="middle" font-size="7" font-weight="700" fill="#fff" font-family="Arial,sans-serif" opacity="0.85">PhonePe</text></svg></span><span class="upi-app-name">PhonePe</span></button>
-                <button class="upi-app-btn" onclick="launchUPI('whatsapp')"><span class="upi-app-icon"><svg viewBox="0 0 48 48" width="40" height="40" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="48" rx="10" fill="#25D366"/><circle cx="24" cy="22" r="11" fill="#fff"/><path d="M24 13c-4.97 0-9 4.03-9 9 0 1.59.42 3.08 1.14 4.38L15 31l4.74-1.24A8.96 8.96 0 0024 31c4.97 0 9-4.03 9-9s-4.03-9-9-9zm4.4 12.61c-.19.53-1.1.98-1.52 1.04-.39.05-.88.07-1.42-.09-.33-.1-.75-.23-1.29-.46-2.27-.98-3.75-3.27-3.87-3.42-.12-.15-.97-1.29-.97-2.46 0-1.17.61-1.75.83-1.99.22-.24.48-.3.64-.3l.46.01c.15.01.35-.06.54.41.2.49.69 1.68.75 1.8.06.12.1.27.02.43-.08.16-.12.26-.24.4-.12.14-.25.31-.36.42-.12.12-.24.25-.1.49.14.24.61 1.01 1.31 1.63.9.8 1.66 1.05 1.9 1.17.24.12.38.1.52-.06.14-.16.59-.69.75-.93.16-.24.32-.2.54-.12.22.08 1.4.66 1.64.78.24.12.4.18.46.28.06.1.06.56-.13 1.1z" fill="#25D366"/><text x="24" y="41" text-anchor="middle" font-size="5.5" font-weight="700" fill="#fff" font-family="Arial,sans-serif">WhatsApp Pay</text></svg></span><span class="upi-app-name">WhatsApp Pay</span></button>
-              </div>
-              <div class="utr-section">
-                <span class="utr-label">&#x1F511; Enter UTR / Transaction Reference Number</span>
-                <div class="utr-desc">After payment, your UPI app shows a 12-digit UTR. Enter it below to confirm your payment.</div>
-                <div class="utr-input-row"><input type="text" class="utr-input" id="utrInput" placeholder="e.g. 504616234567" maxlength="30" /></div>
-                <div class="utr-error" id="utrError"></div>
-              </div>
-              <button class="pay-proceed" style="display:flex;" onclick="onConfirmPayment()">&#x2705;&nbsp; Confirm Payment</button>
             </div>
             <div id="step4" style="display:none;">
               <div class="thankyou-wrap">
@@ -1301,6 +1443,22 @@
     // Admin hook
     if(typeof lnPayInitiated==='function') lnPayInitiated(txnRef,userData,selDesc,selAmount);
 
+    // ── Populate Nykaa order summary ──────────────────────────────────
+    var gd0=calcGST(selAmount);
+    document.getElementById('nykGuideName').textContent=selDesc;
+    document.getElementById('nykGuideTotal').textContent='\u20b9'+selAmount.toLocaleString('en-IN');
+    document.getElementById('nykSumBase').textContent='\u20b9'+gd0.base.toLocaleString('en-IN',{minimumFractionDigits:2});
+    document.getElementById('nykSumGst').textContent='\u20b9'+gd0.gst.toLocaleString('en-IN',{minimumFractionDigits:2});
+    document.getElementById('nykSumTotal').textContent='\u20b9'+gd0.total.toLocaleString('en-IN');
+    var capEl=document.getElementById('cardPayAmt');if(capEl)capEl.textContent=selAmount.toLocaleString('en-IN');
+    document.getElementById('step3Summary').textContent=selDesc+' \u00b7 \u20b9'+selAmount.toLocaleString('en-IN');
+
+    // ── Show Nykaa payment screen ─────────────────────────────────────
+    showStep('step3');
+    switchPayTab('upi');
+  };
+
+  window.openRazorpayCheckout=function(){
     // ── Open Razorpay Standard Checkout ──────────────────────────────
     var rzpOptions={
       key: RZP_KEY_ID,
@@ -1310,7 +1468,7 @@
       description: selDesc,
       image: 'https://fobinterview.vercel.app/og-cover.png',
       // order_id: '',  // pass server-generated order_id here if you add a backend
-      prefill:{name:name, email:email, contact:mobile?'+91'+mobile:''},
+      prefill:{name:userData.name, email:userData.email, contact:userData.mobile?'+91'+userData.mobile:''},
       notes:{order_ref:txnRef, guide:selDesc},
       theme:{color:'#A8782A'},
       config:{
@@ -1362,8 +1520,8 @@
       },
       modal:{
         ondismiss: function(){
-          // User closed the modal without paying — stay on step 2
-          utrSubmitted=true; // suppress abandon-alert for this session
+          // User closed the Razorpay modal — stay on payment screen
+          utrSubmitted=true; // suppress abandon-alert
         }
       }
     };
@@ -1373,6 +1531,14 @@
       onPaymentFailure();
     });
     rzp.open();
+  };
+
+  window.switchPayTab=function(tab){
+    document.querySelectorAll('.nyk-tab').forEach(function(t){t.classList.remove('active');});
+    document.querySelectorAll('.nyk-pane').forEach(function(p){p.classList.remove('active');});
+    var te=document.getElementById('tab-'+tab),pe=document.getElementById('pane-'+tab);
+    if(te)te.classList.add('active');
+    if(pe)pe.classList.add('active');
   };
   window.goBackToStep2=function(){utrSubmitted=true;showStep('step2');};
   window.copyUPIId=function(){navigator.clipboard.writeText(UPI_ID).then(function(){var b=document.querySelector('.copy-btn');b.textContent='Copied!';setTimeout(function(){b.textContent='Copy';},2000);});};
