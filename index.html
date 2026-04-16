@@ -1314,19 +1314,6 @@
       prefill:{name:name, email:email, contact:mobile?'+91'+mobile:''},
       notes:{order_ref:txnRef, guide:selDesc},
       theme:{color:'#A8782A'},
-      config:{
-        display:{
-          blocks:{
-            nb_icici:{name:'ICICI Bank',   instruments:[{method:'netbanking',bank:'ICIC'}]},
-            nb_hdfc: {name:'HDFC Bank',    instruments:[{method:'netbanking',bank:'HDFC'}]},
-            nb_axis: {name:'Axis Bank',    instruments:[{method:'netbanking',bank:'UTIB'}]},
-            nb_sbi:  {name:'SBI',          instruments:[{method:'netbanking',bank:'SBIN'}]},
-            nb_idfc: {name:'IDFC First Bank', instruments:[{method:'netbanking',bank:'IDFB'}]}
-          },
-          sequence:['block.nb_icici','block.nb_hdfc','block.nb_axis','block.nb_sbi','block.nb_idfc'],
-          preferences:{show_default_blocks:true}
-        }
-      },
       handler: function(response){
         utrNumber=response.razorpay_payment_id;
         utrSubmitted=true;
