@@ -1317,21 +1317,13 @@
         display:{
           blocks:{
             cards:{
-              name:'Pay via Card',
+              name:'Pay via Card (Visa / MasterCard / RuPay / Amex / Maestro / Diners / Discover / UnionPay)',
               instruments:[
-                {method:'card',networks:['Visa']},
-                {method:'card',networks:['MasterCard']},
-                {method:'card',networks:['RuPay']},
-                {method:'card',networks:['Amex']}
-              ]
-            },
-            intl_cards:{
-              name:'International Cards',
-              instruments:[
-                {method:'card',networks:['Maestro']},
-                {method:'card',networks:['DinersClub']},
-                {method:'card',networks:['Discover']},
-                {method:'card',networks:['UnionPay']}
+                {
+                  method:'card',
+                  networks:['Visa','MasterCard','RuPay','Amex','Maestro','DinersClub','Discover','UnionPay'],
+                  types:['credit','debit']
+                }
               ]
             },
             apple_pay:{
@@ -1345,7 +1337,7 @@
               instruments:[{method:'emi'}]
             }
           },
-          sequence:['block.cards','block.intl_cards','block.apple_pay','block.emi'],
+          sequence:['block.cards','block.apple_pay','block.emi'],
           preferences:{show_default_blocks:true}
         }
       },
