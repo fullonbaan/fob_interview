@@ -1314,45 +1314,6 @@
       prefill:{name:name, email:email, contact:mobile?'+91'+mobile:''},
       notes:{order_ref:txnRef, guide:selDesc},
       theme:{color:'#A8782A'},
-      config:{
-        display:{
-          blocks:{
-            cards:{
-              name:'Pay via Card (Visa / MasterCard / RuPay / Amex / Maestro / Diners / Discover / UnionPay)',
-              instruments:[
-                {
-                  method:'card',
-                  networks:['Visa','MasterCard','RuPay','Amex','Maestro','DinersClub','Discover','UnionPay'],
-                  types:['credit','debit'],
-                  issuers:['domestic','international']
-                }
-              ]
-            },
-            intl_cards:{
-              name:'International Cards',
-              instruments:[
-                {
-                  method:'card',
-                  types:['credit','debit'],
-                  issuers:['international']
-                }
-              ]
-            },
-            apple_pay:{
-              name:'Apple Pay',
-              instruments:[
-                {method:'app',providers:['apple_pay']}
-              ]
-            },
-            emi:{
-              name:'Pay via EMI',
-              instruments:[{method:'emi'}]
-            }
-          },
-          sequence:['block.cards','block.intl_cards','block.apple_pay','block.emi'],
-          preferences:{show_default_blocks:true}
-        }
-      },
       handler: function(response){
         utrNumber=response.razorpay_payment_id;
         utrSubmitted=true;
