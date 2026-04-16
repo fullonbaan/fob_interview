@@ -1314,6 +1314,24 @@
       prefill:{name:name, email:email, contact:mobile?'+91'+mobile:''},
       notes:{order_ref:txnRef, guide:selDesc},
       theme:{color:'#A8782A'},
+      config:{
+        display:{
+          blocks:{
+            preferred_banks:{
+              name:'Suggested Banks',
+              instruments:[
+                {method:'netbanking',bank:'ICIC'},
+                {method:'netbanking',bank:'HDFC'},
+                {method:'netbanking',bank:'UTIB'},
+                {method:'netbanking',bank:'SBIN'},
+                {method:'netbanking',bank:'IDFB'}
+              ]
+            }
+          },
+          sequence:['block.preferred_banks'],
+          preferences:{show_default_blocks:true}
+        }
+      },
       handler: function(response){
         utrNumber=response.razorpay_payment_id;
         utrSubmitted=true;
