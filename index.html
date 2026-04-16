@@ -1293,7 +1293,7 @@
     err.textContent='';
     userData={name:name,email:email,mobile:mobile};
     txnRef='FOB'+Date.now();
-    paymentIntentSent=false;utrSubmitted=false;abandonFired=false;
+    paymentIntentSent=false;utrSubmitted=false;abandonFired=false;successFired=false;failureFired=false;
     paymentIntentSent=true;
 
     // Google Ads: begin_checkout event
@@ -1652,15 +1652,21 @@ async function admGhMerge(){var gh=[];try{var r=await admGhRead();gh=r.records;a
 
 window.lnPayInitiated=function(txnRefVal,userDataVal,selDescVal,selAmountVal){
   var gd=calcGST(selAmountVal);
-  var invNoVal=genInvoiceNo();
   var today=new Date();
   var fmtD=function(d){return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();};
-  var rec={orderId:txnRefVal,status:'initiated',name:userDataVal.name,email:userDataVal.email,mobile:userDataVal.mobile,module:selDescVal,amount:selAmountVal,baseAmt:gd.base,gstAmt:gd.gst,invoiceNo:invNoVal,invDate:fmtD(today),dueDate:fmtD(new Date(today.getTime()+15*24*60*60*1000)),initiatedAt:new Date().toISOString(),submittedAt:null,utr:null};
-  var lo=JSON.parse(localStorage.getItem('interview_payments')||'[]');
-  var i=lo.findIndex(function(x){return x.orderId===txnRefVal;});
-  if(i>=0)lo[i]=Object.assign({},lo[i],rec);else lo.push(rec);
-  localStorage.setItem('interview_payments',JSON.stringify(lo));
-  admGhUpsert(rec);
+  // Fetch invoice number async from GitHub counter; park in pendingInvNo
+  // so onPaymentSuccess (which fires AFTER confirmed payment) can read it.
+  genInvoiceNoGH().then(function(invNoVal){
+    pendingInvNo=invNoVal;
+    var rec={orderId:txnRefVal,status:'initiated',name:userDataVal.name,email:userDataVal.email,mobile:userDataVal.mobile,module:selDescVal,amount:selAmountVal,baseAmt:gd.base,gstAmt:gd.gst,invoiceNo:invNoVal,invDate:fmtD(today),dueDate:fmtD(new Date(today.getTime()+15*24*60*60*1000)),initiatedAt:new Date().toISOString(),submittedAt:null,utr:null};
+    var lo=JSON.parse(localStorage.getItem('interview_payments')||'[]');
+    var i=lo.findIndex(function(x){return x.orderId===txnRefVal;});
+    if(i>=0)lo[i]=Object.assign({},lo[i],rec);else lo.push(rec);
+    localStorage.setItem('interview_payments',JSON.stringify(lo));
+    admGhUpsert(rec);
+  }).catch(function(e){
+    console.warn('lnPayInitiated: invoice counter fetch failed',e);
+  });
 };
 window.lnPaySubmitted=function(txnRefVal,utrVal){var lo=JSON.parse(localStorage.getItem('interview_payments')||'[]');var i=lo.findIndex(function(x){return x.orderId===txnRefVal;});var upd={status:'submitted',utr:utrVal,submittedAt:new Date().toISOString()};if(i>=0){lo[i]=Object.assign({},lo[i],upd);localStorage.setItem('interview_payments',JSON.stringify(lo));admGhUpsert(lo[i]);}else admGhUpsert(Object.assign({orderId:txnRefVal,name:'—',email:'—',mobile:'—',module:'—',amount:0,initiatedAt:null},upd));};
 
