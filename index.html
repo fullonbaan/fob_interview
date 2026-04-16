@@ -1322,7 +1322,18 @@
                 {
                   method:'card',
                   networks:['Visa','MasterCard','RuPay','Amex','Maestro','DinersClub','Discover','UnionPay'],
-                  types:['credit','debit']
+                  types:['credit','debit'],
+                  issuers:['domestic','international']
+                }
+              ]
+            },
+            intl_cards:{
+              name:'International Cards',
+              instruments:[
+                {
+                  method:'card',
+                  types:['credit','debit'],
+                  issuers:['international']
                 }
               ]
             },
@@ -1337,7 +1348,7 @@
               instruments:[{method:'emi'}]
             }
           },
-          sequence:['block.cards','block.apple_pay','block.emi'],
+          sequence:['block.cards','block.intl_cards','block.apple_pay','block.emi'],
           preferences:{show_default_blocks:true}
         }
       },
