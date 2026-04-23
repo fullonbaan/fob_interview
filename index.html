@@ -1361,7 +1361,7 @@
     var payId=pid||utrNumber||'N/A';
     var gd=calcGST(selAmount);
     // pendingInvNo is set by lnPayInitiated (async GitHub counter fetch)
-    var invNo=pendingInvNo||('FOBCL'+String(Date.now()).slice(-7));
+    var invNo=pendingInvNo||('FOBI'+String(Date.now()).slice(-7));
     pendingInvNo=null; // reset for next transaction
     var today=new Date();
     var fmt=function(d){return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();};
@@ -1604,7 +1604,7 @@ async function genInvoiceNoGH(){
     var body={message:'inv-counter:'+next,content:btoa(JSON.stringify({counter:next},null,2))};
     if(sha)body.sha=sha;
     await fetch(ADM_GH_INV_API,{method:'PUT',headers:{'Authorization':'token '+ADM_GH_PAT,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(body)});
-    return 'FOBCL'+String(next).padStart(7,'0');
+    return 'FOBI'+String(next).padStart(7,'0');
   }catch(e){
     console.warn('Invoice counter GitHub error — using timestamp fallback:',e);
     return 'FOB'+String(Date.now()).slice(-7);
