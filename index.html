@@ -673,7 +673,15 @@
       <a href="#bundles">Bundles</a>
       <a href="#faq">FAQ</a>
     </div>
-    <a class="nav-cta" href="#contact">Buy Now</a>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <select id="currencySelect" onchange="switchCurrency(this.value)" aria-label="Currency"
+              style="background:#fff;border:1px solid var(--border,#e8e2d9);color:var(--ink,#191923);padding:8px 12px;border-radius:8px;font-family:'DM Mono',monospace;font-size:12px;font-weight:700;letter-spacing:0.06em;cursor:pointer;outline:none;">
+        <option value="INR">&#x1F1EE;&#x1F1F3; INR (&#x20b9;)</option>
+        <option value="USD">&#x1F1FA;&#x1F1F8; USD ($)</option>
+        <option value="EUR">&#x1F1EA;&#x1F1FA; EUR (&#x20ac;)</option>
+      </select>
+      <a class="nav-cta" href="#contact">Buy Now</a>
+    </div>
   </div>
 </nav>
 
@@ -736,17 +744,17 @@
         <tr>
           <td><div class="pt-name">Technical Track</div></td>
           <td><div class="pt-modules">Dev, Admin, Studio, ION, BOD, Extensions &amp; Infor OS Administration</div></td>
-          <td><div class="pt-price">&#x20B9;699<span class="gst-tag"> incl. GST</span> <span class="pt-price-sub">ea</span></div><div class="pt-price-orig">Bundle &#x20B9;2,999 (all 7)</div><div class="pt-save-badge">Save &#x20B9;1,894</div></td>
+          <td data-fob-track="combo_tech"><div class="pt-price"><span class="pt-price-each">&#x20B9;699</span><span class="gst-tag"> incl. GST</span> <span class="pt-price-sub">ea</span></div><div class="pt-price-orig"><span class="pt-bundle-label">Bundle </span><span class="pt-bundle-amt">&#x20B9;2,999</span><span class="pt-bundle-suffix"> (all 7)</span></div><div class="pt-save-badge"><span class="pt-save-label">Save </span><span class="pt-save-amt">&#x20B9;1,894</span></div></td>
         </tr>
         <tr>
           <td><div class="pt-name">Functional Track</div></td>
           <td><div class="pt-modules">Finance, SCM, Manufacturing, Planning &amp; WMS</div></td>
-          <td><div class="pt-price">&#x20B9;699<span class="gst-tag"> incl. GST</span> <span class="pt-price-sub">ea</span></div><div class="pt-price-orig">Bundle &#x20B9;1,999 (all 5)</div><div class="pt-save-badge">Save &#x20B9;1,496</div></td>
+          <td data-fob-track="combo_func"><div class="pt-price"><span class="pt-price-each">&#x20B9;699</span><span class="gst-tag"> incl. GST</span> <span class="pt-price-sub">ea</span></div><div class="pt-price-orig"><span class="pt-bundle-label">Bundle </span><span class="pt-bundle-amt">&#x20B9;1,999</span><span class="pt-bundle-suffix"> (all 5)</span></div><div class="pt-save-badge"><span class="pt-save-label">Save </span><span class="pt-save-amt">&#x20B9;1,496</span></div></td>
         </tr>
         <tr class="featured">
           <td><div class="pt-name">Complete Bundle <span class="pt-elite">Best Value</span></div></td>
           <td><div class="pt-modules">Complete Unified Access: All Technical &amp; Functional Guides</div></td>
-          <td><div class="pt-price">&#x20B9;3,999<span class="gst-tag"> incl. GST</span></div><div class="pt-price-orig">&#x20B9;8,388 individually</div><div class="pt-save-badge">Save &#x20B9;4,389</div></td>
+          <td data-fob-track="combo_all"><div class="pt-price"><span class="pt-price-each">&#x20B9;3,999</span><span class="gst-tag"> incl. GST</span></div><div class="pt-price-orig"><span class="pt-bundle-amt">&#x20B9;8,388</span><span class="pt-bundle-suffix"> individually</span></div><div class="pt-save-badge"><span class="pt-save-label">Save </span><span class="pt-save-amt">&#x20B9;4,389</span></div></td>
         </tr>
       </tbody>
     </table>
@@ -1010,7 +1018,7 @@
       </div>
       <div class="faq-item">
         <button class="faq-q" onclick="this.parentElement.classList.toggle('open')">How are bundles different from buying individual guides?</button>
-        <div class="faq-a"><div class="faq-a-inner">Bundles give you the same guides at a steep discount. For example, the Full Academy bundle includes all 12 guides for &#x20B9;3,999 instead of &#x20B9;8,388 if purchased separately &#8212; that's 52% off. The content is identical; you just pay less.</div></div>
+        <div class="faq-a"><div class="faq-a-inner">Bundles give you the same guides at a steep discount. For example, the Full Academy bundle includes all 12 guides for <span data-fob-bundle="combo_all">&#x20B9;3,999</span> instead of <span data-fob-individual-total="combo_all">&#x20B9;8,388</span> if purchased separately &#8212; that's <span data-fob-bundle-pct="combo_all">52</span>% off. The content is identical; you just pay less.</div></div>
       </div>
       <div class="faq-item">
         <button class="faq-q" onclick="this.parentElement.classList.toggle('open')">Do the guides cover the latest Infor LN version?</button>
@@ -1101,7 +1109,7 @@
         <div class="pay-panel" id="payPanel">
           <div class="pay-inner">
             <div id="step1">
-              <div class="pay-row">
+<div class="pay-row">
                 <div>
                   <span class="pay-label">Select Guide</span>
                   <select class="pay-select" id="modSelect" onchange="onModuleChange()">
@@ -1468,26 +1476,41 @@
      in front-end code. Use it only on a server-side endpoint to verify the
      razorpay_signature after a successful payment.                        */
 
+  /* Per-currency fixed prices. INR is the GST-applicable currency; USD/EUR
+     are tax-exclusive flat rates. Total amount is what the customer pays. */
   var GUIDES = {
-    dev:{name:'Infor LN Development Interview Guide',price:699},
-    adm:{name:'Infor LN Administration Interview Guide',price:699},
-    bod:{name:'Infor BOD Interview Guide',price:699},
-    ion:{name:'Infor ION Interview Guide',price:699},
-    ext:{name:'Infor LN Extensions Interview Guide',price:699},
-    fin:{name:'Infor LN Finance Interview Guide',price:699},
-    scm:{name:'Infor LN SCM Interview Guide',price:699},
-    mfg:{name:'Infor LN Manufacturing Interview Guide',price:699},
-    pln:{name:'Infor LN Planning Interview Guide',price:699},
-    wms:{name:'Infor LN WMS Interview Guide',price:699},
-    os:{name:'Infor OS Administration Interview Guide',price:699},
-    std:{name:'Infor LN Studio Interview Guide',price:699},
-    combo_tech:{name:'Combo Technical \u2014 All 7 Tech Guides',price:2999},
-    combo_func:{name:'Combo Functional \u2014 All 5 Func Guides',price:1999},
-    combo_all:{name:'Combo Technical & Functional \u2014 All 12 Guides',price:3999},
+    dev:{name:'Infor LN Development Interview Guide',           prices:{INR:699,  USD:10, EUR:10}},
+    adm:{name:'Infor LN Administration Interview Guide',        prices:{INR:699,  USD:10, EUR:10}},
+    bod:{name:'Infor BOD Interview Guide',                       prices:{INR:699,  USD:10, EUR:10}},
+    ion:{name:'Infor ION Interview Guide',                       prices:{INR:699,  USD:10, EUR:10}},
+    ext:{name:'Infor LN Extensions Interview Guide',             prices:{INR:699,  USD:10, EUR:10}},
+    fin:{name:'Infor LN Finance Interview Guide',                prices:{INR:699,  USD:10, EUR:10}},
+    scm:{name:'Infor LN SCM Interview Guide',                    prices:{INR:699,  USD:10, EUR:10}},
+    mfg:{name:'Infor LN Manufacturing Interview Guide',          prices:{INR:699,  USD:10, EUR:10}},
+    pln:{name:'Infor LN Planning Interview Guide',               prices:{INR:699,  USD:10, EUR:10}},
+    wms:{name:'Infor LN WMS Interview Guide',                    prices:{INR:699,  USD:10, EUR:10}},
+    os: {name:'Infor OS Administration Interview Guide',         prices:{INR:699,  USD:10, EUR:10}},
+    std:{name:'Infor LN Studio Interview Guide',                 prices:{INR:699,  USD:10, EUR:10}},
+    combo_tech:{name:'Combo Technical \u2014 All 7 Tech Guides',  prices:{INR:2999, USD:39, EUR:35}},
+    combo_func:{name:'Combo Functional \u2014 All 5 Func Guides', prices:{INR:1999, USD:29, EUR:25}},
+    combo_all: {name:'Full Academy \u2014 All 12 Guides',         prices:{INR:3999, USD:49, EUR:40}}
   };
+  /* Currency metadata — symbol and label for each supported currency. */
+  var CURRENCIES = {
+    INR: { symbol:'\u20b9', label:'INR', locale:'en-IN' },
+    USD: { symbol:'$',       label:'USD', locale:'en-US' },
+    EUR: { symbol:'\u20ac', label:'EUR', locale:'en-US' }
+  };
+  var SEL_CURR = 'INR';                               // default currency
+  function getCurrSymbol(c){ return (CURRENCIES[c]||CURRENCIES.INR).symbol; }
+  function getCurrLocale(c){ return (CURRENCIES[c]||CURRENCIES.INR).locale; }
+  function fmtMoney(amt, c){
+    var sym=getCurrSymbol(c), loc=getCurrLocale(c);
+    return sym + Number(amt).toLocaleString(loc, {minimumFractionDigits: c==='INR'?0:2, maximumFractionDigits: c==='INR'?0:2});
+  }
   var UPI_ID='nikivernekar@okicici', UPI_NAME='FullonBaan';
   var UPI_APPS={paytm:{scheme:'paytmmp://upi/pay'},gpay:{scheme:'tez://upi/pay'},bhim:{scheme:'bhim://upi/pay'},phonepe:{scheme:'phonepe://upi/pay'},whatsapp:{scheme:'whatsapp://upi/pay'}};
-  var selAmount=0,selDesc='',selKey='';
+  var selAmount=0,selDesc='',selKey='',selCurr='INR';
   var userData={name:'',email:'',mobile:''};
   var txnRef='',utrNumber='',paymentIntentSent=false,utrSubmitted=false,abandonFired=false,successFired=false,failureFired=false;
 
@@ -1510,19 +1533,179 @@
     if(gb)gb.style.display='none';
     if(!selKey)return;
     var g=GUIDES[selKey];if(!g)return;
-    selAmount=g.price;selDesc=g.name;
-    document.getElementById('amountDesc').textContent=selDesc;
-    document.getElementById('amountVal').textContent='\u20b9'+selAmount.toLocaleString('en-IN');
-    // Show GST breakdown
-    var gd=calcGST(selAmount);
-    document.getElementById('gstBase').textContent='\u20b9'+gd.base.toLocaleString('en-IN',{minimumFractionDigits:2});
-    document.getElementById('gstAmt').textContent='\u20b9'+gd.gst.toLocaleString('en-IN',{minimumFractionDigits:2});
-    document.getElementById('gstTotal').textContent='\u20b9'+gd.total.toLocaleString('en-IN');
-    if(gb)gb.style.display='block';
+    /* Pull the price for the currently selected currency. Total is GST-inclusive
+       for INR; for USD/EUR there is no GST. */
+    selCurr  = SEL_CURR;
+    selAmount = (g.prices && g.prices[selCurr] != null) ? g.prices[selCurr] : (g.prices && g.prices.INR) || 0;
+    selDesc  = g.name;
+    document.getElementById('amountDesc').textContent = selDesc;
+    /* Update the currency label + amount in the right column */
+    var paCurr = document.querySelector('#amountRow .pa-curr'); if(paCurr) paCurr.textContent = selCurr;
+    document.getElementById('amountVal').textContent = fmtMoney(selAmount, selCurr);
+    if(selCurr === 'INR'){
+      // GST applies — show breakdown
+      var gd = calcGST(selAmount);
+      document.getElementById('gstBase').textContent  = fmtMoney(gd.base,  'INR');
+      document.getElementById('gstAmt').textContent   = fmtMoney(gd.gst,   'INR');
+      document.getElementById('gstTotal').textContent = fmtMoney(gd.total, 'INR');
+      if(gb) gb.style.display = 'block';
+    } else {
+      // Non-INR: no GST applicable
+      if(gb) gb.style.display = 'none';
+    }
     document.getElementById('amountRow').classList.add('visible');
     document.getElementById('proceedBtn').classList.add('visible');
     document.getElementById('upiNote').classList.add('visible');
   };
+  /* Bundle item counts — used to compute the strike-through "individual total" and savings. */
+  var BUNDLE_ITEM_COUNTS = { combo_tech: 7, combo_func: 5, combo_all: 12 };
+  /* Update every visible price on the page to the given currency. Idempotent. */
+  function applyCurrencyToPage(curr){
+    if(!CURRENCIES[curr]) curr = 'INR';
+    var indivPrice = (GUIDES.dev && GUIDES.dev.prices && GUIDES.dev.prices[curr]) || 0;
+    var taxTagINR = '<span class="gst-tag"> incl. GST</span>';
+    var taxTagXC  = '<span class="gst-tag" style="opacity:.7;"> excl. GST</span>';
+    var taxTag = (curr==='INR') ? taxTagINR : taxTagXC;
+    /* For non-INR, hide the "₹999 → ₹699" strike-through marketing on guide cards
+       since the discount math doesn't translate cleanly across currencies. */
+    var showOrig = (curr === 'INR');
+
+    /* ── Individual guide cards ── */
+    document.querySelectorAll('.guide-card').forEach(function(card){
+      var btn = card.querySelector('[onclick^="selectGuide("]');
+      if(!btn) return;
+      var m = String(btn.getAttribute('onclick')||'').match(/selectGuide\(['"]([^'"\)]+)['"]/);
+      if(!m) return;
+      var key = m[1];
+      var g = GUIDES[key]; if(!g) return;
+      var price = (g.prices && g.prices[curr] != null) ? g.prices[curr] : 0;
+      var priceEl = card.querySelector('.guide-price');
+      if(priceEl){
+        var origHtml = showOrig ? '<span class="guide-price-orig">'+fmtMoney(999,'INR')+'</span>' : '';
+        priceEl.innerHTML = origHtml + fmtMoney(price, curr) + taxTag;
+      }
+    });
+
+    /* ── Bundle cards ── */
+    document.querySelectorAll('.bundle-card,[class*="bundle"]').forEach(function(card){
+      var btn = card.querySelector('[onclick^="selectGuide("]');
+      if(!btn) return;
+      var m = String(btn.getAttribute('onclick')||'').match(/selectGuide\(['"]([^'"\)]+)['"]/);
+      if(!m) return;
+      var key = m[1];
+      var g = GUIDES[key]; if(!g) return;
+      var count = BUNDLE_ITEM_COUNTS[key]||0;
+      var bundleP = (g.prices && g.prices[curr] != null) ? g.prices[curr] : 0;
+      var indivTotal = count * indivPrice;
+      var saving = Math.max(0, indivTotal - bundleP);
+      var pct = indivTotal>0 ? Math.round((saving/indivTotal)*100) : 0;
+      /* .bundle-price (the headline price) */
+      var bundlePriceEl = card.querySelector('.bundle-price');
+      if(bundlePriceEl){ bundlePriceEl.innerHTML = fmtMoney(bundleP, curr) + taxTag; }
+      /* .bundle-math-strike (individual total) */
+      var strike = card.querySelector('.bundle-math-strike');
+      if(strike){ strike.textContent = fmtMoney(indivTotal, curr); }
+      /* .bundle-math-final (final discounted price) */
+      var fin = card.querySelector('.bundle-math-final');
+      if(fin){ fin.textContent = fmtMoney(bundleP, curr); }
+      /* .bundle-save (Save ₹X (Y% off)) */
+      var save = card.querySelector('.bundle-save');
+      if(save){ save.innerHTML = 'Save ' + fmtMoney(saving, curr) + ' (' + pct + '% off)'; }
+    });
+
+    /* ── Pricing comparison table rows ── */
+    document.querySelectorAll('[data-fob-track]').forEach(function(td){
+      var key = td.getAttribute('data-fob-track');
+      var g = GUIDES[key]; if(!g) return;
+      var bundleP = (g.prices && g.prices[curr] != null) ? g.prices[curr] : 0;
+      var count = BUNDLE_ITEM_COUNTS[key]||0;
+      var indivTotal = count * indivPrice;
+      var saving = Math.max(0, indivTotal - bundleP);
+      /* .pt-price-each — individual price (or bundle-only for combo_all) */
+      var each = td.querySelector('.pt-price-each');
+      if(each){
+        each.textContent = (key === 'combo_all') ? fmtMoney(bundleP, curr) : fmtMoney(indivPrice, curr);
+      }
+      /* .pt-bundle-amt — bundle price for tech/func, individual-total for combo_all */
+      var amt = td.querySelector('.pt-bundle-amt');
+      if(amt){
+        amt.textContent = (key === 'combo_all') ? fmtMoney(indivTotal, curr) : fmtMoney(bundleP, curr);
+      }
+      /* .pt-save-amt — savings */
+      var saveAmt = td.querySelector('.pt-save-amt');
+      if(saveAmt){ saveAmt.textContent = fmtMoney(saving, curr); }
+      /* gst-tag — show "incl. GST" only for INR */
+      var gstTag = td.querySelector('.gst-tag');
+      if(gstTag){ gstTag.innerHTML = (curr==='INR') ? ' incl. GST' : ' excl. GST'; gstTag.style.opacity = (curr==='INR') ? '' : '.7'; }
+    });
+
+    /* ── Sticky bar "Guides from X" ── */
+    document.querySelectorAll('[data-fob-from="indiv"]').forEach(function(el){
+      el.textContent = fmtMoney(indivPrice, curr);
+    });
+
+    /* ── FAQ narrative: "for X instead of Y if purchased separately — that's Z% off" ── */
+    document.querySelectorAll('[data-fob-bundle]').forEach(function(el){
+      var k = el.getAttribute('data-fob-bundle');
+      var p = (GUIDES[k] && GUIDES[k].prices && GUIDES[k].prices[curr]) || 0;
+      el.textContent = fmtMoney(p, curr);
+    });
+    document.querySelectorAll('[data-fob-individual-total]').forEach(function(el){
+      var k = el.getAttribute('data-fob-individual-total');
+      var n = BUNDLE_ITEM_COUNTS[k]||0;
+      el.textContent = fmtMoney(n * indivPrice, curr);
+    });
+    document.querySelectorAll('[data-fob-bundle-pct]').forEach(function(el){
+      var k = el.getAttribute('data-fob-bundle-pct');
+      var n = BUNDLE_ITEM_COUNTS[k]||0;
+      var bp = (GUIDES[k] && GUIDES[k].prices && GUIDES[k].prices[curr]) || 0;
+      var indivTotal = n * indivPrice;
+      var pct = indivTotal>0 ? Math.round(((indivTotal-bp)/indivTotal)*100) : 0;
+      el.textContent = String(pct);
+    });
+
+    /* ── Modal Step-1 dropdown labels ── */
+    var sel = document.getElementById('modSelect');
+    if(sel){
+      Array.prototype.forEach.call(sel.options, function(opt){
+        var key = opt.value;
+        if(!key || !GUIDES[key]) return;
+        var g = GUIDES[key];
+        var price = (g.prices && g.prices[curr] != null) ? g.prices[curr] : 0;
+        /* Strip any existing trailing price after the last em-dash */
+        var label = String(opt.textContent);
+        var idx = label.lastIndexOf(' \u2014 ');
+        if(idx > 0) label = label.slice(0, idx);
+        opt.textContent = label + ' \u2014 ' + fmtMoney(price, curr);
+      });
+    }
+  }
+
+  /* Currency switcher — wired to the navbar <select> dropdown */
+  window.switchCurrency = function(curr){
+    if(!CURRENCIES[curr]) return;
+    SEL_CURR = curr;
+    /* Persist the choice so it survives page reloads */
+    try { localStorage.setItem('fob_iv_curr', curr); } catch(e){}
+    /* Sync the navbar dropdown (in case this was called programmatically) */
+    var dd = document.getElementById('currencySelect');
+    if(dd && dd.value !== curr) dd.value = curr;
+    /* Update legacy chip state if any chips still exist */
+    document.querySelectorAll('.curr-chip').forEach(function(b){
+      b.classList.toggle('on', b.dataset.curr === curr);
+    });
+    /* Update every visible price on the page so the entire site reflects the new currency. */
+    applyCurrencyToPage(curr);
+    /* If a guide is already selected, recompute the displayed amount + GST */
+    if(selKey) onModuleChange();
+  };
+  /* Run once on page load: restore saved currency choice and localise prices everywhere */
+  document.addEventListener('DOMContentLoaded', function(){
+    var saved = null;
+    try { saved = localStorage.getItem('fob_iv_curr'); } catch(e){}
+    var initial = (saved && CURRENCIES[saved]) ? saved : SEL_CURR;
+    if(typeof window.switchCurrency==='function') window.switchCurrency(initial);
+  });
   window.goToStep2=function(){if(!selAmount){alert('Please select a guide first.');return;}document.getElementById('step2Summary').textContent=selDesc+'  \u00b7  \u20b9'+selAmount.toLocaleString('en-IN');showStep('step2');if(typeof gtag!=='undefined'){gtag('event','add_to_cart',{value:selAmount,currency:'INR',items:[{item_name:selDesc,price:selAmount,quantity:1}]});}};
   window.goToStep1=function(){showStep('step1');};
   window.goToStep3=function(){
@@ -1581,8 +1764,14 @@
     // Admin hook
     if(typeof lnPayInitiated==='function') lnPayInitiated(txnRef,userData,selDesc,selAmount);
 
-    /* Razorpay caps notes at 15 keys — consolidate billing into a slim payload */
-    var split = calcGSTSplitFromInclusive(selAmount, billCountry==='IN'?billStateCd:'');
+    /* Razorpay caps notes at 15 keys — consolidate billing into a slim payload.
+       GST only applies to INR; for USD/EUR the split is identity. */
+    var split;
+    if(selCurr === 'INR'){
+      split = calcGSTSplitFromInclusive(selAmount, billCountry==='IN'?billStateCd:'');
+    } else {
+      split = { base:selAmount, cgst:0, sgst:0, igst:0, gst:0, total:selAmount, taxType:'NONE' };
+    }
     var addr = [billLine1, billLine2].filter(function(p){return !!p;}).join(' | ');
     var stateLine = billStateName ? (billStateName + (billStateCd?' ('+billStateCd+')':'')) : '';
     var taxSplit;
@@ -1603,8 +1792,9 @@
     // ── Open Razorpay Standard Checkout ──────────────────────────────
     var rzpOptions={
       key: RZP_KEY_ID,
-      amount: selAmount * 100,          // paise
-      currency: 'INR',
+      /* For INR, amount is in paise. For USD/EUR Razorpay also uses smallest unit (cents). */
+      amount: Math.round(selAmount * 100),
+      currency: selCurr,
       name: 'FullOnBaan',
       description: selDesc,
       image: 'https://interview.fullonbaan.com/og-cover.png',
@@ -1641,8 +1831,13 @@
   window.onPaymentSuccess=function(pid){
     if(successFired)return; successFired=true;
     var payId=pid||utrNumber||'N/A';
-    /* Use the GST split based on the buyer state captured in goToStep3 */
-    var split = calcGSTSplitFromInclusive(selAmount, (userData.billCountry==='IN')?userData.billStateCode:'');
+    /* GST split based on currency + buyer state. INR only — USD/EUR get no GST. */
+    var split;
+    if(selCurr === 'INR'){
+      split = calcGSTSplitFromInclusive(selAmount, (userData.billCountry==='IN')?userData.billStateCode:'');
+    } else {
+      split = { base:selAmount, cgst:0, sgst:0, igst:0, gst:0, total:selAmount, taxType:'NONE' };
+    }
     // pendingInvNo is set by lnPayInitiated (async GitHub counter fetch)
     var invNo=pendingInvNo||('FOBI'+String(Date.now()).slice(-7));
     pendingInvNo=null; // reset for next transaction
@@ -1655,7 +1850,7 @@
     currentInvData={
       invNo:invNo, invDate:invDate, dueDate:dueDate,
       name:userData.name, email:userData.email, mobile:userData.mobile||'',
-      guide:selDesc,
+      guide:selDesc, currency:selCurr,
       baseAmt:split.base, gstAmt:split.gst, totalAmt:split.total,
       cgstAmt:split.cgst, sgstAmt:split.sgst, igstAmt:split.igst, taxType:split.taxType,
       billCompany:userData.billCompany||'', billLine1:userData.billLine1||'', billLine2:userData.billLine2||'',
@@ -1677,24 +1872,30 @@
     }
 
     document.getElementById('tyEmail').textContent=userData.email;
+    var amtBlock;
+    if(selCurr === 'INR'){
+      amtBlock = '<br><strong>Base Amount:</strong> '+fmtMoney(gd.base,'INR')+
+                 ' &nbsp;+&nbsp; <strong>GST 18%:</strong> '+fmtMoney(gd.gst,'INR')+
+                 '<br><strong>Total Paid:</strong> '+fmtMoney(gd.total,'INR');
+    } else {
+      amtBlock = '<br><strong>Total Paid:</strong> '+fmtMoney(gd.total, selCurr)+' (no GST)';
+    }
     document.getElementById('tyOrderBox').innerHTML=
       '<strong>Invoice No:</strong> '+invNo+
       '<br><strong>Order Ref:</strong> '+txnRef+
       '<br><strong>Payment ID:</strong> '+payId+
       '<br><strong>Guide:</strong> '+selDesc+
-      '<br><strong>Base Amount:</strong> \u20b9'+gd.base.toLocaleString('en-IN',{minimumFractionDigits:2})+
-      ' &nbsp;+&nbsp; <strong>IGST 18%:</strong> \u20b9'+gd.gst.toLocaleString('en-IN',{minimumFractionDigits:2})+
-      '<br><strong>Total Paid:</strong> \u20b9'+gd.total.toLocaleString('en-IN')+
+      amtBlock+
       '<br><strong>Name:</strong> '+userData.name+
       '<br><strong>Email:</strong> '+userData.email;
     showStep('step4');
 
     // Notify admin
-    sendEmail({to_email:'fullonbaan@gmail.com',subject:'New Order \u2014 '+selDesc,status:'PAYMENT CONFIRMED \u2014 RAZORPAY',order_ref:txnRef,utr_number:payId,guide:selDesc,amount:'Rs.'+selAmount.toLocaleString('en-IN')+' (Base: Rs.'+gd.base.toFixed(2)+' + IGST Rs.'+gd.gst.toFixed(2)+')',cust_name:userData.name,cust_email:userData.email,cust_mobile:userData.mobile?('+91 '+userData.mobile):'(not provided)',message:'Invoice No: '+invNo+'. Payment ID: '+payId});
+    sendEmail({to_email:'fullonbaan@gmail.com',subject:'New Order \u2014 '+selDesc,status:'PAYMENT CONFIRMED \u2014 RAZORPAY',order_ref:txnRef,utr_number:payId,guide:selDesc,amount:fmtMoney(selAmount,selCurr)+(selCurr==='INR'?(' (Base: '+fmtMoney(gd.base,'INR')+' + GST '+fmtMoney(gd.gst,'INR')+')'):' (no GST)'),cust_name:userData.name,cust_email:userData.email,cust_mobile:userData.mobile?('+91 '+userData.mobile):'(not provided)',message:'Invoice No: '+invNo+'. Payment ID: '+payId});
     // Customer confirmation
-    sendEmail({to_email:userData.email,subject:'Your FullonBaan Tax Invoice \u2014 '+invNo,status:'PAYMENT CONFIRMED',order_ref:txnRef,utr_number:payId,guide:selDesc,amount:'Rs.'+selAmount.toLocaleString('en-IN'),cust_name:userData.name,cust_email:userData.email,cust_mobile:userData.mobile?('+91 '+userData.mobile):'(not provided)',message:'Thank you! Your payment (ID: '+payId+') was successful. Invoice No: '+invNo+'. Your guide will be delivered to your email shortly. Download your GST invoice from the confirmation page or contact us at fullonbaan@gmail.com.'});
+    sendEmail({to_email:userData.email,subject:'Your FullonBaan Tax Invoice \u2014 '+invNo,status:'PAYMENT CONFIRMED',order_ref:txnRef,utr_number:payId,guide:selDesc,amount:fmtMoney(selAmount,selCurr),cust_name:userData.name,cust_email:userData.email,cust_mobile:userData.mobile?('+91 '+userData.mobile):'(not provided)',message:'Thank you! Your payment (ID: '+payId+') was successful. Invoice No: '+invNo+'. Your guide will be delivered to your email shortly. Download your GST invoice from the confirmation page or contact us at fullonbaan@gmail.com.'});
   };
-  window.onPaymentFailure=function(){if(failureFired)return;failureFired=true;utrSubmitted=true;document.getElementById('failContact').textContent=userData.email+' / +91 '+userData.mobile;document.getElementById('failOrderBox').innerHTML='<strong>Guide:</strong> '+selDesc+'<br><strong>Amount:</strong> \u20b9'+selAmount.toLocaleString('en-IN')+'<br><strong>Name:</strong> '+userData.name+'<br><strong>Email:</strong> '+userData.email;showStep('step5');sendEmail({to_email:'fullonbaan@gmail.com',subject:'Payment Failed \u2014 '+selDesc,status:'PAYMENT FAILED',order_ref:txnRef||'N/A',guide:selDesc,amount:'Rs.'+selAmount.toLocaleString('en-IN'),cust_name:userData.name,cust_email:userData.email,cust_mobile:'+91 '+userData.mobile,message:'Payment failed.'},EMAILJS_TEMPLATE_FAILURE);};
+  window.onPaymentFailure=function(){if(failureFired)return;failureFired=true;utrSubmitted=true;document.getElementById('failContact').textContent=userData.email+' / +91 '+userData.mobile;document.getElementById('failOrderBox').innerHTML='<strong>Guide:</strong> '+selDesc+'<br><strong>Amount:</strong> '+fmtMoney(selAmount,selCurr)+(selCurr==='INR'?' (incl. GST)':'')+'<br><strong>Name:</strong> '+userData.name+'<br><strong>Email:</strong> '+userData.email;showStep('step5');sendEmail({to_email:'fullonbaan@gmail.com',subject:'Payment Failed \u2014 '+selDesc,status:'PAYMENT FAILED',order_ref:txnRef||'N/A',guide:selDesc,amount:fmtMoney(selAmount,selCurr),cust_name:userData.name,cust_email:userData.email,cust_mobile:'+91 '+userData.mobile,message:'Payment failed.'},EMAILJS_TEMPLATE_FAILURE);};
   window.retryPayment=function(){document.getElementById('utrInput').value='';document.getElementById('utrError').textContent='';goToStep3();};
   function fireAbandonAlert(){if(!paymentIntentSent||utrSubmitted||abandonFired)return;abandonFired=true;sendEmail({to_email:'fullonbaan@gmail.com',subject:'\u26a0\ufe0f Possible Payment \u2014 No UTR \u2014 '+(userData?userData.name:'Unknown'),status:'PAYMENT LIKELY \u2014 UTR NOT SUBMITTED',order_ref:txnRef||'N/A',utr_number:'(not submitted)',guide:selDesc||'N/A',amount:selAmount?'Rs.'+selAmount.toLocaleString('en-IN'):'N/A',cust_name:userData?userData.name:'N/A',cust_email:userData?userData.email:'N/A',cust_mobile:userData?'+91 '+userData.mobile:'N/A',message:'Customer opened UPI screen but did not submit UTR. Order Ref: '+(txnRef||'N/A')});}
   document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')fireAbandonAlert();});
@@ -1861,7 +2062,7 @@
 
 <!-- STICKY BAR -->
 <div class="sticky-bar" id="stickyBar">
-  <span class="sticky-bar-text">Guides from <strong>&#x20B9;699</strong> &nbsp;&#183;&nbsp; Bundles up to <strong>57% off</strong></span>
+  <span class="sticky-bar-text">Guides from <strong data-fob-from="indiv">&#x20B9;699</strong> &nbsp;&#183;&nbsp; Bundles up to <strong>57% off</strong></span>
   <a class="sticky-bar-btn" href="#contact" onclick="var pb=document.getElementById('payBtn'),pp=document.getElementById('payPanel');if(!pp.classList.contains('open')){pb.classList.add('open');pp.classList.add('open');}">Buy Now</a>
 </div>
 <script>
@@ -2071,7 +2272,13 @@ async function admGhUpsert(rec){
 async function admGhMerge(){var gh=[];try{var r=await admGhRead();gh=r.records;admSync('ok','Synced');}catch(e){admSync('err','Offline');}var lo=JSON.parse(localStorage.getItem('interview_payments')||'[]');var m=gh.slice();lo.forEach(function(l){if(!m.find(function(x){return x.orderId===l.orderId;}))m.push(l);});localStorage.setItem('interview_payments',JSON.stringify(m));return m;}
 
 window.lnPayInitiated=function(txnRefVal,userDataVal,selDescVal,selAmountVal){
-  var split = calcGSTSplitFromInclusive(selAmountVal, (userDataVal.billCountry==='IN')?userDataVal.billStateCode:'');
+  /* Currency-aware split. SEL_CURR is the global currency state set by switchCurrency(). */
+  var split;
+  if(SEL_CURR === 'INR'){
+    split = calcGSTSplitFromInclusive(selAmountVal, (userDataVal.billCountry==='IN')?userDataVal.billStateCode:'');
+  } else {
+    split = { base:selAmountVal, cgst:0, sgst:0, igst:0, gst:0, total:selAmountVal, taxType:'NONE' };
+  }
   var today=new Date();
   var fmtD=function(d){return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();};
   /* Counter only increments on CONFIRMED payment — generated in onPaymentSuccess.
@@ -2079,7 +2286,7 @@ window.lnPayInitiated=function(txnRefVal,userDataVal,selDescVal,selAmountVal){
   var rec={
     orderId:txnRefVal, status:'initiated',
     name:userDataVal.name, email:userDataVal.email, mobile:userDataVal.mobile,
-    module:selDescVal, amount:selAmountVal,
+    module:selDescVal, amount:selAmountVal, currency:SEL_CURR,
     baseAmt:split.base, gstAmt:split.gst, totalAmt:split.total,
     cgstAmt:split.cgst, sgstAmt:split.sgst, igstAmt:split.igst, taxType:split.taxType,
     billCompany:userDataVal.billCompany||'', billLine1:userDataVal.billLine1||'', billLine2:userDataVal.billLine2||'',

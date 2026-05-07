@@ -1,0 +1,9 @@
+{
+  "name": "fob-interview",
+  "version": "1.0.0",
+  "description": "FullOnBaan Interview Guide sales page with secure payment proxies.",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  }
+}
