@@ -1151,6 +1151,53 @@
                 <div class="field-group"><label class="pay-label">Email ID *</label><input type="email" class="pay-input" id="userEmail" placeholder="Enter your email address" /></div>
                 <div class="field-group"><label class="pay-label">Mobile No <span style="font-weight:400;color:var(--ink-lt);font-size:9px;letter-spacing:.1em;">(OPTIONAL)</span></label><input type="tel" class="pay-input" id="userMobile" placeholder="Enter your 10-digit mobile number" maxlength="10" /></div>
               </div>
+
+              <!-- ── Billing Address (mandatory for GST Invoice) ── -->
+              <div style="margin:14px 0 6px;">
+                <label class="pay-label">Billing Address *</label>
+                <p style="font-size:10.5px;color:var(--ink-lt);margin:0 0 6px;">Required for GST Tax Invoice. CGST/SGST or IGST is computed from your state.</p>
+              </div>
+              <div class="user-fields">
+                <div class="field-group"><input type="text" class="pay-input" id="billCompany" placeholder="Company / Organisation (optional)"></div>
+                <div class="field-group"><input type="text" class="pay-input" id="billLine1" placeholder="Address Line 1 (Flat/House No., Building, Street)"></div>
+                <div class="field-group"><input type="text" class="pay-input" id="billLine2" placeholder="Address Line 2 — Area, Locality (optional)"></div>
+                <div class="field-group" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                  <input type="text" class="pay-input" id="billCity" placeholder="City / Town">
+                  <input type="text" class="pay-input" id="billPincode" placeholder="PIN / ZIP">
+                </div>
+                <div class="field-group" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                  <select class="pay-input" id="billCountry" onchange="onBillCountryChange()">
+                    <option value="IN">India</option>
+                    <option value="US">United States</option>
+                    <option value="GB">United Kingdom</option>
+                    <option value="AE">UAE</option>
+                    <option value="SA">Saudi Arabia</option>
+                    <option value="AU">Australia</option>
+                    <option value="CA">Canada</option>
+                    <option value="SG">Singapore</option>
+                    <option value="MY">Malaysia</option>
+                    <option value="DE">Germany</option>
+                    <option value="FR">France</option>
+                    <option value="JP">Japan</option>
+                    <option value="OTHER">Other</option>
+                  </select>
+                  <select class="pay-input" id="billState"></select>
+                  <input type="text" class="pay-input" id="billStateText" placeholder="State / Region / Province" style="display:none">
+                </div>
+              </div>
+
+              <!-- ── Optional: GSTIN (input tax credit) ── -->
+              <div id="gstinSection" style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--gold-soft, rgba(192,140,52,0.25));">
+                <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-size:12px;color:var(--ink-md, #444);">
+                  <input type="checkbox" id="gstinToggle" onchange="onGstinToggle()" style="margin-top:3px;">
+                  <span><strong>I have a GSTIN</strong> and want to claim input tax credit (optional). My GST Invoice will be issued in my registered company name.</span>
+                </label>
+                <div id="gstinFields" style="display:none;margin-top:8px;display:grid;grid-template-columns:1fr;gap:8px;padding-left:24px;border-left:2px solid var(--gold, #c08c34);">
+                  <input type="text" class="pay-input" id="billGstin" placeholder="GSTIN (15 chars, e.g. 29AAFFF1528H1ZH)" maxlength="15" style="text-transform:uppercase;">
+                  <input type="text" class="pay-input" id="billLegalName" placeholder="Legal name of business (as per GST registration)">
+                </div>
+              </div>
+
               <div class="field-error" id="fieldError"></div>
               <button class="pay-proceed" style="display:flex;margin-top:6px;" onclick="goToStep3()">&#x1F4B3;&nbsp; Proceed to Payment</button>
             </div>
@@ -1261,11 +1308,73 @@
 
   /* ── GST ───────────────────────────────────────────────────────────── */
   var GST_RATE = 0.18;
+  /* Seller registered state for GST. FullOnBaan Consulting Service LLP
+     is in Karnataka (state code 29) — used to decide intra-state vs inter-state. */
+  var SELLER_STATE_CODE = '29';
+  var SELLER_STATE_NAME = 'Karnataka';
   function calcGST(total) {
     var base = Math.round(total / (1 + GST_RATE) * 100) / 100;
     var gst  = Math.round((total - base) * 100) / 100;
     return { base: base, gst: gst, total: total };
   }
+  /* Splits Indian GST into CGST 9% + SGST 9% (intra-state) or IGST 18% (inter-state).
+     Input is the GST-INCLUSIVE total since prices on this page are tax-inclusive. */
+  function calcGSTSplitFromInclusive(total, buyerStateCode){
+    var base = Math.round(total / (1 + GST_RATE) * 100) / 100;
+    var totalGst = Math.round((total - base) * 100) / 100;
+    var isIntra = !!buyerStateCode && String(buyerStateCode) === SELLER_STATE_CODE;
+    if(isIntra){
+      var cgst = Math.round(base * 0.09 * 100) / 100;
+      var sgst = Math.round((totalGst - cgst) * 100) / 100; // covers rounding remainder
+      return { base:base, cgst:cgst, sgst:sgst, igst:0, gst:totalGst, total:total, taxType:'CGST_SGST' };
+    }
+    return { base:base, cgst:0, sgst:0, igst:totalGst, gst:totalGst, total:total, taxType:'IGST' };
+  }
+  /* Indian states with GST state codes (place of supply) */
+  var INDIA_STATES = [
+    {code:'35',name:'Andaman & Nicobar Islands'},{code:'37',name:'Andhra Pradesh'},
+    {code:'12',name:'Arunachal Pradesh'},{code:'18',name:'Assam'},{code:'10',name:'Bihar'},
+    {code:'04',name:'Chandigarh'},{code:'22',name:'Chhattisgarh'},
+    {code:'26',name:'Dadra & Nagar Haveli and Daman & Diu'},{code:'07',name:'Delhi'},
+    {code:'30',name:'Goa'},{code:'24',name:'Gujarat'},{code:'06',name:'Haryana'},
+    {code:'02',name:'Himachal Pradesh'},{code:'01',name:'Jammu & Kashmir'},{code:'20',name:'Jharkhand'},
+    {code:'29',name:'Karnataka'},{code:'32',name:'Kerala'},{code:'38',name:'Ladakh'},
+    {code:'31',name:'Lakshadweep'},{code:'23',name:'Madhya Pradesh'},{code:'27',name:'Maharashtra'},
+    {code:'14',name:'Manipur'},{code:'17',name:'Meghalaya'},{code:'15',name:'Mizoram'},
+    {code:'13',name:'Nagaland'},{code:'21',name:'Odisha'},{code:'34',name:'Puducherry'},
+    {code:'03',name:'Punjab'},{code:'08',name:'Rajasthan'},{code:'11',name:'Sikkim'},
+    {code:'33',name:'Tamil Nadu'},{code:'36',name:'Telangana'},{code:'16',name:'Tripura'},
+    {code:'09',name:'Uttar Pradesh'},{code:'05',name:'Uttarakhand'},{code:'19',name:'West Bengal'}
+  ];
+  function getStateNameByCode(code){var s=INDIA_STATES.find(function(x){return x.code===code;});return s?s.name:'';}
+  /* GSTIN format: 2-digit state + 10-char PAN + 1 entity + 'Z' + 1 checksum */
+  function isValidGSTIN(g){if(!g)return false;g=String(g).toUpperCase().trim();return /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[0-9A-Z]{1}Z[0-9A-Z]{1}$/.test(g);}
+  function gstinStateCode(g){return (g && g.length>=2)?String(g).toUpperCase().slice(0,2):'';}
+  function populateIndianStates(){
+    var sel=document.getElementById('billState'); if(!sel || sel.dataset.populated) return;
+    var html='<option value="">— Select State —</option>';
+    INDIA_STATES.forEach(function(s){html+='<option value="'+s.code+'">'+s.name+' ('+s.code+')</option>';});
+    sel.innerHTML=html; sel.dataset.populated='1';
+  }
+  window.onBillCountryChange = function(){
+    var c=document.getElementById('billCountry').value;
+    var sel=document.getElementById('billState');
+    var txt=document.getElementById('billStateText');
+    var gstSec=document.getElementById('gstinSection');
+    if(c==='IN'){ populateIndianStates(); if(sel)sel.style.display=''; if(txt)txt.style.display='none'; if(gstSec)gstSec.style.display=''; }
+    else { if(sel)sel.style.display='none'; if(txt)txt.style.display=''; if(gstSec)gstSec.style.display='none';
+      var t=document.getElementById('gstinToggle'); if(t)t.checked=false;
+      var f=document.getElementById('gstinFields'); if(f)f.style.display='none';
+    }
+  };
+  window.onGstinToggle = function(){
+    var on=document.getElementById('gstinToggle').checked;
+    document.getElementById('gstinFields').style.display = on?'block':'none';
+  };
+  document.addEventListener('DOMContentLoaded', function(){
+    if(document.getElementById('billState')) populateIndianStates();
+    if(typeof window.onBillCountryChange==='function') window.onBillCountryChange();
+  });
   // Invoice number is fetched from GitHub (genInvoiceNoGH in admin script)
   // and parked here before Razorpay opens so onPaymentSuccess can read it.
   var pendingInvNo   = null;
@@ -1336,11 +1445,51 @@
   window.goToStep1=function(){showStep('step1');};
   window.goToStep3=function(){
     var name=document.getElementById('userName').value.trim(),email=document.getElementById('userEmail').value.trim(),mobile=document.getElementById('userMobile').value.trim(),err=document.getElementById('fieldError');
+    /* Billing fields */
+    var billCompany  = (document.getElementById('billCompany').value||'').trim();
+    var billLine1    = (document.getElementById('billLine1').value||'').trim();
+    var billLine2    = (document.getElementById('billLine2').value||'').trim();
+    var billCity     = (document.getElementById('billCity').value||'').trim();
+    var billPincode  = (document.getElementById('billPincode').value||'').trim();
+    var billCountry  = (document.getElementById('billCountry').value||'IN').trim();
+    var billStateCd  = '', billStateName='';
+    if(billCountry==='IN'){
+      billStateCd  = (document.getElementById('billState').value||'').trim();
+      billStateName= billStateCd?getStateNameByCode(billStateCd):'';
+    } else {
+      billStateName= (document.getElementById('billStateText').value||'').trim();
+    }
+    var gstinChecked = !!document.getElementById('gstinToggle').checked;
+    var billGstin    = gstinChecked?(document.getElementById('billGstin').value||'').toUpperCase().trim():'';
+    var billLegalName= gstinChecked?(document.getElementById('billLegalName').value||'').trim():'';
+
     if(!name){err.textContent='Please enter your full name.';return;}
     if(!email||!email.includes('@')){err.textContent='Please enter a valid email address.';return;}
     if(mobile&&mobile.length<10){err.textContent='Please enter a valid 10-digit mobile number.';return;}
+    /* Billing-address validation (mandatory for tax invoice) */
+    if(!billLine1){err.textContent='Please enter your billing address (Line 1). It is mandatory for the GST Invoice.';return;}
+    if(!billCity){err.textContent='Please enter the city for your billing address.';return;}
+    if(!billPincode){err.textContent='Please enter the PIN / ZIP code for your billing address.';return;}
+    if(billCountry==='IN' && !billStateCd){err.textContent='Please select your state. It determines whether CGST+SGST or IGST applies.';return;}
+    if(billCountry!=='IN' && !billStateName){err.textContent='Please enter your state / region.';return;}
+    if(billCountry==='IN' && !/^\d{6}$/.test(billPincode)){err.textContent='Indian PIN code must be 6 digits.';return;}
+    if(gstinChecked){
+      if(!isValidGSTIN(billGstin)){err.textContent='GSTIN format is invalid. Expected 15 chars like 29AAFFF1528H1ZH.';return;}
+      if(billCountry==='IN' && gstinStateCode(billGstin)!==billStateCd){
+        err.textContent='Your GSTIN starts with state code '+gstinStateCode(billGstin)+' but you selected '+billStateName+' ('+billStateCd+'). They must match.';
+        return;
+      }
+      if(!billLegalName){err.textContent='Please enter the legal business name as per GST registration.';return;}
+    }
     err.textContent='';
-    userData={name:name,email:email,mobile:mobile};
+
+    userData={
+      name:name, email:email, mobile:mobile,
+      billCompany:billCompany, billLine1:billLine1, billLine2:billLine2,
+      billCity:billCity, billPincode:billPincode, billCountry:billCountry,
+      billStateCode:billStateCd, billStateName:billStateName,
+      gstin:billGstin, gstLegalName:billLegalName
+    };
     txnRef='FOB'+Date.now();
     paymentIntentSent=false;utrSubmitted=false;abandonFired=false;successFired=false;failureFired=false;
     paymentIntentSent=true;
@@ -1349,6 +1498,25 @@
     if(typeof gtag!=='undefined'){gtag('event','begin_checkout',{value:selAmount,currency:'INR',items:[{item_name:selDesc,price:selAmount,quantity:1}]});}
     // Admin hook
     if(typeof lnPayInitiated==='function') lnPayInitiated(txnRef,userData,selDesc,selAmount);
+
+    /* Razorpay caps notes at 15 keys — consolidate billing into a slim payload */
+    var split = calcGSTSplitFromInclusive(selAmount, billCountry==='IN'?billStateCd:'');
+    var addr = [billLine1, billLine2].filter(function(p){return !!p;}).join(' | ');
+    var stateLine = billStateName ? (billStateName + (billStateCd?' ('+billStateCd+')':'')) : '';
+    var taxSplit;
+    if(split.taxType==='CGST_SGST') taxSplit='CGST '+split.cgst+' + SGST '+split.sgst;
+    else if(split.taxType==='IGST') taxSplit='IGST '+split.igst;
+    else taxSplit='NONE';
+    var rzpNotes = {
+      order_ref:txnRef, guide:selDesc,
+      base_amt:split.base, gst_amt:split.gst, total_amt:split.total,
+      tax_type:split.taxType, tax_split:taxSplit,
+      bill_company:billCompany,
+      bill_addr:addr, bill_city:billCity,
+      bill_state:stateLine, bill_pin:billPincode, bill_country:billCountry,
+      gstin: billGstin ? (billGstin + (billLegalName?' / '+billLegalName:'')) : ''
+    };
+    Object.keys(rzpNotes).forEach(function(k){ if(rzpNotes[k]==='' || rzpNotes[k]==null) delete rzpNotes[k]; });
 
     // ── Open Razorpay Standard Checkout ──────────────────────────────
     var rzpOptions={
@@ -1360,7 +1528,7 @@
       image: 'https://interview.fullonbaan.com/og-cover.png',
       // order_id: '',  // pass server-generated order_id here if you add a backend
       prefill:{name:name, email:email, contact:mobile?'+91'+mobile:''},
-      notes:{order_ref:txnRef, guide:selDesc},
+      notes: rzpNotes,
       theme:{color:'#A8782A'},
       handler: function(response){
         utrNumber=response.razorpay_payment_id;
@@ -1391,7 +1559,8 @@
   window.onPaymentSuccess=function(pid){
     if(successFired)return; successFired=true;
     var payId=pid||utrNumber||'N/A';
-    var gd=calcGST(selAmount);
+    /* Use the GST split based on the buyer state captured in goToStep3 */
+    var split = calcGSTSplitFromInclusive(selAmount, (userData.billCountry==='IN')?userData.billStateCode:'');
     // pendingInvNo is set by lnPayInitiated (async GitHub counter fetch)
     var invNo=pendingInvNo||('FOBI'+String(Date.now()).slice(-7));
     pendingInvNo=null; // reset for next transaction
@@ -1401,7 +1570,29 @@
     var dueDate=fmt(new Date(today.getTime()+15*24*60*60*1000)); // Net 15
 
     // Build and store invoice data
-    currentInvData={invNo:invNo,invDate:invDate,dueDate:dueDate,name:userData.name,email:userData.email,mobile:userData.mobile||'',guide:selDesc,baseAmt:gd.base,gstAmt:gd.gst,totalAmt:gd.total,paymentId:payId,orderRef:txnRef};
+    currentInvData={
+      invNo:invNo, invDate:invDate, dueDate:dueDate,
+      name:userData.name, email:userData.email, mobile:userData.mobile||'',
+      guide:selDesc,
+      baseAmt:split.base, gstAmt:split.gst, totalAmt:split.total,
+      cgstAmt:split.cgst, sgstAmt:split.sgst, igstAmt:split.igst, taxType:split.taxType,
+      billCompany:userData.billCompany||'', billLine1:userData.billLine1||'', billLine2:userData.billLine2||'',
+      billCity:userData.billCity||'', billPincode:userData.billPincode||'',
+      billStateCode:userData.billStateCode||'', billStateName:userData.billStateName||'',
+      billCountry:userData.billCountry||'IN',
+      gstin:userData.gstin||'', gstLegalName:userData.gstLegalName||'',
+      placeOfSupply: userData.billStateName?(userData.billStateName+(userData.billStateCode?' ('+userData.billStateCode+')':'')):'',
+      paymentId:payId, orderRef:txnRef
+    };
+    /* Backwards compatibility — also keep the gd alias used by the rest of this fn */
+    var gd = { base: split.base, gst: split.gst, total: split.total };
+    /* Persist confirmed status + new fields to the GitHub admin record */
+    if(typeof admGhUpsert==='function'){
+      admGhUpsert(Object.assign({orderId:txnRef}, currentInvData, {
+        status:'submitted', utr:payId, submittedAt:new Date().toISOString(),
+        module:selDesc, amount:selAmount
+      }));
+    }
 
     document.getElementById('tyEmail').textContent=userData.email;
     document.getElementById('tyOrderBox').innerHTML=
@@ -1441,7 +1632,7 @@
   /* ── GST Invoice PDF Generator (Premium Theme) ─────────────────── */
   /* inv: { invNo, invDate, dueDate, name, email, mobile, guide,
             baseAmt, gstAmt, totalAmt, paymentId, orderRef }               */
-  var FOB_LOGO_B64 = 'data:image/jpeg;base64,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';
+  var FOB_LOGO_B64 = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/4QL4RXhpZgAATU0AKgAAAAgABAE7AAIAAAAPAAABSodpAAQAAAABAAABWpydAAEAAAAeAAAC0uocAAcAAAEMAAAAPgAAAAAc6gAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUmF2aXJhaiBSYWlrYXIAAAAFkAMAAgAAABQAAAKokAQAAgAAABQAAAK8kpEAAgAAAAMxMQAAkpIAAgAAAAMxMQAA6hwABwAAAQwAAAGcAAAAABzqAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAyMDI2OjAyOjIxIDEyOjEwOjQ0ADIwMjY6MDI6MjEgMTI6MTA6NDQAAABSAGEAdgBpAHIAYQBqACAAUgBhAGkAawBhAHIAAAD/4QQhaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wLwA8P3hwYWNrZXQgYmVnaW49J++7vycgaWQ9J1c1TTBNcENlaGlIenJlU3pOVGN6a2M5ZCc/Pg0KPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyI+PHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj48cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0idXVpZDpmYWY1YmRkNS1iYTNkLTExZGEtYWQzMS1kMzNkNzUxODJmMWIiIHhtbG5zOmRjPSJodHRwOi8vcHVybC5vcmcvZGMvZWxlbWVudHMvMS4xLyIvPjxyZGY6RGVzY3JpcHRpb24gcmRmOmFib3V0PSJ1dWlkOmZhZjViZGQ1LWJhM2QtMTFkYS1hZDMxLWQzM2Q3NTE4MmYxYiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIj48eG1wOkNyZWF0ZURhdGU+MjAyNi0wMi0yMVQxMjoxMDo0NC4xMTM8L3htcDpDcmVhdGVEYXRlPjwvcmRmOkRlc2NyaXB0aW9uPjxyZGY6RGVzY3JpcHRpb24gcmRmOmFib3V0PSJ1dWlkOmZhZjViZGQ1LWJhM2QtMTFkYS1hZDMxLWQzM2Q3NTE4MmYxYiIgeG1sbnM6ZGM9Imh0dHA6Ly9wdXJsLm9yZy9kYy9lbGVtZW50cy8xLjEvIj48ZGM6Y3JlYXRvcj48cmRmOlNlcSB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPjxyZGY6bGk+UmF2aXJhaiBSYWlrYXI8L3JkZjpsaT48L3JkZjpTZXE+DQoJCQk8L2RjOmNyZWF0b3I+PC9yZGY6RGVzY3JpcHRpb24+PC9yZGY6UkRGPjwveDp4bXBtZXRhPg0KICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIDw/eHBhY2tldCBlbmQ9J3cnPz7/2wBDAAcFBQYFBAcGBQYIBwcIChELCgkJChUPEAwRGBUaGRgVGBcbHichGx0lHRcYIi4iJSgpKywrGiAvMy8qMicqKyr/2wBDAQcICAoJChQLCxQqHBgcKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKir/wAARCAH4Aq4DASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD6QooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiuW8VfETw94RUpqV35l3jK2luN8h+o/h/HFeP+Ifjl4g1Nmi0OGPSoDwH/1kpH1PA/AV10cJWraxWncwqYinT0b1PoK8vrTT4TNfXMVvGOryuFH61xOr/GbwhpTMkV5JqEi/w2cZcf8AfRwP1r5yv9RvtWnM2qXk95Ied08hb9OlV9vFelTyuK+N3OGeOb+FHsmoftCyFmXSdAAHZ7q4/wDZVH9a5y7+OPjG5Y+Q1haKegjttxH4sTXnu2l212xwVCO0TneKqPqde/xb8cO3/IcZf923i/8AiaaPi144Xn+3pD9beL/4iuR20hWr+r0v5V9wvbz/AJmd5a/G/wAaWv8Arbizux/02tgP/QSK6HTv2iLtGA1jQI5B3e0nKn/vlh/WvHytMK1lPB0ZfZNI4ioup9NaJ8avB2sMsc15JpszfwXsewZ/3uV/Wu7t7mC7gWa1mjmiYZV42DA/iK+KCv5VoaN4k1nw3cCXQ9SnsyDkojZRvqp4NcFTLlvBnVDFv7SPsyivD/CX7QCu6WvjG0ERPH221XK/Vk6j6j8q9nsNRtNUsYrzTrmO5tpRlJYm3Kw+teZUozpO00dsKkZr3SzRRRWJYUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFAB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dGVh0NVP+EMsJPD95o91d6jd215/rWubou4HoCegroaKLsLFCTRbCfQxpFzbrPZCIRGOTnKgYH48dawD8ONLa3Fo+o6w1gOPsJvm8rH93GM49s111FF2gsihNotjLoL6OsIhsnhMHlRfLtQjGB6U/SdMt9F0m206yDC3toxHGHbJwPU1copDMrRvDlhoV3qVxYLIJNSuDcXG992X9vQVq0UUAZWkeHLDRL/UbyxWQS6lN51wXfILYxx6VW1rwdpetahHqEhuLO/jXat3ZTGKTb6Ejgj61vUU7sVjntH8F6XpGqNqZe6v9QK7Bd30xlkRfRey/gKuXPhywu/E1prsyyG9s4miiIfChW65HetWii7GFZ+u6LaeItEudK1EOba5ULII22tgEHg/hWhRSAgsbOLTtPt7K2yIbeJYo9xydqjA/QVnHwxp58XDxIRL/aAt/swO/wCTZnPT1rYooAKzdb0K2160SC6luofLfzEktbhonVsYzlfr0PFaVFAHN6X4H0zTdYTVJbi+1G9iUpFNf3BlMQPXaOAKm1rwdpet38WoSfaLTUIl2peWcpikx6E9x9a3qKd2Kxz+keDdO0rU/wC0pJrvUb/bsW5vpvMZF7hegX8BVy78PWN74hstanEhvLJGSEh8LhuuR3rUoouwsYGveDdL8QXsF7cm5tryAbUubSYxSAemR2qsvw80EfZ3eO4muILhbn7TNOzyu69NzHkj26V1FFF2FkZfiHw7p3ijSH07V4jJAzBwVYqyMOjAjoapQeDLKLQrzSZr3Uru3vE8uRrq6MjquMYUnpXQ0UXYyhFotjHoKaM8InsVhEHly/NuQDGDXOj4baclv9kh1XWYtPPBsUvSIsf3emQPbNdjRRdisilFo9jb6L/ZNrAsFl5RhEcfGFIwcf403RdHtdA0e30zTw4trdSqB23HGc9fxq/RSuMxtO8L6dpetapqlqJftOqlTc7nypxnGB261lN8ONKdDA1/q7WLHmxa/cwkZzjB5x7ZrrqKd2KyI7e3itbeO3to1ihiUIiIMBQOgFSUUUhhRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFAH/9k=';
   function generateGSTInvoice(inv){
     var doc=new window.jspdf.jsPDF({unit:'pt',format:'a4'});
     var W=doc.internal.pageSize.getWidth();
@@ -1449,16 +1640,35 @@
     var NAVY=[10,32,68];var GOLD=[192,140,52];var GOLD2=[240,210,140];
     var WHITE=[255,255,255];var INK=[25,25,35];var GREY=[110,110,125];
     var LGREY=[245,245,248];var MGREY=[210,210,218];
-    var fmt2=function(v){return v.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});};
+    var fmt2=function(v){return Number(v).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});};
     var PAD=32;
-    doc.setFillColor(NAVY[0],NAVY[1],NAVY[2]);doc.rect(0,0,W,96,'F');
-    var logoW=70,logoH=52;
-    try{doc.addImage(FOB_LOGO_B64,'JPEG',PAD,14,logoW,logoH);}catch(e){}
-    doc.setFont('helvetica','bold');doc.setFontSize(26);doc.setTextColor(GOLD[0],GOLD[1],GOLD[2]);
+    var INV_HAS_GST = Number(inv.gstAmt||0) > 0;
+    var INV_TAX_TYPE = inv.taxType || (INV_HAS_GST?((inv.billStateCode && String(inv.billStateCode)===SELLER_STATE_CODE)?'CGST_SGST':'IGST'):'NONE');
+    var INV_CGST = Number(inv.cgstAmt||0), INV_SGST = Number(inv.sgstAmt||0), INV_IGST = Number(inv.igstAmt||0);
+    if(INV_HAS_GST && !INV_CGST && !INV_SGST && !INV_IGST){
+      if(INV_TAX_TYPE==='CGST_SGST'){INV_CGST=Math.round(Number(inv.baseAmt)*0.09*100)/100;INV_SGST=Math.round((Number(inv.gstAmt)-INV_CGST)*100)/100;}
+      else {INV_IGST=Number(inv.gstAmt);}
+    }
+    var INV_PLACE_OF_SUPPLY = inv.placeOfSupply || (inv.billStateName?(inv.billStateName+(inv.billStateCode?' ('+inv.billStateCode+')':'')):'');
+
+    /* ── Header: white background so the FullOnBaan logo sits cleanly ── */
+    doc.setFillColor(WHITE[0],WHITE[1],WHITE[2]);doc.rect(0,0,W,96,'F');
+    var logoW=90,logoH=68;
+    var __logoOk=false;
+    try{if(FOB_LOGO_B64){doc.addImage(FOB_LOGO_B64,'PNG',PAD,14,logoW,logoH);__logoOk=true;}}catch(e){}
+    if(!__logoOk){try{if(FOB_LOGO_B64){doc.addImage(FOB_LOGO_B64,'JPEG',PAD,14,logoW,logoH);__logoOk=true;}}catch(e){}}
+    if(!__logoOk){
+      doc.setFont('helvetica','bold');doc.setFontSize(20);doc.setTextColor(NAVY[0],NAVY[1],NAVY[2]);doc.text('Full',PAD,44);
+      doc.setTextColor(GOLD[0],GOLD[1],GOLD[2]);doc.text('On',PAD+38,44);
+      doc.setTextColor(NAVY[0],NAVY[1],NAVY[2]);doc.text('Baan',PAD+58,44);
+      doc.setFont('helvetica','italic');doc.setFontSize(7.5);doc.setTextColor(GREY[0],GREY[1],GREY[2]);doc.text('One stop destination for IT solutions',PAD,58);
+    }
+    doc.setFont('helvetica','bold');doc.setFontSize(26);doc.setTextColor(NAVY[0],NAVY[1],NAVY[2]);
     doc.text('TAX INVOICE',W-PAD,44,{align:'right'});
-    doc.setFont('helvetica','normal');doc.setFontSize(9.5);doc.setTextColor(WHITE[0],WHITE[1],WHITE[2]);
-    doc.text('Invoice No: '+inv.invNo,W-PAD,60,{align:'right'});
-    doc.text('Date: '+inv.invDate,W-PAD,74,{align:'right'});
+    /* Invoice No — bold; Date — normal weight */
+    doc.setFont('helvetica','bold');doc.setFontSize(10.5);doc.setTextColor(NAVY[0],NAVY[1],NAVY[2]);doc.text('Invoice No: '+inv.invNo,W-PAD,60,{align:'right'});
+    doc.setFont('helvetica','normal');doc.setFontSize(9.5);doc.setTextColor(INK[0],INK[1],INK[2]);doc.text('Date: '+inv.invDate,W-PAD,74,{align:'right'});
+    /* Gold separator stripe */
     doc.setFillColor(GOLD[0],GOLD[1],GOLD[2]);doc.rect(0,96,W,4,'F');
     var r1Y=106,r1H=112,midX=W/2+10;
     doc.setFillColor(LGREY[0],LGREY[1],LGREY[2]);doc.rect(PAD,r1Y,midX-PAD-8,r1H,'F');
@@ -1476,28 +1686,70 @@
     doc.setFont('helvetica','normal');doc.setFontSize(8.5);
     ['Invoice Date:','Terms:','Due Date:'].forEach(function(l,i){doc.setTextColor(GOLD2[0],GOLD2[1],GOLD2[2]);doc.text(l,midX+12,r1Y+64+i*15);doc.setTextColor(WHITE[0],WHITE[1],WHITE[2]);doc.text([inv.invDate,'Immediate',inv.dueDate][i],W-PAD-8,r1Y+64+i*15,{align:'right'});});
     var r2Y=r1Y+r1H+10,r2H=88;
-    doc.setFillColor(WHITE[0],WHITE[1],WHITE[2]);doc.setDrawColor(MGREY[0],MGREY[1],MGREY[2]);doc.setLineWidth(0.6);doc.rect(PAD,r2Y,midX-PAD-8,r2H,'FD');
+    /* BILL TO — expanded to fit billing address + optional GSTIN */
+    var billBoxH = r2H + 60;
+    doc.setFillColor(WHITE[0],WHITE[1],WHITE[2]);doc.setDrawColor(MGREY[0],MGREY[1],MGREY[2]);doc.setLineWidth(0.6);doc.rect(PAD,r2Y,midX-PAD-8,billBoxH,'FD');
     doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(GREY[0],GREY[1],GREY[2]);doc.text('BILL TO',PAD+10,r2Y+14);
-    doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(NAVY[0],NAVY[1],NAVY[2]);doc.text(inv.name,PAD+10,r2Y+30);
-    doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(INK[0],INK[1],INK[2]);
-    doc.text(inv.email,PAD+10,r2Y+46);
-    if(inv.mobile)doc.text('+91 '+inv.mobile,PAD+10,r2Y+61);
-    doc.setFillColor(LGREY[0],LGREY[1],LGREY[2]);doc.setDrawColor(MGREY[0],MGREY[1],MGREY[2]);doc.rect(midX,r2Y,W-midX-PAD,r2H,'FD');
+    var BILL_NAME = inv.gstLegalName || inv.billCompany || inv.name;
+    doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(NAVY[0],NAVY[1],NAVY[2]);doc.text(String(BILL_NAME).slice(0,42),PAD+10,r2Y+30);
+    var billY = r2Y + 44;
+    doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setTextColor(INK[0],INK[1],INK[2]);
+    if(BILL_NAME !== inv.name && inv.name){doc.text('Attn: '+String(inv.name).slice(0,46),PAD+10,billY); billY += 12;}
+    var addrLines = [];
+    if(inv.billLine1) addrLines.push(String(inv.billLine1));
+    if(inv.billLine2) addrLines.push(String(inv.billLine2));
+    var cityLine = [inv.billCity, inv.billStateName, inv.billPincode].filter(function(p){return !!p;}).join(', ');
+    if(cityLine) addrLines.push(cityLine);
+    if(inv.billCountry) addrLines.push(inv.billCountry==='IN'?'India':String(inv.billCountry));
+    addrLines.forEach(function(l){var wrapped=doc.splitTextToSize(l,midX-PAD-28);wrapped.forEach(function(w){doc.text(w,PAD+10,billY); billY += 11;});});
+    if(inv.email){doc.text('Email: '+inv.email,PAD+10,billY); billY += 11;}
+    if(inv.mobile){doc.text('Mobile: +91 '+inv.mobile,PAD+10,billY); billY += 11;}
+    if(inv.gstin){doc.setFont('helvetica','bold');doc.setTextColor(NAVY[0],NAVY[1],NAVY[2]);doc.text('GSTIN: '+String(inv.gstin).toUpperCase(),PAD+10,billY); billY += 11; doc.setFont('helvetica','normal');doc.setTextColor(INK[0],INK[1],INK[2]);}
+    /* SERVICE DETAILS — same height as expanded BILL TO */
+    doc.setFillColor(LGREY[0],LGREY[1],LGREY[2]);doc.setDrawColor(MGREY[0],MGREY[1],MGREY[2]);doc.rect(midX,r2Y,W-midX-PAD,billBoxH,'FD');
     doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(GREY[0],GREY[1],GREY[2]);doc.text('SERVICE DETAILS',midX+12,r2Y+14);
     doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(INK[0],INK[1],INK[2]);
-    doc.text('SAC Code: 998431',midX+12,r2Y+30);doc.text('Tax Type: IGST @ 18%',midX+12,r2Y+46);
-    doc.text('Payment Ref: '+inv.paymentId.slice(0,22),midX+12,r2Y+61);doc.text('Order Ref: '+inv.orderRef,midX+12,r2Y+76);
-    var tY=r2Y+r2H+12;
+    var sdY = r2Y + 30;
+    doc.text('SAC Code: 998431',midX+12,sdY); sdY += 14;
+    var taxLabel;
+    if(INV_TAX_TYPE==='CGST_SGST') taxLabel='Tax Type: CGST 9% + SGST 9%';
+    else if(INV_TAX_TYPE==='IGST')  taxLabel='Tax Type: IGST @ 18%';
+    else                            taxLabel='No GST applicable';
+    doc.text(taxLabel,midX+12,sdY); sdY += 14;
+    if(INV_HAS_GST){
+      doc.text('Place of Supply: '+(INV_PLACE_OF_SUPPLY||'—'),midX+12,sdY); sdY += 14;
+      doc.text('Supplier State: '+SELLER_STATE_NAME+' ('+SELLER_STATE_CODE+')',midX+12,sdY); sdY += 14;
+    }
+    doc.text('Payment Ref: '+String(inv.paymentId||'').slice(0,22),midX+12,sdY); sdY += 14;
+    doc.text('Order Ref: '+inv.orderRef,midX+12,sdY);
+    var tY = r2Y + billBoxH + 12;
     doc.autoTable({startY:tY,head:[['Sr. No','Item & Description','Qty','Rate (INR)','Amount (INR)']],body:[['1',inv.guide+'\n\nSAC: 998431','1',fmt2(inv.baseAmt),fmt2(inv.baseAmt)]],theme:'plain',headStyles:{fillColor:NAVY,textColor:WHITE,fontStyle:'bold',fontSize:9,halign:'center',cellPadding:9},bodyStyles:{fontSize:9,textColor:INK,cellPadding:{top:14,right:8,bottom:14,left:8}},columnStyles:{0:{cellWidth:44,halign:'center'},1:{cellWidth:'auto'},2:{cellWidth:40,halign:'center'},3:{cellWidth:95,halign:'right'},4:{cellWidth:95,halign:'right'}},margin:{left:PAD,right:PAD},alternateRowStyles:{fillColor:LGREY},tableLineColor:MGREY,tableLineWidth:0.5});
     var fY=doc.lastAutoTable.finalY+14,totW=260,totX=W-PAD-totW;
+    var taxRows = INV_HAS_GST ? (INV_TAX_TYPE==='CGST_SGST'?2:1) : 0;
+    var totBoxH = 30 + (taxRows*30) + 38;
+    /* Sub Total row */
     doc.setFillColor(LGREY[0],LGREY[1],LGREY[2]);doc.rect(totX,fY,totW,30,'F');
     doc.setFont('helvetica','normal');doc.setFontSize(9.5);doc.setTextColor(GREY[0],GREY[1],GREY[2]);doc.text('Sub Total',totX+14,fY+19);doc.setTextColor(INK[0],INK[1],INK[2]);doc.text(fmt2(inv.baseAmt),W-PAD-8,fY+19,{align:'right'});
-    doc.setFillColor(WHITE[0],WHITE[1],WHITE[2]);doc.rect(totX,fY+30,totW,30,'F');
-    doc.setTextColor(GREY[0],GREY[1],GREY[2]);doc.text('IGST18 (18%)',totX+14,fY+49);doc.setTextColor(INK[0],INK[1],INK[2]);doc.text(fmt2(inv.gstAmt),W-PAD-8,fY+49,{align:'right'});
-    doc.setFillColor(NAVY[0],NAVY[1],NAVY[2]);doc.rect(totX,fY+60,totW,38,'F');
-    doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(GOLD[0],GOLD[1],GOLD[2]);doc.text('TOTAL',totX+14,fY+84);doc.setTextColor(WHITE[0],WHITE[1],WHITE[2]);doc.text('INR '+fmt2(inv.totalAmt),W-PAD-8,fY+84,{align:'right'});
-    doc.setDrawColor(GOLD[0],GOLD[1],GOLD[2]);doc.setLineWidth(0.8);doc.rect(totX,fY,totW,98,'S');
-    var wY=fY+112;
+    var rowY = fY + 30;
+    if(INV_HAS_GST){
+      if(INV_TAX_TYPE==='CGST_SGST'){
+        doc.setFillColor(WHITE[0],WHITE[1],WHITE[2]);doc.rect(totX,rowY,totW,30,'F');
+        doc.setTextColor(GREY[0],GREY[1],GREY[2]);doc.text('CGST (9%)',totX+14,rowY+19);doc.setTextColor(INK[0],INK[1],INK[2]);doc.text(fmt2(INV_CGST),W-PAD-8,rowY+19,{align:'right'});
+        rowY += 30;
+        doc.setFillColor(LGREY[0],LGREY[1],LGREY[2]);doc.rect(totX,rowY,totW,30,'F');
+        doc.setTextColor(GREY[0],GREY[1],GREY[2]);doc.text('SGST (9%)',totX+14,rowY+19);doc.setTextColor(INK[0],INK[1],INK[2]);doc.text(fmt2(INV_SGST),W-PAD-8,rowY+19,{align:'right'});
+        rowY += 30;
+      } else {
+        doc.setFillColor(WHITE[0],WHITE[1],WHITE[2]);doc.rect(totX,rowY,totW,30,'F');
+        doc.setTextColor(GREY[0],GREY[1],GREY[2]);doc.text('IGST (18%)',totX+14,rowY+19);doc.setTextColor(INK[0],INK[1],INK[2]);doc.text(fmt2(INV_IGST||inv.gstAmt),W-PAD-8,rowY+19,{align:'right'});
+        rowY += 30;
+      }
+    }
+    var totalRowY = rowY;
+    doc.setFillColor(NAVY[0],NAVY[1],NAVY[2]);doc.rect(totX,totalRowY,totW,38,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(GOLD[0],GOLD[1],GOLD[2]);doc.text('TOTAL',totX+14,totalRowY+24);doc.setTextColor(WHITE[0],WHITE[1],WHITE[2]);doc.text('INR '+fmt2(inv.totalAmt),W-PAD-8,totalRowY+24,{align:'right'});
+    doc.setDrawColor(GOLD[0],GOLD[1],GOLD[2]);doc.setLineWidth(0.8);doc.rect(totX,fY,totW,totBoxH,'S');
+    var wY = fY + totBoxH + 14;
     doc.setFillColor(LGREY[0],LGREY[1],LGREY[2]);doc.setDrawColor(GOLD[0],GOLD[1],GOLD[2]);doc.setLineWidth(0.8);doc.rect(PAD,wY,W-2*PAD,48,'FD');
     doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setTextColor(GREY[0],GREY[1],GREY[2]);doc.text('Amount in Words:',PAD+10,wY+16);
     doc.setFont('helvetica','bolditalic');doc.setFontSize(9);doc.setTextColor(NAVY[0],NAVY[1],NAVY[2]);
@@ -1585,6 +1837,7 @@
       <div class="atb-right">
         <div class="async"><div class="asyncdot" id="adot"></div><span id="aslbl">—</span></div>
         <button class="ab gold" onclick="admRefresh()">↻ Refresh</button>
+        <button class="ab" onclick="admMigrateInvoiceNos()" title="Renumber confirmed invoices to FOB####### sequence" style="border:1px solid rgba(251,191,36,0.5);color:#fbbf24;">🔢 Renumber Invoices</button>
         <button class="ab" onclick="admClose()">✕ Close</button>
       </div>
     </div>
@@ -1597,7 +1850,8 @@
       <div class="afrow">
         <button class="afbtn on" onclick="admFilt('all',this)">All</button>
         <button class="afbtn on bf" onclick="admFilt('initiated',this)">Initiated</button>
-        <button class="afbtn on gf" onclick="admFilt('submitted',this)">Submitted</button>
+        <button class="afbtn on gf" onclick="admFilt('submitted',this)">Confirmed</button>
+        <button class="afbtn on" onclick="admFilt('failed',this)" style="border-color:rgba(248,113,113,0.4);color:#f87171;">Failed</button>
       </div>
       <input class="asrch" id="asrch" placeholder="Search name, email, mobile, guide…" oninput="admRender()">
       <div class="ahd">Payment Records</div>
@@ -1605,6 +1859,67 @@
     </div>
   </div>
 </div>
+<!-- ── ADMIN: Edit Billing & GST modal (backfill legacy records) ── -->
+<div id="adm-edit-overlay" style="display:none;position:fixed;inset:0;background:rgba(6,15,30,0.85);z-index:10001;align-items:center;justify-content:center;padding:24px;">
+  <div style="background:#0d1a30;border:1px solid rgba(246,188,104,0.3);border-radius:16px;width:100%;max-width:640px;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 30px 80px rgba(0,0,0,0.6);font-family:inherit;">
+    <div style="padding:18px 22px;border-bottom:1px solid rgba(246,188,104,0.15);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+      <div>
+        <div style="font-weight:700;color:#f6bc68;font-size:15px;">✏️ Edit Billing &amp; GST</div>
+        <div id="admEd-meta" style="font-size:11px;color:rgba(212,196,178,0.6);margin-top:3px;"></div>
+      </div>
+      <button onclick="admEditClose()" style="padding:6px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:rgba(212,196,178,0.7);border-radius:8px;cursor:pointer;font-size:12px;">✕ Close</button>
+    </div>
+    <div style="padding:18px 22px;overflow-y:auto;color:#f0e8d8;font-size:13px;">
+      <p style="font-size:11.5px;color:rgba(212,196,178,0.7);margin:0 0 12px;line-height:1.55;">Backfill or correct the billing address and GSTIN for this record. The CGST/SGST or IGST split will be recomputed from the buyer's state and the invoice can then be regenerated.</p>
+      <div id="admEd-cust" style="background:rgba(246,188,104,0.05);border:1px solid rgba(246,188,104,0.15);border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:12px;line-height:1.55;"></div>
+      <div style="display:grid;grid-template-columns:1fr;gap:10px;">
+        <input type="text" id="admEd_billCompany" placeholder="Company / Organisation (optional)" style="padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid rgba(246,188,104,0.2);border-radius:8px;color:#f0e8d8;font-size:13px;font-family:inherit;">
+        <input type="text" id="admEd_billLine1" placeholder="Address Line 1 (Flat/House No., Building, Street)" style="padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid rgba(246,188,104,0.2);border-radius:8px;color:#f0e8d8;font-size:13px;font-family:inherit;">
+        <input type="text" id="admEd_billLine2" placeholder="Address Line 2 — Area, Locality (optional)" style="padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid rgba(246,188,104,0.2);border-radius:8px;color:#f0e8d8;font-size:13px;font-family:inherit;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <input type="text" id="admEd_billCity" placeholder="City / Town" style="padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid rgba(246,188,104,0.2);border-radius:8px;color:#f0e8d8;font-size:13px;font-family:inherit;">
+          <input type="text" id="admEd_billPin" placeholder="PIN / ZIP Code" style="padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid rgba(246,188,104,0.2);border-radius:8px;color:#f0e8d8;font-size:13px;font-family:inherit;">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <select id="admEd_billCountry" onchange="admEdCountryChange()" style="padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid rgba(246,188,104,0.2);border-radius:8px;color:#f0e8d8;font-size:13px;font-family:inherit;">
+            <option value="IN">India</option>
+            <option value="US">United States</option>
+            <option value="GB">United Kingdom</option>
+            <option value="AE">UAE</option>
+            <option value="SA">Saudi Arabia</option>
+            <option value="AU">Australia</option>
+            <option value="CA">Canada</option>
+            <option value="SG">Singapore</option>
+            <option value="MY">Malaysia</option>
+            <option value="DE">Germany</option>
+            <option value="FR">France</option>
+            <option value="JP">Japan</option>
+            <option value="OTHER">Other</option>
+          </select>
+          <select id="admEd_billState" onchange="admEdRefreshPreview()" style="padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid rgba(246,188,104,0.2);border-radius:8px;color:#f0e8d8;font-size:13px;font-family:inherit;"></select>
+          <input type="text" id="admEd_billStateText" placeholder="State / Region / Province" style="display:none;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid rgba(246,188,104,0.2);border-radius:8px;color:#f0e8d8;font-size:13px;font-family:inherit;">
+        </div>
+        <div id="admEd-gstin-block" style="margin-top:6px;padding-top:10px;border-top:1px dashed rgba(246,188,104,0.2);">
+          <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-size:12px;color:rgba(212,196,178,0.85);margin-bottom:8px;">
+            <input type="checkbox" id="admEd_gstinToggle" onchange="admEdGstinToggle()" style="margin-top:3px;">
+            <span><strong style="color:#f0e8d8;">Buyer has a GSTIN</strong> (claim input tax credit). Invoice will be issued in the registered company name.</span>
+          </label>
+          <div id="admEd-gstin-fields" style="display:none;display:grid;grid-template-columns:1fr;gap:10px;padding-left:24px;border-left:2px solid rgba(246,188,104,0.3);">
+            <input type="text" id="admEd_gstin" placeholder="GSTIN (15 chars, e.g. 29AAFFF1528H1ZH)" maxlength="15" style="padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid rgba(246,188,104,0.2);border-radius:8px;color:#f0e8d8;font-size:13px;text-transform:uppercase;font-family:inherit;">
+            <input type="text" id="admEd_gstLegalName" placeholder="Legal name of business (as per GST registration)" style="padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid rgba(246,188,104,0.2);border-radius:8px;color:#f0e8d8;font-size:13px;font-family:inherit;">
+          </div>
+        </div>
+        <div id="admEd-preview" style="margin-top:10px;padding:12px 14px;background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.2);border-radius:8px;font-size:12px;color:#bbf7d0;line-height:1.6;"></div>
+        <div id="admEd-err" style="color:#f87171;font-size:12px;min-height:16px;"></div>
+      </div>
+    </div>
+    <div style="padding:14px 22px;border-top:1px solid rgba(246,188,104,0.15);display:flex;justify-content:flex-end;gap:10px;flex-shrink:0;">
+      <button onclick="admEditClose()" style="padding:9px 18px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:rgba(212,196,178,0.85);border-radius:8px;cursor:pointer;font-size:13px;font-family:inherit;">Cancel</button>
+      <button onclick="admEditSave()" id="admEd-saveBtn" style="padding:9px 22px;background:linear-gradient(135deg,#f6bc68,#ba8738);border:none;color:#06132a;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;font-family:inherit;">💾 Save &amp; Recompute Tax</button>
+    </div>
+  </div>
+</div>
+
 <div id="adm-toast"></div>
 
 <script>
@@ -1625,22 +1940,35 @@ var ADM_GH_INV_API='https://api.github.com/repos/'+ADM_GH_OWNER+'/'+ADM_GH_REPO+
 async function genInvoiceNoGH(){
   try{
     var r=await fetch(ADM_GH_INV_API,{headers:{'Authorization':'token '+ADM_GH_PAT,'Accept':'application/vnd.github.v3+json'}});
-    var current=1000,sha=null;
+    var current=0,sha=null;
     if(r.ok){
       var d=await r.json();
       var data=JSON.parse(atob(d.content.replace(/\n/g,'')));
-      current=data.counter||1000;
+      current=Number(data.counter)||0;
       sha=d.sha;
     }
     var next=current+1;
     var body={message:'inv-counter:'+next,content:btoa(JSON.stringify({counter:next},null,2))};
     if(sha)body.sha=sha;
     await fetch(ADM_GH_INV_API,{method:'PUT',headers:{'Authorization':'token '+ADM_GH_PAT,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(body)});
-    return 'FOBI'+String(next).padStart(7,'0');
+    return 'FOB'+String(next).padStart(7,'0');
   }catch(e){
     console.warn('Invoice counter GitHub error — using timestamp fallback:',e);
     return 'FOB'+String(Date.now()).slice(-7);
   }
+}
+/* Set the GitHub invoice counter to a specific value (used by Renumber migration). */
+async function setInvoiceCounterGH(value){
+  try {
+    var r = await fetch(ADM_GH_INV_API,{headers:{'Authorization':'token '+ADM_GH_PAT,'Accept':'application/vnd.github.v3+json'}});
+    var sha = null;
+    if(r.ok){var d=await r.json(); sha=d.sha;}
+    var body={message:'inv-counter:SET '+value, content:btoa(JSON.stringify({counter:Number(value)},null,2))};
+    if(sha) body.sha=sha;
+    var w = await fetch(ADM_GH_INV_API,{method:'PUT',headers:{'Authorization':'token '+ADM_GH_PAT,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(!w.ok) throw new Error('GH counter set '+w.status);
+    return value;
+  } catch(e) { console.warn('setInvoiceCounterGH error:', e); throw e; }
 }
 
 var admRecs=[],admFl='all';
@@ -1659,43 +1987,84 @@ async function admGhUpsert(rec){try{admSync('spin','Syncing…');var gh=await ad
 async function admGhMerge(){var gh=[];try{var r=await admGhRead();gh=r.records;admSync('ok','Synced');}catch(e){admSync('err','Offline');}var lo=JSON.parse(localStorage.getItem('interview_payments')||'[]');var m=gh.slice();lo.forEach(function(l){if(!m.find(function(x){return x.orderId===l.orderId;}))m.push(l);});localStorage.setItem('interview_payments',JSON.stringify(m));return m;}
 
 window.lnPayInitiated=function(txnRefVal,userDataVal,selDescVal,selAmountVal){
-  var gd=calcGST(selAmountVal);
+  var split = calcGSTSplitFromInclusive(selAmountVal, (userDataVal.billCountry==='IN')?userDataVal.billStateCode:'');
   var today=new Date();
   var fmtD=function(d){return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();};
-  // Fetch invoice number async from GitHub counter; park in pendingInvNo
-  // so onPaymentSuccess (which fires AFTER confirmed payment) can read it.
-  genInvoiceNoGH().then(function(invNoVal){
-    pendingInvNo=invNoVal;
-    var rec={orderId:txnRefVal,status:'initiated',name:userDataVal.name,email:userDataVal.email,mobile:userDataVal.mobile,module:selDescVal,amount:selAmountVal,baseAmt:gd.base,gstAmt:gd.gst,invoiceNo:invNoVal,invDate:fmtD(today),dueDate:fmtD(new Date(today.getTime()+15*24*60*60*1000)),initiatedAt:new Date().toISOString(),submittedAt:null,utr:null};
-    var lo=JSON.parse(localStorage.getItem('interview_payments')||'[]');
-    var i=lo.findIndex(function(x){return x.orderId===txnRefVal;});
-    if(i>=0)lo[i]=Object.assign({},lo[i],rec);else lo.push(rec);
-    localStorage.setItem('interview_payments',JSON.stringify(lo));
-    admGhUpsert(rec);
-  }).catch(function(e){
-    console.warn('lnPayInitiated: invoice counter fetch failed',e);
-  });
+  /* Counter only increments on CONFIRMED payment — generated in onPaymentSuccess.
+     For initiated records, leave invoiceNo blank. */
+  var rec={
+    orderId:txnRefVal, status:'initiated',
+    name:userDataVal.name, email:userDataVal.email, mobile:userDataVal.mobile,
+    module:selDescVal, amount:selAmountVal,
+    baseAmt:split.base, gstAmt:split.gst, totalAmt:split.total,
+    cgstAmt:split.cgst, sgstAmt:split.sgst, igstAmt:split.igst, taxType:split.taxType,
+    billCompany:userDataVal.billCompany||'', billLine1:userDataVal.billLine1||'', billLine2:userDataVal.billLine2||'',
+    billCity:userDataVal.billCity||'', billPincode:userDataVal.billPincode||'',
+    billStateCode:userDataVal.billStateCode||'', billStateName:userDataVal.billStateName||'',
+    billCountry:userDataVal.billCountry||'IN',
+    gstin:userDataVal.gstin||'', gstLegalName:userDataVal.gstLegalName||'',
+    placeOfSupply:userDataVal.billStateName?(userDataVal.billStateName+(userDataVal.billStateCode?' ('+userDataVal.billStateCode+')':'')):'',
+    invoiceNo:'',
+    invDate:fmtD(today),
+    dueDate:fmtD(new Date(today.getTime()+15*24*60*60*1000)),
+    initiatedAt:new Date().toISOString(), submittedAt:null, utr:null
+  };
+  var lo=JSON.parse(localStorage.getItem('interview_payments')||'[]');
+  var i=lo.findIndex(function(x){return x.orderId===txnRefVal;});
+  if(i>=0)lo[i]=Object.assign({},lo[i],rec);else lo.push(rec);
+  localStorage.setItem('interview_payments',JSON.stringify(lo));
+  admGhUpsert(rec);
 };
-window.lnPaySubmitted=function(txnRefVal,utrVal){var lo=JSON.parse(localStorage.getItem('interview_payments')||'[]');var i=lo.findIndex(function(x){return x.orderId===txnRefVal;});var upd={status:'submitted',utr:utrVal,submittedAt:new Date().toISOString()};if(i>=0){lo[i]=Object.assign({},lo[i],upd);localStorage.setItem('interview_payments',JSON.stringify(lo));admGhUpsert(lo[i]);}else admGhUpsert(Object.assign({orderId:txnRefVal,name:'—',email:'—',mobile:'—',module:'—',amount:0,initiatedAt:null},upd));};
+window.lnPaySubmitted=async function(txnRefVal,utrVal){
+  /* Counter only increments on confirmed payment — get invoice number now */
+  var invNo;
+  try { invNo = await genInvoiceNoGH(); pendingInvNo = invNo; }
+  catch(e){ invNo = 'FOB'+Date.now(); }
+  var lo=JSON.parse(localStorage.getItem('interview_payments')||'[]');
+  var i=lo.findIndex(function(x){return x.orderId===txnRefVal;});
+  var upd={status:'submitted', utr:utrVal, submittedAt:new Date().toISOString(), invoiceNo:invNo};
+  if(i>=0){lo[i]=Object.assign({},lo[i],upd);localStorage.setItem('interview_payments',JSON.stringify(lo));admGhUpsert(lo[i]);}
+  else admGhUpsert(Object.assign({orderId:txnRefVal,name:'—',email:'—',mobile:'—',module:'—',amount:0,initiatedAt:null},upd));
+};
 
 async function admRefresh(){document.getElementById('alist').innerHTML='<div class="aempty">⏳ Syncing with GitHub…</div>';admSync('spin','Syncing…');try{admRecs=await admGhMerge();}catch(e){admRecs=JSON.parse(localStorage.getItem('interview_payments')||'[]');admSync('err','Offline');}admStats();admRender();}
 function admStats(){var i=admRecs.filter(function(r){return r.status==='initiated';}).length;var s=admRecs.filter(function(r){return r.status==='submitted';}).length;document.getElementById('ast-all').textContent=admRecs.length;document.getElementById('ast-init').textContent=i;document.getElementById('ast-sub').textContent=s;}
 function admFilt(f,btn){admFl=f;document.querySelectorAll('.afbtn').forEach(function(b){b.classList.remove('on');});btn.classList.add('on');admRender();}
 function aH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function aE(s){return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
-function admRender(){var q=(document.getElementById('asrch').value||'').toLowerCase();var r=admFl==='all'?admRecs:admRecs.filter(function(x){return x.status===admFl;});if(q)r=r.filter(function(x){return['name','email','mobile','module','orderId','utr'].some(function(k){return(x[k]||'').toLowerCase().includes(q);});});r=r.slice().sort(function(a,b){if(a.status!==b.status)return a.status==='submitted'?-1:1;return new Date(b.submittedAt||b.initiatedAt||0)-new Date(a.submittedAt||a.initiatedAt||0);});var el=document.getElementById('alist');if(!r.length){el.innerHTML='<div class="aempty">No records found.</div>';return;}el.innerHTML=r.map(admCard).join('');}
-function admCard(r){var s=r.status==='submitted';function ft(d){return d?new Date(d).toLocaleString('en-IN',{timeZone:'Asia/Kolkata',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'—';}
+function admRender(){var q=(document.getElementById('asrch').value||'').toLowerCase();var r=admFl==='all'?admRecs:admRecs.filter(function(x){return x.status===admFl;});if(q)r=r.filter(function(x){return['name','email','mobile','module','orderId','utr','billCompany','billCity','billStateName','billPincode','gstin','gstLegalName'].some(function(k){return(x[k]||'').toLowerCase().includes(q);});});r=r.slice().sort(function(a,b){if(a.status!==b.status){var ord={submitted:0,initiated:1,failed:2};return (ord[a.status]||3)-(ord[b.status]||3);}return new Date(b.submittedAt||b.initiatedAt||0)-new Date(a.submittedAt||a.initiatedAt||0);});var el=document.getElementById('alist');if(!r.length){el.innerHTML='<div class="aempty">No records found.</div>';return;}el.innerHTML=r.map(admCard).join('');}
+
+function admCard(r){
+  var s=r.status==='submitted', f=r.status==='failed';
+  function ft(d){return d?new Date(d).toLocaleString('en-IN',{timeZone:'Asia/Kolkata',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'—';}
   var gstLine='';
-  if(r.baseAmt&&r.gstAmt){gstLine='<div class="ami"><div class="ami-v" style="color:#00c878">Rs.'+Number(r.baseAmt).toFixed(2)+' + GST Rs.'+Number(r.gstAmt).toFixed(2)+'</div><div class="ami-k">GST Breakdown</div></div>';}
+  if(r.baseAmt && Number(r.gstAmt||0)>0){
+    var rTaxType = r.taxType || ((r.billStateCode && String(r.billStateCode)===SELLER_STATE_CODE)?'CGST_SGST':'IGST');
+    var taxBreak;
+    if(rTaxType==='CGST_SGST') taxBreak='CGST Rs.'+Number(r.cgstAmt||0).toFixed(2)+' + SGST Rs.'+Number(r.sgstAmt||0).toFixed(2);
+    else                       taxBreak='IGST Rs.'+Number(r.igstAmt||r.gstAmt||0).toFixed(2);
+    gstLine='<div class="ami"><div class="ami-v" style="color:#00c878">Base Rs.'+Number(r.baseAmt).toFixed(2)+' · '+taxBreak+'</div><div class="ami-k">GST Breakdown</div></div>';
+  }
   var invLine='';
   if(r.invoiceNo){invLine='<div class="ami"><div class="ami-v" style="color:#e8b86d">'+aH(r.invoiceNo)+'</div><div class="ami-k">Invoice No</div></div>';}
+  var addrParts=[r.billLine1,r.billLine2,r.billCity,r.billStateName,r.billPincode,(r.billCountry==='IN'?'India':r.billCountry)].filter(function(p){return !!p;});
+  var billLine='';
+  if(addrParts.length){
+    billLine='<div class="ami" style="grid-column:1/-1;"><div class="ami-v" style="color:#e8b86d;font-size:12px;line-height:1.5;font-weight:400;">'+(r.billCompany?'<strong>'+aH(r.billCompany)+'</strong> · ':'')+aH(addrParts.join(', '))+(r.gstin?'<br><span style="color:#4ade80;">GSTIN: '+aH(String(r.gstin).toUpperCase())+(r.gstLegalName?' · '+aH(r.gstLegalName):'')+'</span>':'')+'</div><div class="ami-k">Billing Address</div></div>';
+  }
   var acts='';
   if(r.email)acts+='<button class="acopy" onclick="admCp(\''+aE(r.email)+'\',\'Email\')">📧 Email</button>';
   if(r.utr)acts+='<button class="acopy" onclick="admCp(\''+aE(r.utr)+'\',\'Payment ID\')">🔑 Payment ID</button>';
   if(r.mobile)acts+='<button class="acopy" onclick="admCp(\'+91'+aE(r.mobile)+'\',\'Mobile\')">📱 Mobile</button>';
+  if(r.gstin)acts+='<button class="acopy" onclick="admCp(\''+aE(String(r.gstin).toUpperCase())+'\',\'GSTIN\')" style="border-color:rgba(74,222,128,0.4);color:#4ade80;">🏢 GSTIN</button>';
   acts+='<button class="acopy" onclick="admCp(\''+aE(r.orderId)+'\',\'Ref\')">📋 Ref</button>';
+  acts+='<button class="acopy" onclick="admEditOpen(\''+aE(r.orderId)+'\')" style="background:rgba(74,222,128,0.12);border-color:rgba(74,222,128,0.4);color:#4ade80;">✏️ Edit Billing</button>';
+  acts+='<button class="acopy" onclick="admDeleteRecord(\''+aE(r.orderId)+'\')" style="background:rgba(248,113,113,0.12);border-color:rgba(248,113,113,0.4);color:#f87171;">🗑️ Delete</button>';
   if(r.utr&&r.invoiceNo){acts+='<button class="acopy inv-dl" onclick="admDownloadInvoice(\''+aE(r.orderId)+'\')">📄 GST Invoice</button>';}
-  return'<div class="acard"><div class="acard-top"><div><div class="acard-name">'+aH(r.name||'—')+'</div><div class="acard-email">'+aH(r.email||'—')+(r.mobile?' · +91 '+aH(r.mobile):'')+'</div></div><span class="abadge '+(s?'s':'i')+'">'+(s?'✅ Confirmed':'💳 Initiated')+'</span></div><div class="ameta"><div class="ami"><div class="ami-v">'+aH(r.module||'—')+'</div><div class="ami-k">Guide</div></div><div class="ami"><div class="ami-v">'+(r.amount?'Rs.'+Number(r.amount).toLocaleString('en-IN'):'—')+'</div><div class="ami-k">Total Amount</div></div><div class="ami"><div class="ami-v">'+aH(r.orderId||'—')+'</div><div class="ami-k">Order Ref</div></div><div class="ami"><div class="ami-v">'+(r.utr?aH(r.utr):'<span style="color:#6e6b65">Not yet</span>')+'</div><div class="ami-k">Payment ID</div></div>'+gstLine+invLine+'</div><div class="atl"><div class="atlr"><div class="atld b"></div><div class="atll">Initiated</div><div class="atlv">'+ft(r.initiatedAt)+'</div></div><div class="atlr"><div class="atld '+(s?'g':'x')+'"></div><div class="atll">Confirmed</div><div class="atlv">'+(s?ft(r.submittedAt):'<span style="color:#6e6b65">Awaiting…</span>')+'</div></div></div><div class="aacts">'+acts+'</div></div>';}
+  var badgeClass = s?'s':(f?'f':'i');
+  var badgeLabel = s?'✅ Confirmed':(f?'❌ Failed':'💳 Initiated');
+  return '<div class="acard"><div class="acard-top"><div><div class="acard-name">'+aH(r.name||'—')+'</div><div class="acard-email">'+aH(r.email||'—')+(r.mobile?' · +91 '+aH(r.mobile):'')+'</div></div><span class="abadge '+badgeClass+'" style="'+(f?'background:rgba(248,113,113,0.12);color:#f87171;':'')+'">'+badgeLabel+'</span></div><div class="ameta"><div class="ami"><div class="ami-v">'+aH(r.module||'—')+'</div><div class="ami-k">Guide</div></div><div class="ami"><div class="ami-v">'+(r.amount?'Rs.'+Number(r.amount).toLocaleString('en-IN'):'—')+'</div><div class="ami-k">Total Amount</div></div><div class="ami"><div class="ami-v">'+aH(r.orderId||'—')+'</div><div class="ami-k">Order Ref</div></div><div class="ami"><div class="ami-v">'+(r.utr?aH(r.utr):'<span style="color:#6e6b65">Not yet</span>')+'</div><div class="ami-k">Payment ID</div></div>'+gstLine+invLine+billLine+'</div><div class="atl"><div class="atlr"><div class="atld b"></div><div class="atll">Initiated</div><div class="atlv">'+ft(r.initiatedAt)+'</div></div><div class="atlr"><div class="atld '+(s?'g':'x')+'"></div><div class="atll">Confirmed</div><div class="atlv">'+(s?ft(r.submittedAt):'<span style="color:#6e6b65">Awaiting…</span>')+'</div></div></div><div class="aacts">'+acts+'</div></div>';
+}
 
 function admSync(st,lb){var d=document.getElementById('adot'),l=document.getElementById('aslbl');if(d)d.className='asyncdot '+st;if(l&&lb)l.textContent=lb;}
 function admCp(t,lb){navigator.clipboard.writeText(t).then(function(){admToast('📋 Copied '+lb);}).catch(function(){admToast(lb+': '+t);});}
@@ -1708,11 +2077,202 @@ function admDownloadInvoice(orderId){
   if(!rec.invoiceNo){admToast('Invoice data unavailable for this record.');return;}
   try{
     var gd={base:rec.baseAmt||Math.round(rec.amount/1.18*100)/100,gst:rec.gstAmt||Math.round((rec.amount-rec.amount/1.18)*100)/100,total:rec.amount};
-    var invData={invNo:rec.invoiceNo,invDate:rec.invDate||'—',dueDate:rec.dueDate||'—',name:rec.name,email:rec.email,mobile:rec.mobile||'',guide:rec.module,baseAmt:gd.base,gstAmt:gd.gst,totalAmt:gd.total,paymentId:rec.utr||'—',orderRef:rec.orderId};
+    var invData={
+      invNo:rec.invoiceNo,invDate:rec.invDate||'—',dueDate:rec.dueDate||'—',
+      name:rec.name,email:rec.email,mobile:rec.mobile||'',
+      guide:rec.module,
+      baseAmt:gd.base,gstAmt:gd.gst,totalAmt:gd.total,
+      cgstAmt:Number(rec.cgstAmt||0), sgstAmt:Number(rec.sgstAmt||0), igstAmt:Number(rec.igstAmt||0), taxType:rec.taxType||'',
+      billCompany:rec.billCompany||'', billLine1:rec.billLine1||'', billLine2:rec.billLine2||'',
+      billCity:rec.billCity||'', billPincode:rec.billPincode||'',
+      billStateCode:rec.billStateCode||'', billStateName:rec.billStateName||'',
+      billCountry:rec.billCountry||'IN',
+      gstin:rec.gstin||'', gstLegalName:rec.gstLegalName||'',
+      placeOfSupply:rec.placeOfSupply||'',
+      paymentId:rec.utr||'—',orderRef:rec.orderId
+    };
     downloadInvoice(invData);
     admToast('📄 Invoice downloading…');
   }catch(e){console.error(e);admToast('Invoice generation failed.');}
 }
+
+/* ── Admin: Delete a record (with confirmation) ──────────────────────── */
+async function admDeleteRecord(orderId){
+  var rec = admRecs.find(function(x){return x.orderId===orderId;});
+  if(!rec){admToast('Record not found.');return;}
+  var label = (rec.name||'—')+' · '+(rec.module||'—')+' · '+(rec.invoiceNo||rec.orderId);
+  if(!confirm('Permanently delete this record from GitHub?\n\n'+label+'\n\nThis cannot be undone.')) return;
+  try {
+    var gh = await admGhRead();
+    var idx = (gh.records||[]).findIndex(function(x){return x.orderId===orderId;});
+    if(idx < 0){ admToast('Record not on server. Refreshing.'); admRefresh(); return; }
+    gh.records.splice(idx, 1);
+    var body = { message:'admin: delete '+orderId, content: btoa(unescape(encodeURIComponent(JSON.stringify(gh.records, null, 2)))) };
+    if(gh.sha) body.sha = gh.sha;
+    var w = await fetch(ADM_GH_API,{method:'PUT',headers:{'Authorization':'token '+ADM_GH_PAT,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(!w.ok) throw new Error('GH write '+w.status);
+    admRecs = admRecs.filter(function(x){return x.orderId!==orderId;});
+    admStats(); admRender();
+    admToast('🗑️ Deleted '+(rec.invoiceNo||rec.orderId));
+  } catch(e){ console.error('Delete failed:', e); alert('Delete failed: '+(e.message||'unknown error')); }
+}
+
+/* ── Admin: Renumber confirmed invoices to FOB####### sequence ──────── */
+async function admMigrateInvoiceNos(){
+  var msg = 'This will renumber every CONFIRMED invoice to the new FOB####### sequence (sorted by confirmed date) and reset the counter.\n\n' +
+            'Existing invoice numbers are preserved as legacyInvoiceNo on each record.\n\nContinue?';
+  if(!confirm(msg)) return;
+  try {
+    var gh = await admGhRead();
+    var allRecs = gh.records || [];
+    var confirmedRecs = allRecs.filter(function(r){return r.status==='submitted';})
+      .sort(function(a,b){return new Date(a.submittedAt||a.initiatedAt||0)-new Date(b.submittedAt||b.initiatedAt||0);});
+    if(!confirmedRecs.length){ admToast('No confirmed records to renumber.'); return; }
+    var changed = 0;
+    confirmedRecs.forEach(function(r, i){
+      var newNo = 'FOB' + String(i+1).padStart(7, '0');
+      if(r.invoiceNo && r.invoiceNo !== newNo){
+        if(!r.legacyInvoiceNo) r.legacyInvoiceNo = r.invoiceNo;
+        r.invoiceNo = newNo; r.invoiceMigratedAt = new Date().toISOString(); changed++;
+      } else if(!r.invoiceNo){
+        r.invoiceNo = newNo; r.invoiceMigratedAt = new Date().toISOString(); changed++;
+      }
+    });
+    var body = { message:'invoice-migration: renumbered '+confirmedRecs.length+' confirmed (changed '+changed+')', content: btoa(unescape(encodeURIComponent(JSON.stringify(allRecs, null, 2)))) };
+    if(gh.sha) body.sha = gh.sha;
+    var w = await fetch(ADM_GH_API,{method:'PUT',headers:{'Authorization':'token '+ADM_GH_PAT,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(!w.ok) throw new Error('GH write '+w.status);
+    try { await setInvoiceCounterGH(confirmedRecs.length); }
+    catch(e){ console.warn('Counter set failed, but records updated:', e); }
+    admToast('✅ Renumbered '+confirmedRecs.length+' invoice(s)');
+    alert('✅ Renumbered '+confirmedRecs.length+' confirmed invoice(s).\nNext payment will be FOB'+String(confirmedRecs.length+1).padStart(7,'0')+'.');
+    admRefresh();
+  } catch(e){ console.error('Migration failed:', e); alert('Migration failed: '+(e.message||'unknown error')); }
+}
+
+/* ── Admin: Edit Billing & GST modal handlers ────────────────────────── */
+var admEdRec = null;
+function admEditOpen(orderId){
+  var rec = admRecs.find(function(x){return x.orderId===orderId;});
+  if(!rec){admToast('Record not found.');return;}
+  admEdRec = rec;
+  var stSel = document.getElementById('admEd_billState');
+  if(stSel && !stSel.dataset.populated){
+    var html = '<option value="">— Select State —</option>';
+    INDIA_STATES.forEach(function(s){ html += '<option value="'+s.code+'">'+s.name+' ('+s.code+')</option>'; });
+    stSel.innerHTML = html; stSel.dataset.populated = '1';
+  }
+  document.getElementById('admEd-meta').textContent = 'Order: '+(rec.orderId||'—')+' · Invoice: '+(rec.invoiceNo||'—')+' · '+(rec.module||'—');
+  var rSym = '₹';
+  var custH = '<div><strong style="color:#f6bc68;">'+(rec.name||'—')+'</strong> · '+(rec.email||'—')+(rec.mobile?' · +91 '+rec.mobile:'')+'</div>'+
+    '<div style="color:rgba(212,196,178,0.7);margin-top:4px;">Base '+rSym+Number(rec.baseAmt||0).toFixed(2)+' · Tax '+rSym+Number(rec.gstAmt||0).toFixed(2)+' · Total <strong style="color:#f6bc68;">'+rSym+Number(rec.amount||rec.totalAmt||0).toFixed(2)+'</strong> (INR)</div>';
+  document.getElementById('admEd-cust').innerHTML = custH;
+  document.getElementById('admEd_billCompany').value = rec.billCompany||'';
+  document.getElementById('admEd_billLine1').value   = rec.billLine1  ||'';
+  document.getElementById('admEd_billLine2').value   = rec.billLine2  ||'';
+  document.getElementById('admEd_billCity').value    = rec.billCity   ||'';
+  document.getElementById('admEd_billPin').value     = rec.billPincode||'';
+  document.getElementById('admEd_billCountry').value = rec.billCountry||'IN';
+  admEdCountryChange();
+  if((rec.billCountry||'IN')==='IN'){ document.getElementById('admEd_billState').value = rec.billStateCode||''; }
+  else { document.getElementById('admEd_billStateText').value = rec.billStateName||''; }
+  var hasGstin = !!rec.gstin;
+  document.getElementById('admEd_gstinToggle').checked = hasGstin;
+  document.getElementById('admEd_gstin').value         = (rec.gstin||'').toUpperCase();
+  document.getElementById('admEd_gstLegalName').value  = rec.gstLegalName||'';
+  admEdGstinToggle();
+  document.getElementById('admEd-err').textContent = '';
+  admEdRefreshPreview();
+  document.getElementById('adm-edit-overlay').style.display = 'flex';
+}
+function admEditClose(){ document.getElementById('adm-edit-overlay').style.display='none'; admEdRec=null; }
+function admEdCountryChange(){
+  var c=document.getElementById('admEd_billCountry').value;
+  var sel=document.getElementById('admEd_billState');
+  var txt=document.getElementById('admEd_billStateText');
+  var gst=document.getElementById('admEd-gstin-block');
+  if(c==='IN'){ if(sel)sel.style.display=''; if(txt)txt.style.display='none'; if(gst)gst.style.display=''; }
+  else { if(sel)sel.style.display='none'; if(txt)txt.style.display=''; if(gst)gst.style.display='none';
+    var t=document.getElementById('admEd_gstinToggle'); if(t)t.checked=false; admEdGstinToggle();
+  }
+  admEdRefreshPreview();
+}
+function admEdGstinToggle(){var on=document.getElementById('admEd_gstinToggle').checked;document.getElementById('admEd-gstin-fields').style.display=on?'grid':'none';}
+function admEdRefreshPreview(){
+  if(!admEdRec) return;
+  var prev=document.getElementById('admEd-preview');
+  var rSym='₹';
+  var total=Number(admEdRec.amount||admEdRec.totalAmt||0);
+  var country=document.getElementById('admEd_billCountry').value;
+  var stCd=(country==='IN')?document.getElementById('admEd_billState').value:'';
+  if(country!=='IN'){prev.innerHTML='<strong style="color:#fbbf24;">Buyer outside India</strong> — invoice will be issued without GST.';return;}
+  if(!stCd){prev.innerHTML='<strong style="color:#fbbf24;">Pick a state</strong> to see whether CGST+SGST or IGST applies.';return;}
+  var split = calcGSTSplitFromInclusive(total, stCd);
+  if(split.taxType==='CGST_SGST'){
+    prev.innerHTML='<strong style="color:#4ade80;">CGST 9% + SGST 9%</strong> (intra-state, '+getStateNameByCode(stCd)+'): Base '+rSym+split.base.toFixed(2)+' &nbsp;·&nbsp; CGST '+rSym+split.cgst.toFixed(2)+' + SGST '+rSym+split.sgst.toFixed(2)+' &nbsp;·&nbsp; <strong>Total '+rSym+split.total.toFixed(2)+'</strong>';
+  } else {
+    prev.innerHTML='<strong style="color:#4ade80;">IGST @ 18%</strong> (inter-state, '+getStateNameByCode(stCd)+'): Base '+rSym+split.base.toFixed(2)+' &nbsp;·&nbsp; IGST '+rSym+split.igst.toFixed(2)+' &nbsp;·&nbsp; <strong>Total '+rSym+split.total.toFixed(2)+'</strong>';
+  }
+}
+async function admEditSave(){
+  if(!admEdRec) return;
+  var err=document.getElementById('admEd-err'); err.textContent='';
+  var company=(document.getElementById('admEd_billCompany').value||'').trim();
+  var line1  =(document.getElementById('admEd_billLine1').value||'').trim();
+  var line2  =(document.getElementById('admEd_billLine2').value||'').trim();
+  var city   =(document.getElementById('admEd_billCity').value||'').trim();
+  var pin    =(document.getElementById('admEd_billPin').value||'').trim();
+  var country=(document.getElementById('admEd_billCountry').value||'IN').trim();
+  var stCd='', stName='';
+  if(country==='IN'){ stCd=document.getElementById('admEd_billState').value||''; stName=stCd?getStateNameByCode(stCd):''; }
+  else { stName=(document.getElementById('admEd_billStateText').value||'').trim(); }
+  var gstinOn=!!document.getElementById('admEd_gstinToggle').checked;
+  var gstin=gstinOn?(document.getElementById('admEd_gstin').value||'').toUpperCase().trim():'';
+  var legalName=gstinOn?(document.getElementById('admEd_gstLegalName').value||'').trim():'';
+
+  if(!line1){err.textContent='Address Line 1 is required.';return;}
+  if(!city){err.textContent='City is required.';return;}
+  if(!pin){err.textContent='PIN / ZIP is required.';return;}
+  if(country==='IN' && !stCd){err.textContent='Please select an Indian state.';return;}
+  if(country!=='IN' && !stName){err.textContent='Please enter the state / region.';return;}
+  if(country==='IN' && !/^\d{6}$/.test(pin)){err.textContent='Indian PIN code must be 6 digits.';return;}
+  if(gstinOn){
+    if(!isValidGSTIN(gstin)){err.textContent='GSTIN format is invalid (expected 15 chars).';return;}
+    if(country==='IN' && gstinStateCode(gstin)!==stCd){err.textContent='GSTIN state code '+gstinStateCode(gstin)+' does not match selected state '+stName+' ('+stCd+').';return;}
+    if(!legalName){err.textContent='Legal name of business is required when GSTIN is provided.';return;}
+  }
+
+  var total=Number(admEdRec.amount||admEdRec.totalAmt||0);
+  var cgst=0, sgst=0, igst=0, gstAmt=Number(admEdRec.gstAmt||0), base=Number(admEdRec.baseAmt||0), taxType=admEdRec.taxType||'NONE';
+  if(country==='IN' && total>0){
+    var split = calcGSTSplitFromInclusive(total, stCd);
+    cgst=split.cgst; sgst=split.sgst; igst=split.igst;
+    gstAmt=split.gst; base=split.base; taxType=split.taxType;
+  }
+  var merged = Object.assign({}, admEdRec, {
+    billCompany:company, billLine1:line1, billLine2:line2, billCity:city, billPincode:pin,
+    billCountry:country, billStateCode:stCd, billStateName:stName,
+    gstin:gstin, gstLegalName:legalName,
+    placeOfSupply: stName?(stName+(stCd?' ('+stCd+')':'')):'',
+    cgstAmt:cgst, sgstAmt:sgst, igstAmt:igst, baseAmt:base, gstAmt:gstAmt, taxType:taxType,
+    billingUpdatedAt: new Date().toISOString()
+  });
+
+  var btn=document.getElementById('admEd-saveBtn'); var orig=btn.textContent;
+  btn.disabled=true; btn.textContent='⏳ Saving…';
+  try {
+    await admGhUpsert(merged);
+    var i = admRecs.findIndex(function(x){return x.orderId===merged.orderId;});
+    if(i>=0) admRecs[i] = merged;
+    admStats(); admRender();
+    admToast('✅ Billing saved & tax recomputed');
+    admEditClose();
+  } catch(e){ console.error(e); err.textContent='Save failed: '+(e.message||'unknown error'); }
+  finally { btn.disabled=false; btn.textContent=orig; }
+}
+document.addEventListener('change', function(e){
+  if(e.target && (e.target.id==='admEd_billState' || e.target.id==='admEd_billCountry')){ admEdRefreshPreview(); }
+});
 </script>
 </body>
 </html>
