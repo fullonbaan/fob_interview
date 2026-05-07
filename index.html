@@ -1924,51 +1924,36 @@
 
 <script>
 var ADM_PW='Admin@M3Pay2025';
-var ADM_GH_OWNER='fullonbaan';
-var ADM_GH_REPO='fob_pay_store_ln_intv';
-var ADM_GH_FILE='payments/interview_payments.json';
-var ADM_GH_PAT=['ghp_acSai','fFwsB4vx','OSfwD0iuTb','4HD6V1S0Qy2bG'].join('');
-var ADM_GH_API='https://api.github.com/repos/'+ADM_GH_OWNER+'/'+ADM_GH_REPO+'/contents/'+ADM_GH_FILE;
+/* All GitHub access goes through Vercel serverless proxies — the PAT lives in
+   process.env.GITHUB_PAT and never reaches the browser. */
+var ADM_API     = '/api/payments';
+var ADM_INV_API = '/api/invoice-counter';
 
 /* ── GitHub Invoice Counter ─────────────────────────────────────────────
    Reads/writes  payments/invoice_counter.json  →  { "counter": 1001 }
    Called by lnPayInitiated before Razorpay opens; result parked in
    pendingInvNo so onPaymentSuccess can use it synchronously.
    ──────────────────────────────────────────────────────────────────── */
-var ADM_GH_INV_API='https://api.github.com/repos/'+ADM_GH_OWNER+'/'+ADM_GH_REPO+'/contents/payments/invoice_counter.json';
+/* ADM_GH_INV_API removed — counter goes through ADM_INV_API proxy */
 
 async function genInvoiceNoGH(){
+  /* Proxy endpoint atomically increments the counter file in fob_pay_store_ln_intv
+     and returns the next FOB####### value. PAT never touches the browser. */
   try{
-    var r=await fetch(ADM_GH_INV_API,{headers:{'Authorization':'token '+ADM_GH_PAT,'Accept':'application/vnd.github.v3+json'}});
-    var current=0,sha=null;
+    var r = await fetch(ADM_INV_API);
     if(r.ok){
-      var d=await r.json();
-      var data=JSON.parse(atob(d.content.replace(/\n/g,'')));
-      current=Number(data.counter)||0;
-      sha=d.sha;
+      var d = await r.json();
+      if(d.invoiceNo) return d.invoiceNo;
     }
-    var next=current+1;
-    var body={message:'inv-counter:'+next,content:btoa(JSON.stringify({counter:next},null,2))};
-    if(sha)body.sha=sha;
-    await fetch(ADM_GH_INV_API,{method:'PUT',headers:{'Authorization':'token '+ADM_GH_PAT,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(body)});
-    return 'FOB'+String(next).padStart(7,'0');
-  }catch(e){
-    console.warn('Invoice counter GitHub error — using timestamp fallback:',e);
-    return 'FOB'+String(Date.now()).slice(-7);
-  }
+  } catch(e){ console.warn('Invoice counter API error — using timestamp fallback:', e); }
+  return 'FOB'+String(Date.now()).slice(-7);
 }
-/* Set the GitHub invoice counter to a specific value (used by Renumber migration). */
+/* Set the invoice counter to a specific value (used by Renumber migration).
+   POSTs to /api/invoice-counter which writes the new value server-side. */
 async function setInvoiceCounterGH(value){
-  try {
-    var r = await fetch(ADM_GH_INV_API,{headers:{'Authorization':'token '+ADM_GH_PAT,'Accept':'application/vnd.github.v3+json'}});
-    var sha = null;
-    if(r.ok){var d=await r.json(); sha=d.sha;}
-    var body={message:'inv-counter:SET '+value, content:btoa(JSON.stringify({counter:Number(value)},null,2))};
-    if(sha) body.sha=sha;
-    var w = await fetch(ADM_GH_INV_API,{method:'PUT',headers:{'Authorization':'token '+ADM_GH_PAT,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(body)});
-    if(!w.ok) throw new Error('GH counter set '+w.status);
-    return value;
-  } catch(e) { console.warn('setInvoiceCounterGH error:', e); throw e; }
+  var w = await fetch(ADM_INV_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({counter:Number(value)})});
+  if(!w.ok){ var t=''; try{t=await w.text();}catch(_){} throw new Error('Counter set '+w.status+(t?': '+t.slice(0,120):'')); }
+  return value;
 }
 
 var admRecs=[],admFl='all';
@@ -1982,8 +1967,39 @@ window.addEventListener('hashchange',function(){if(window.location.hash==='#admi
 
 function admLogin(){var pw=document.getElementById('adm-pw').value;if(pw===ADM_PW){document.getElementById('adm-pw').value='';document.getElementById('adm-login').style.display='none';document.getElementById('adm-dash').style.display='block';admRefresh();}else{document.getElementById('adm-err').style.display='block';document.getElementById('adm-pw').classList.add('bad');}}
 
-async function admGhRead(){var r=await fetch(ADM_GH_API,{headers:{'Authorization':'token '+ADM_GH_PAT,'Accept':'application/vnd.github.v3+json'}});if(r.status===404)return{records:[],sha:null};if(!r.ok)throw new Error('GH '+r.status);var d=await r.json();return{records:JSON.parse(atob(d.content.replace(/\n/g,''))),sha:d.sha};}
-async function admGhUpsert(rec){try{admSync('spin','Syncing…');var gh=await admGhRead();var i=gh.records.findIndex(function(x){return x.orderId===rec.orderId;});if(i>=0)gh.records[i]=Object.assign({},gh.records[i],rec);else gh.records.push(rec);var body={message:'intpay:'+rec.status+' '+rec.orderId,content:btoa(unescape(encodeURIComponent(JSON.stringify(gh.records,null,2))))};if(gh.sha)body.sha=gh.sha;var w=await fetch(ADM_GH_API,{method:'PUT',headers:{'Authorization':'token '+ADM_GH_PAT,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(body)});if(!w.ok){var errText='';try{errText=await w.text();}catch(_){}throw new Error('GH write '+w.status+(errText?': '+errText.slice(0,120):''));}localStorage.setItem('interview_payments',JSON.stringify(gh.records));admSync('ok','Synced');}catch(e){admSync('err','Offline');console.warn(e);throw e;}}
+async function admGhRead(){
+  /* Proxy returns {records:[...], sha} already decoded. */
+  var r = await fetch(ADM_API);
+  if(!r.ok) throw new Error('Proxy GET '+r.status);
+  var d = await r.json();
+  return { records: d.records || [], sha: d.sha || null };
+}
+async function admGhUpsert(rec){
+  try {
+    admSync('spin','Syncing…');
+    /* Read current state from the proxy, merge our record on top, then PUT it back.
+       The proxy holds the GitHub PAT server-side, so the browser never sees it. */
+    var gh = await admGhRead();
+    var i = gh.records.findIndex(function(x){return x.orderId===rec.orderId;});
+    if(i>=0) gh.records[i] = Object.assign({}, gh.records[i], rec);
+    else gh.records.push(rec);
+    var w = await fetch(ADM_API, {
+      method: 'PUT',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({records: gh.records, sha: gh.sha, message: 'intpay:'+rec.status+' '+rec.orderId})
+    });
+    if(!w.ok){
+      var errText=''; try{errText = await w.text();}catch(_){}
+      throw new Error('Proxy write '+w.status+(errText?': '+errText.slice(0,120):''));
+    }
+    localStorage.setItem('interview_payments', JSON.stringify(gh.records));
+    admSync('ok','Synced');
+  } catch(e){
+    admSync('err','Offline');
+    console.warn('admGhUpsert:', e);
+    throw e;
+  }
+}
 async function admGhMerge(){var gh=[];try{var r=await admGhRead();gh=r.records;admSync('ok','Synced');}catch(e){admSync('err','Offline');}var lo=JSON.parse(localStorage.getItem('interview_payments')||'[]');var m=gh.slice();lo.forEach(function(l){if(!m.find(function(x){return x.orderId===l.orderId;}))m.push(l);});localStorage.setItem('interview_payments',JSON.stringify(m));return m;}
 
 window.lnPayInitiated=function(txnRefVal,userDataVal,selDescVal,selAmountVal){
@@ -2107,10 +2123,12 @@ async function admDeleteRecord(orderId){
     var idx = (gh.records||[]).findIndex(function(x){return x.orderId===orderId;});
     if(idx < 0){ admToast('Record not on server. Refreshing.'); admRefresh(); return; }
     gh.records.splice(idx, 1);
-    var body = { message:'admin: delete '+orderId, content: btoa(unescape(encodeURIComponent(JSON.stringify(gh.records, null, 2)))) };
-    if(gh.sha) body.sha = gh.sha;
-    var w = await fetch(ADM_GH_API,{method:'PUT',headers:{'Authorization':'token '+ADM_GH_PAT,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(body)});
-    if(!w.ok) throw new Error('GH write '+w.status);
+    var w = await fetch(ADM_API, {
+      method: 'PUT',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({records: gh.records, sha: gh.sha, message: 'admin: delete '+orderId})
+    });
+    if(!w.ok){var t='';try{t=await w.text();}catch(_){}throw new Error('Proxy write '+w.status+(t?': '+t.slice(0,120):''));}
     admRecs = admRecs.filter(function(x){return x.orderId!==orderId;});
     admStats(); admRender();
     admToast('🗑️ Deleted '+(rec.invoiceNo||rec.orderId));
@@ -2138,10 +2156,12 @@ async function admMigrateInvoiceNos(){
         r.invoiceNo = newNo; r.invoiceMigratedAt = new Date().toISOString(); changed++;
       }
     });
-    var body = { message:'invoice-migration: renumbered '+confirmedRecs.length+' confirmed (changed '+changed+')', content: btoa(unescape(encodeURIComponent(JSON.stringify(allRecs, null, 2)))) };
-    if(gh.sha) body.sha = gh.sha;
-    var w = await fetch(ADM_GH_API,{method:'PUT',headers:{'Authorization':'token '+ADM_GH_PAT,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(body)});
-    if(!w.ok) throw new Error('GH write '+w.status);
+    var w = await fetch(ADM_API, {
+      method: 'PUT',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({records: allRecs, sha: gh.sha, message: 'invoice-migration: renumbered '+confirmedRecs.length+' confirmed (changed '+changed+')'})
+    });
+    if(!w.ok){var t='';try{t=await w.text();}catch(_){}throw new Error('Proxy write '+w.status+(t?': '+t.slice(0,120):''));}
     try { await setInvoiceCounterGH(confirmedRecs.length); }
     catch(e){ console.warn('Counter set failed, but records updated:', e); }
     admToast('✅ Renumbered '+confirmedRecs.length+' invoice(s)');
