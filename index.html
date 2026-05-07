@@ -1699,11 +1699,40 @@
     /* If a guide is already selected, recompute the displayed amount + GST */
     if(selKey) onModuleChange();
   };
-  /* Run once on page load: restore saved currency choice and localise prices everywhere */
+  /* Auto-detect the user's preferred currency based on their browser timezone.
+     Asia/Kolkata (or legacy Asia/Calcutta) → INR.
+     Europe/*  → EUR.
+     Anything else → USD.
+     Falls back to navigator.language and finally to USD if nothing matches. */
+  function detectInitialCurrency(){
+    /* 1. Saved manual choice always wins */
+    try {
+      var saved = localStorage.getItem('fob_iv_curr');
+      if(saved && CURRENCIES[saved]) return saved;
+    } catch(e){}
+    /* 2. Timezone-based heuristic */
+    try {
+      var tz = (Intl && Intl.DateTimeFormat) ? Intl.DateTimeFormat().resolvedOptions().timeZone : '';
+      if(tz){
+        if(tz === 'Asia/Kolkata' || tz === 'Asia/Calcutta') return 'INR';
+        if(tz.indexOf('Europe/') === 0) return 'EUR';
+        return 'USD';
+      }
+    } catch(e){}
+    /* 3. Language fallback (locale tag like en-IN, de-DE, fr-FR) */
+    try {
+      var lang = (navigator.language || navigator.userLanguage || '').toLowerCase();
+      if(lang.indexOf('-in') > 0 || lang === 'hi') return 'INR';
+      var euLangs = ['de','fr','es','it','nl','pt','el','sv','da','fi','no','pl','cs','sk','hu','ro','bg','hr','sl','et','lv','lt','ga','mt'];
+      for(var i=0;i<euLangs.length;i++){ if(lang.indexOf(euLangs[i]) === 0) return 'EUR'; }
+    } catch(e){}
+    /* 4. Default */
+    return 'USD';
+  }
+
+  /* Run once on page load: detect currency (or restore saved) and localise prices everywhere */
   document.addEventListener('DOMContentLoaded', function(){
-    var saved = null;
-    try { saved = localStorage.getItem('fob_iv_curr'); } catch(e){}
-    var initial = (saved && CURRENCIES[saved]) ? saved : SEL_CURR;
+    var initial = detectInitialCurrency();
     if(typeof window.switchCurrency==='function') window.switchCurrency(initial);
   });
   window.goToStep2=function(){if(!selAmount){alert('Please select a guide first.');return;}document.getElementById('step2Summary').textContent=selDesc+'  \u00b7  \u20b9'+selAmount.toLocaleString('en-IN');showStep('step2');if(typeof gtag!=='undefined'){gtag('event','add_to_cart',{value:selAmount,currency:'INR',items:[{item_name:selDesc,price:selAmount,quantity:1}]});}};
@@ -1925,7 +1954,24 @@
     var LGREY=[245,245,248];var MGREY=[210,210,218];
     var fmt2=function(v){return Number(v).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});};
     var PAD=32;
-    var INV_HAS_GST = Number(inv.gstAmt||0) > 0;
+    /* Currency-driven GST applicability. INR sales always carry GST regardless
+       of whether the persisted record happens to have gstAmt populated. */
+    var INV_CURRENCY = inv.currency || 'INR';
+    var INV_HAS_GST  = (INV_CURRENCY === 'INR') && (Number(inv.totalAmt||0) > 0 || Number(inv.baseAmt||0) > 0);
+    /* If INR record is missing baseAmt/gstAmt, recompute from totalAmt */
+    if(INV_HAS_GST && (!Number(inv.baseAmt) || !Number(inv.gstAmt))){
+      var totalForRecover = Number(inv.totalAmt) || (Number(inv.baseAmt) + Number(inv.gstAmt||0)) || 0;
+      if(totalForRecover > 0){
+        var rec = calcGSTSplitFromInclusive(totalForRecover, inv.billStateCode||'');
+        if(!Number(inv.baseAmt))   inv.baseAmt   = rec.base;
+        if(!Number(inv.gstAmt))    inv.gstAmt    = rec.gst;
+        if(!Number(inv.cgstAmt))   inv.cgstAmt   = rec.cgst;
+        if(!Number(inv.sgstAmt))   inv.sgstAmt   = rec.sgst;
+        if(!Number(inv.igstAmt))   inv.igstAmt   = rec.igst;
+        if(!inv.taxType)           inv.taxType   = rec.taxType;
+        if(!inv.totalAmt)          inv.totalAmt  = rec.total;
+      }
+    }
     var INV_TAX_TYPE = inv.taxType || (INV_HAS_GST?((inv.billStateCode && String(inv.billStateCode)===SELLER_STATE_CODE)?'CGST_SGST':'IGST'):'NONE');
     var INV_CGST = Number(inv.cgstAmt||0), INV_SGST = Number(inv.sgstAmt||0), INV_IGST = Number(inv.igstAmt||0);
     if(INV_HAS_GST && !INV_CGST && !INV_SGST && !INV_IGST){
