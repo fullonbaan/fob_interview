@@ -2614,4 +2614,8 @@ async function admEditSave(){
   finally { btn.disabled=false; btn.textContent=orig; }
 }
 document.addEventListener('change', function(e){
-  if(e.target && (e.t
+  if(e.target && (e.target.id==='admEd_billState' || e.target.id==='admEd_billCountry')){ admEdRefreshPreview(); }
+});
+</script>
+</body>
+</html>
