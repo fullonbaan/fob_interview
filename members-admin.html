@@ -52,6 +52,7 @@
   <div id="app" hidden style="display:grid;gap:18px">
     <section class="card">
       <h2>Ebook library</h2><p style="margin:-4px 0 12px;color:var(--ink-mid)">Every PDF in a guide’s folder appears in buyers’ libraries straight away — no code change. File name = title shown (an ordering prefix like <code>01 - </code> is hidden). Names starting with <code>_</code> stay hidden as drafts.</p>
+      <button id="moveAll" hidden style="margin-bottom:12px"></button>
       <div class="scroll"><table id="files"></table></div>
     </section>
 
@@ -103,17 +104,33 @@
     $('files').innerHTML='<tr><th style="width:24%">Guide</th><th>Ebooks customers see (in this order)</th><th style="width:220px">Add ebooks</th></tr>'+d.guides.map(function(g){
       var rows=g.ebooks.length?g.ebooks.map(function(f){
         return '<div class="ebrow"><span><b>'+esc(f.title)+'</b><br><small>'+esc(f.legacy?'ebooks/'+f.file+' (old single-file location)':g.folder+f.file)+' · '+mb(f.size)+'</small></span>'+
+               (f.legacy?'<button class="sm" data-mv="'+esc(f.id)+'" data-g="'+esc(g.key)+'" data-n="'+esc(defaultName(g))+'">Move into folder</button> ':'<button class="ghost sm" data-rn="'+esc(f.id)+'" data-g="'+esc(g.key)+'" data-n="'+esc(f.file)+'">Rename</button> ')+
                '<button class="ghost sm" data-del="'+esc(f.id)+'" data-g="'+esc(g.key)+'" data-t="'+esc(f.title)+'">Delete</button></div>';
       }).join(''):'<span class="bad">No ebooks yet — buyers see “being prepared”.</span>';
       return '<tr><td><b>'+esc(g.name.replace(' Interview Guide',''))+'</b><br><small>'+esc(g.track)+' · '+g.ebooks.length+' ebook'+(g.ebooks.length===1?'':'s')+'</small></td><td>'+rows+'</td>'+
              '<td><label class="upl">+ Upload PDF(s)<input type="file" accept="application/pdf,.pdf" multiple data-up="'+esc(g.key)+'" hidden></label><div class="upst" id="up-'+esc(g.key)+'"></div></td></tr>';
     }).join('')+(empty?'<tr><td colspan="3" class="bad">'+empty+' guide(s) have no ebooks yet.</td></tr>':'');
+    var legacy=[];d.guides.forEach(function(g){g.ebooks.forEach(function(f){if(f.legacy)legacy.push({g:g,f:f});});});
+    $('moveAll').hidden=!legacy.length; $('moveAll').textContent='Move all '+legacy.length+' old single files into their guide folders';
+    $('moveAll').onclick=async function(){
+      if(!confirm('Move '+legacy.length+' file(s) from ebooks/<guide>.pdf into ebooks/<guide>/ ?\nEach keeps its title and stays first in its guide.'))return;
+      this.disabled=true; var ok=0,fail=[];
+      for(var i=0;i<legacy.length;i++){ var x=legacy[i]; this.textContent='Moving '+(i+1)+'/'+legacy.length+'…';
+        try{await call('move-file',{guide:x.g.key,id:x.f.id,name:defaultName(x.g)});ok++;}catch(e){fail.push(x.g.key+': '+e.message);} }
+      this.disabled=false; toast('Moved '+ok+(fail.length?' · not moved: '+fail.join('; '):'')); if(fail.length)alert('Not moved:\n'+fail.join('\n')); reloadFiles();
+    };
+    Array.prototype.forEach.call(document.querySelectorAll('[data-mv],[data-rn]'),function(b){b.onclick=function(){
+      var n=prompt(b.hasAttribute('data-mv')?'Move into the guide folder as (file name = title; "00 - " keeps it first):':'New file name (= title shown; a leading "01 - " sets the order):',b.getAttribute('data-n'));
+      if(!n)return;
+      call('move-file',{guide:b.getAttribute('data-g'),id:b.getAttribute('data-mv')||b.getAttribute('data-rn'),name:n}).then(function(r){toast('Saved as “'+r.title+'”');reloadFiles();}).catch(function(e){toast(e.message);});
+    };});
     Array.prototype.forEach.call(document.querySelectorAll('[data-up]'),function(inp){inp.onchange=function(){uploadFiles(inp.getAttribute('data-up'),Array.prototype.slice.call(inp.files));inp.value='';};});
     Array.prototype.forEach.call(document.querySelectorAll('[data-del]'),function(b){b.onclick=function(){
       if(!confirm('Delete “'+b.getAttribute('data-t')+'”? Customers will no longer see it. (Copies they already downloaded are not affected.)'))return;
       call('delete-file',{guide:b.getAttribute('data-g'),id:b.getAttribute('data-del')}).then(function(){toast('Deleted');reloadFiles();}).catch(function(e){toast(e.message);});
     };});
   }
+  function defaultName(g){return '00 - '+g.name+'.pdf';}
   function reloadFiles(){return call('files').then(function(d){CAT=d;renderFiles(d);});}
   function putFile(url,file,onp){
     return new Promise(function(res,rej){

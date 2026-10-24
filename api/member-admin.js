@@ -5,6 +5,7 @@
 //   GET  ?action=files                   every guide with the ebooks currently in its folder
 //   POST ?action=upload-url   {guide, filename}  → 15-min signed PUT link (browser uploads straight to R2)
 //   POST ?action=delete-file  {guide, id}
+//   POST ?action=move-file    {guide, id, name}  → move/rename an ebook into ebooks/<guide>/<name>
 //   POST ?action=grant        {email, name, product | guides[], note, notify}
 //   POST ?action=revoke       {email, guide}
 //   POST ?action=reset-code   {email, notify}     → returns the new code so you can share it too
@@ -75,6 +76,22 @@ module.exports = async function handler(req, res) {
       const key = library.ROOT + b.guide + '/' + name;
       const exists = !!(await r2.headObject(key));
       return H.send(res, 200, { url: await r2.signedPutUrl(key, 900), key, id: key.slice(library.ROOT.length), title: library.titleFromFile(name), replaces: exists });
+    }
+    if (action === 'move-file') {
+      const guide = String(b.guide || '');
+      const src = library.keyForId(guide, b.id);
+      const name = library.safeFileName(b.name);
+      if (!src || !name) return H.send(res, 400, { error: 'Unknown ebook or bad name' });
+      const dst = library.ROOT + guide + '/' + name;
+      if (dst === src) return H.send(res, 200, { ok: true, id: src.slice(library.ROOT.length) });
+      const from = await r2.headObject(src);
+      if (!from) return H.send(res, 404, { error: 'Original file not found' });
+      if (await r2.headObject(dst)) return H.send(res, 409, { error: '“' + name + '” already exists in this guide' });
+      await r2.copyObject(src, dst);
+      const to = await r2.headObject(dst);                       // verify before removing the original
+      if (!to || to.size !== from.size) return H.send(res, 500, { error: 'Copy could not be verified — original kept' });
+      await r2.deleteObject(src);
+      return H.send(res, 200, { ok: true, id: dst.slice(library.ROOT.length), title: library.titleFromFile(name) });
     }
     if (action === 'delete-file') {
       const key = library.keyForId(String(b.guide || ''), b.id);

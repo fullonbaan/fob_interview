@@ -121,6 +121,14 @@ async function listObjects(prefix) {
   } while (token);
   return items;
 }
+// Server-side copy inside the bucket (no download/re-upload).
+async function copyObject(srcKey, dstKey) {
+  if (LOCAL) { fs.mkdirSync(path.dirname(lp(dstKey)), { recursive: true }); fs.copyFileSync(lp(srcKey), lp(dstKey)); return; }
+  const src = '/' + process.env.R2_BUCKET + '/' + String(srcKey).split('/').map(encodeURIComponent).join('/');
+  const r = await client().fetch(objUrl(dstKey), { method: 'PUT', headers: { 'x-amz-copy-source': src } });
+  if (!r.ok) throw new Error('R2 COPY ' + srcKey + ' → ' + dstKey + ': ' + r.status + ' ' + (await r.text()).slice(0, 200));
+}
+
 async function listKeys(prefix) { return (await listObjects(prefix)).map(o => o.key); }
 
 // Short-lived signed PUT link so the admin page can upload a PDF straight to the private bucket.
@@ -162,4 +170,4 @@ function bareEtag(e) { return String(e || '').replace(/^W\//, '').replace(/"/g, 
 function quoteEtag(e) { return '"' + bareEtag(e) + '"'; }
 function sameEtag(a, b) { return !!bareEtag(a) && bareEtag(a) === bareEtag(b); }
 
-module.exports = { bareEtag, quoteEtag, sameEtag, getObject, headObject, putObject, deleteObject, listKeys, listObjects, signedPutUrl, getJson, putJson, signedUrl };
+module.exports = { bareEtag, quoteEtag, sameEtag, getObject, headObject, putObject, deleteObject, copyObject, listKeys, listObjects, signedPutUrl, getJson, putJson, signedUrl };
