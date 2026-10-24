@@ -102,6 +102,7 @@
   .nav-cta { padding:11px 28px; background:var(--ink); color:#fff; border:none; font-family:'Work Sans',sans-serif; font-size:11px; font-weight:700; letter-spacing:.2em; text-transform:uppercase; cursor:pointer; text-decoration:none; display:inline-block; transition:background .2s; }
   .nav-cta:hover { background:var(--gold); }
   @media(max-width:900px){ .nav-links,.nav-ecosystem{display:none;} .nav-inner{padding:0 24px;} }
+  @media(max-width:640px){ .nav-inner{padding:0 14px;} .nav-inner .nav-cta{display:none;} #currencySelect{padding:7px 8px!important;} }
 
   /* HERO */
   .hero { min-height:90vh; display:flex; align-items:center; justify-content:center; text-align:center; padding:140px 48px 80px; position:relative; overflow:hidden; background:radial-gradient(circle at top right,rgba(168,120,42,0.06),transparent 40%), radial-gradient(circle at bottom left,rgba(168,120,42,0.04),transparent 30%); }
@@ -680,6 +681,7 @@
         <option value="USD">&#x1F1FA;&#x1F1F8; USD ($)</option>
         <option value="EUR">&#x1F1EA;&#x1F1FA; EUR (&#x20ac;)</option>
       </select>
+      <a href="/members" class="nav-member" style="font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-mid);text-decoration:none;white-space:nowrap;">Member Login</a>
       <a class="nav-cta" href="#contact">Buy Now</a>
     </div>
   </div>
@@ -1228,9 +1230,10 @@
               <div class="thankyou-wrap">
                 <div class="ty-icon">&#x2705;</div>
                 <div class="ty-title">Payment Confirmed!</div>
-                <div class="ty-msg">Thank you! Your payment was successful. Your guide will be delivered to your email shortly.</div>
+                <div class="ty-msg">Thank you! Your payment was successful. Your guides are now in your Members Library.</div>
                 <div class="ty-order-box" id="tyOrderBox"></div>
-                <div class="ty-delivery">&#x1F4E7; Guide will be sent to <strong id="tyEmail"></strong> shortly.</div>
+                <div id="tyAccess" style="margin:14px 0;padding:14px 16px;border:1px dashed var(--gold);background:var(--cream,#FFFDF8);text-align:left;font-size:13px;line-height:1.6;color:var(--ink-mid);">&#x23F3; Unlocking your library&#8230;</div>
+                <div class="ty-delivery">&#x1F4E7; Your access code &amp; invoice are emailed to <strong id="tyEmail"></strong>.</div>
                 <div class="ty-contact">Questions? WhatsApp us at <strong>+91 63605 93122</strong></div>
                 <button class="inv-download-btn" id="downloadInvBtn" onclick="downloadInvoice()">&#x1F4C4;&nbsp; Download GST Invoice</button>
               </div>
@@ -1287,7 +1290,7 @@
       <div class="footer-links-grid">
         <div class="footer-links-col"><span class="footer-links-col-label">Resources</span><a href="https://repo.fullonbaan.com/" target="_blank">Documentation</a><a href="https://certification.fullonbaan.com/" target="_blank">Certification</a><a href="https://training.fullonbaan.com/" target="_blank">Training</a></div>
         <div class="footer-links-col"><span class="footer-links-col-label">Legal</span><a href="/terms.html">Terms &amp; Conditions</a><a href="/privacy.html">Privacy Policy</a><a href="/cancellation.html">Cancellation &amp; Refund</a><a href="/shipping.html">Shipping &amp; Exchange</a></div>
-        <div class="footer-links-col"><span class="footer-links-col-label">Contact</span><a href="/contact.html">Contact Us</a><a href="mailto:fullonbaan@gmail.com?subject=Enquiry%20%E2%80%94%20FullonBaan&body=Hi%20FullonBaan%20Team%2C%0A%0A">fullonbaan@gmail.com</a><a href="https://wa.me/916360593122" target="_blank">+91 63605 93122</a></div>
+        <div class="footer-links-col"><span class="footer-links-col-label">Contact</span><a href="/members">Member Login</a><a href="/contact.html">Contact Us</a><a href="mailto:fullonbaan@gmail.com?subject=Enquiry%20%E2%80%94%20FullonBaan&body=Hi%20FullonBaan%20Team%2C%0A%0A">fullonbaan@gmail.com</a><a href="https://wa.me/916360593122" target="_blank">+91 63605 93122</a></div>
       </div>
     </div>
     <div class="footer-copy"><span>&#169; <script>document.write(new Date().getFullYear())</script> FullonBaan IT Solutions. The Definitive Standard.</span><span>Bangalore, India</span></div>
@@ -1472,9 +1475,8 @@
 
   /* ── Razorpay ──────────────────────────────────────────────────────── */
   var RZP_KEY_ID = 'rzp_live_Sd3yvlDYShR9ll';
-  /* NOTE: The key_secret (PrbkqplMs36tqEIGZJesTtX3) must NEVER be placed
-     in front-end code. Use it only on a server-side endpoint to verify the
-     razorpay_signature after a successful payment.                        */
+  /* The key SECRET lives only in Vercel env (RAZORPAY_KEY_SECRET). Orders are
+     created and payments verified server-side in /api/checkout.            */
 
   /* Per-currency fixed prices. INR is the GST-applicable currency; USD/EUR
      are tax-exclusive flat rates. Total amount is what the customer pays. */
@@ -1818,7 +1820,8 @@
     };
     Object.keys(rzpNotes).forEach(function(k){ if(rzpNotes[k]==='' || rzpNotes[k]==null) delete rzpNotes[k]; });
 
-    // ── Open Razorpay Standard Checkout ──────────────────────────────
+    // ── Open Razorpay Standard Checkout (server-created order) ───────
+    rzpNotes.product_key = selKey;
     var rzpOptions={
       key: RZP_KEY_ID,
       /* For INR, amount is in paise. For USD/EUR Razorpay also uses smallest unit (cents). */
@@ -1835,6 +1838,7 @@
         utrNumber=response.razorpay_payment_id;
         utrSubmitted=true;
         onPaymentSuccess(response.razorpay_payment_id);
+        fobUnlockLibrary(response);
         // Google Ads: conversion
         if(typeof gtag!=='undefined'){gtag('event','conversion',{send_to:'AW-18000254476/GinaCJyVroQcEIysmIdD',value:selAmount,currency:'INR',transaction_id:txnRef});}
         if(typeof lnPaySubmitted==='function') lnPaySubmitted(txnRef,response.razorpay_payment_id);
@@ -1846,17 +1850,62 @@
         }
       }
     };
-    var rzp=new Razorpay(rzpOptions);
-    rzp.on('payment.failed',function(response){
-      console.warn('Razorpay payment failed',response.error);
-      onPaymentFailure();
-    });
-    rzp.open();
+    function openRzp(){
+      var rzp=new Razorpay(rzpOptions);
+      rzp.on('payment.failed',function(response){
+        console.warn('Razorpay payment failed',response.error);
+        onPaymentFailure();
+      });
+      rzp.open();
+    }
+    /* Ask our server to create the Razorpay order at the catalogue price. */
+    fetch('/api/checkout?action=order',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({product:selKey,currency:selCurr,orderRef:txnRef,customer:{name:name,email:email,mobile:mobile},notes:rzpNotes})})
+      .then(function(r){return r.json().then(function(d){if(!r.ok||!d.orderId)throw new Error(d.error||('HTTP '+r.status));return d;});})
+      .then(function(d){
+        rzpOptions.order_id=d.orderId; rzpOptions.amount=d.amount; rzpOptions.currency=d.currency;
+        if(d.keyId) rzpOptions.key=d.keyId;
+        openRzp();
+      })
+      .catch(function(e){
+        /* Fallback keeps sales running if the order API is down; access is then granted by admin. */
+        console.warn('Server order failed, using direct checkout:',e);
+        openRzp();
+      });
+  };
+
+  /* After Razorpay success: server verifies the signature and unlocks the ebooks. */
+  window.fobUnlockLibrary=function(resp){
+    var box=document.getElementById('tyAccess');
+    function esc(t){return String(t||'').replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+    var manual='&#x1F4E7; Your payment is received. Your Members Library access code will be emailed to <strong>'+esc(userData.email)+'</strong> shortly. Questions? WhatsApp +91 63605 93122.';
+    if(!resp||!resp.razorpay_order_id||!resp.razorpay_signature){ if(box)box.innerHTML=manual; return; }
+    var tries=0;
+    (function attempt(){
+      tries++;
+      fetch('/api/checkout?action=verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({razorpay_order_id:resp.razorpay_order_id,razorpay_payment_id:resp.razorpay_payment_id,razorpay_signature:resp.razorpay_signature})})
+        .then(function(r){return r.json().then(function(d){d._s=r.status;return d;});})
+        .then(function(d){
+          if(d.ok){
+            var html='<strong style="color:var(--ink)">&#x1F513; Your library is ready.</strong><br>';
+            if(d.code){
+              html+='Sign in with <strong>'+esc(d.email)+'</strong> and your access code:<div style="font-family:\'DM Mono\',monospace;font-size:20px;font-weight:700;letter-spacing:.12em;color:var(--rust);margin:8px 0;">'+esc(d.code)+'</div>We\'ve emailed this code to you too &#8212; keep it private.';
+            } else {
+              html+='These guides were added to the library for <strong>'+esc(d.email)+'</strong>. Sign in with your existing access code (or request a new one on the sign-in page).';
+            }
+            html+='<div style="margin-top:12px;"><a href="/members?email='+encodeURIComponent(d.email)+'" style="display:inline-block;padding:10px 18px;background:var(--ink);color:#fff;text-decoration:none;font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;">Open my library &#8594;</a></div>';
+            if(box)box.innerHTML=html; return;
+          }
+          if((d._s>=500||d._s===409)&&tries<4){ setTimeout(attempt, 2500*tries); return; }
+          if(box)box.innerHTML=manual;
+        })
+        .catch(function(){ if(tries<4) setTimeout(attempt,2500*tries); else if(box)box.innerHTML=manual; });
+    })();
   };
   window.goBackToStep2=function(){utrSubmitted=true;showStep('step2');};
   window.copyUPIId=function(){navigator.clipboard.writeText(UPI_ID).then(function(){var b=document.querySelector('.copy-btn');b.textContent='Copied!';setTimeout(function(){b.textContent='Copy';},2000);});};
   window.launchUPI=function(k){var a=UPI_APPS[k];if(typeof gtag!=='undefined'){gtag('event','add_payment_info',{value:selAmount,currency:'INR',payment_type:'UPI_'+k,items:[{item_name:selDesc,price:selAmount,quantity:1}]});}window.location.href=a.scheme+'?pa='+encodeURIComponent(UPI_ID)+'&pn='+encodeURIComponent(UPI_NAME)+'&am='+selAmount+'&cu=INR&tn='+encodeURIComponent(selDesc.substring(0,50))+'&tr='+txnRef;};
-  window.onConfirmPayment=function(){var utr=document.getElementById('utrInput').value.trim(),err=document.getElementById('utrError');if(!utr){err.textContent='Please enter your UTR / Transaction Reference Number.';return;}if(!/^[A-Za-z0-9]{12,}$/.test(utr)){err.textContent='Please enter a valid UTR (min 12 alphanumeric characters).';return;}if(!paymentIntentSent){err.textContent='No active payment session. Please start over.';return;}err.textContent='';utrNumber=utr;utrSubmitted=true;onPaymentSuccess();if(typeof gtag!=='undefined'){gtag('event','conversion',{send_to:'AW-18000254476/GinaCJyVroQcEIysmIdD',value:selAmount,currency:'INR',transaction_id:txnRef});}if(typeof lnPaySubmitted==='function')lnPaySubmitted(txnRef,utr);};
+  window.onConfirmPayment=function(){var utr=document.getElementById('utrInput').value.trim(),err=document.getElementById('utrError');if(!utr){err.textContent='Please enter your UTR / Transaction Reference Number.';return;}if(!/^[A-Za-z0-9]{12,}$/.test(utr)){err.textContent='Please enter a valid UTR (min 12 alphanumeric characters).';return;}if(!paymentIntentSent){err.textContent='No active payment session. Please start over.';return;}err.textContent='';utrNumber=utr;utrSubmitted=true;onPaymentSuccess();if(typeof fobUnlockLibrary==='function')fobUnlockLibrary(null);if(typeof gtag!=='undefined'){gtag('event','conversion',{send_to:'AW-18000254476/GinaCJyVroQcEIysmIdD',value:selAmount,currency:'INR',transaction_id:txnRef});}if(typeof lnPaySubmitted==='function')lnPaySubmitted(txnRef,utr);};
   window.onPaymentSuccess=function(pid){
     if(successFired)return; successFired=true;
     var payId=pid||utrNumber||'N/A';
@@ -1922,7 +1971,7 @@
     // Notify admin
     sendEmail({to_email:'fullonbaan@gmail.com',subject:'New Order \u2014 '+selDesc,status:'PAYMENT CONFIRMED \u2014 RAZORPAY',order_ref:txnRef,utr_number:payId,guide:selDesc,amount:fmtMoney(selAmount,selCurr)+(selCurr==='INR'?(' (Base: '+fmtMoney(gd.base,'INR')+' + GST '+fmtMoney(gd.gst,'INR')+')'):' (no GST)'),cust_name:userData.name,cust_email:userData.email,cust_mobile:userData.mobile?('+91 '+userData.mobile):'(not provided)',message:'Invoice No: '+invNo+'. Payment ID: '+payId});
     // Customer confirmation
-    sendEmail({to_email:userData.email,subject:'Your FullonBaan Tax Invoice \u2014 '+invNo,status:'PAYMENT CONFIRMED',order_ref:txnRef,utr_number:payId,guide:selDesc,amount:fmtMoney(selAmount,selCurr),cust_name:userData.name,cust_email:userData.email,cust_mobile:userData.mobile?('+91 '+userData.mobile):'(not provided)',message:'Thank you! Your payment (ID: '+payId+') was successful. Invoice No: '+invNo+'. Your guide will be delivered to your email shortly. Download your GST invoice from the confirmation page or contact us at fullonbaan@gmail.com.'});
+    sendEmail({to_email:userData.email,subject:'Your FullonBaan Tax Invoice \u2014 '+invNo,status:'PAYMENT CONFIRMED',order_ref:txnRef,utr_number:payId,guide:selDesc,amount:fmtMoney(selAmount,selCurr),cust_name:userData.name,cust_email:userData.email,cust_mobile:userData.mobile?('+91 '+userData.mobile):'(not provided)',message:'Thank you! Your payment (ID: '+payId+') was successful. Invoice No: '+invNo+'. Your access code has been emailed separately - sign in at https://interview.fullonbaan.com/members to read and download your guides. Download your GST invoice from the confirmation page or contact us at fullonbaan@gmail.com.'});
   };
   window.onPaymentFailure=function(){if(failureFired)return;failureFired=true;utrSubmitted=true;document.getElementById('failContact').textContent=userData.email+' / +91 '+userData.mobile;document.getElementById('failOrderBox').innerHTML='<strong>Guide:</strong> '+selDesc+'<br><strong>Amount:</strong> '+fmtMoney(selAmount,selCurr)+(selCurr==='INR'?' (incl. GST)':'')+'<br><strong>Name:</strong> '+userData.name+'<br><strong>Email:</strong> '+userData.email;showStep('step5');sendEmail({to_email:'fullonbaan@gmail.com',subject:'Payment Failed \u2014 '+selDesc,status:'PAYMENT FAILED',order_ref:txnRef||'N/A',guide:selDesc,amount:fmtMoney(selAmount,selCurr),cust_name:userData.name,cust_email:userData.email,cust_mobile:'+91 '+userData.mobile,message:'Payment failed.'},EMAILJS_TEMPLATE_FAILURE);};
   window.retryPayment=function(){document.getElementById('utrInput').value='';document.getElementById('utrError').textContent='';goToStep3();};

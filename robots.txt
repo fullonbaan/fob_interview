@@ -4,6 +4,9 @@
 User-agent: *
 Allow: /
 Disallow: /admin
+Disallow: /members
+Disallow: /members-admin
+Disallow: /api/
 
 # Sitemap
 Sitemap: https://interview.fullonbaan.com/sitemap.xml

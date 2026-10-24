@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Members Admin | FullOnBaan</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <style>
+    :root{--gold:#A8782A;--gold-lt:#E2B96A;--ink:#1A160F;--ink-mid:#524B3E;--ink-lt:#8C8070;--bg:#F9F6F1;--surface:#fff;--border:#E8E2D9;--rust:#7B3210;--green:#2E7D4F}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--bg);color:var(--ink);font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+    header{background:var(--ink);color:var(--gold-lt);padding:14px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+    header b{font-family:Georgia,serif;font-size:18px}
+    main{max-width:1200px;margin:0 auto;padding:20px 16px 60px;display:grid;gap:18px}
+    .card{background:var(--surface);border:1px solid var(--border);padding:18px}
+    h2{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-mid);margin-bottom:12px}
+    input,select,textarea{padding:9px 10px;border:1px solid var(--border);font:inherit;background:#fff;width:100%}
+    button{padding:9px 14px;border:1px solid var(--ink);background:var(--ink);color:#fff;font:inherit;font-weight:600;cursor:pointer}
+    button.ghost{background:#fff;color:var(--ink)} button.warn{background:var(--rust);border-color:var(--rust)}
+    button:disabled{opacity:.5}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}.row>*{flex:1;min-width:160px}.row>button{flex:0 0 auto}
+    label{font-size:12px;color:var(--ink-mid);display:block;margin-bottom:4px}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    th,td{text-align:left;padding:8px;border-bottom:1px solid var(--border);vertical-align:top}
+    th{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-lt)}
+    tr.click{cursor:pointer} tr.click:hover{background:#FFFDF8}
+    .pill{display:inline-block;padding:1px 7px;border:1px solid var(--border);margin:1px;font-size:11px;font-family:ui-monospace,Consolas,monospace}
+    .ok{color:var(--green)} .bad{color:var(--rust)}
+    .guides{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:4px 12px;margin-top:6px}
+    .guides label{display:flex;gap:6px;align-items:center;color:var(--ink);font-size:13px}
+    .guides input{width:auto}
+    #toast{position:fixed;bottom:18px;right:18px;background:var(--ink);color:#fff;padding:12px 16px;max-width:360px;display:none;z-index:9}
+    .code{font:700 20px ui-monospace,Consolas,monospace;letter-spacing:.12em;color:var(--rust);background:#FFFDF8;border:1px dashed var(--gold);padding:10px;margin-top:8px;display:inline-block}
+    .scroll{overflow-x:auto}
+    [hidden]{display:none!important}
+  </style>
+</head>
+<body>
+<header><b>FullOnBaan · Members Admin</b><button class="ghost" id="lockBtn" hidden>Lock</button></header>
+<main>
+  <section class="card" id="gate">
+    <h2>Admin token</h2>
+    <p style="margin-bottom:10px;color:var(--ink-mid)">Paste the <code>ADMIN_API_TOKEN</code> value from Vercel. It is kept only for this browser tab.</p>
+    <div class="row"><input id="tok" type="password" autocomplete="off"><button id="tokBtn">Unlock</button></div>
+  </section>
+
+  <div id="app" hidden style="display:grid;gap:18px">
+    <section class="card">
+      <h2>Ebook files in private storage</h2>
+      <div class="scroll"><table id="files"></table></div>
+    </section>
+
+    <section class="card">
+      <h2>Grant access (UPI / bank-transfer buyers, past customers, comps)</h2>
+      <div class="row">
+        <div><label>Email</label><input id="gEmail" type="email"></div>
+        <div><label>Name</label><input id="gName"></div>
+        <div><label>Product</label><select id="gProduct"><option value="">— pick guides below —</option></select></div>
+        <div><label>Note / reference (UTR, invoice)</label><input id="gNote"></div>
+      </div>
+      <div class="guides" id="gGuides"></div>
+      <div class="row" style="margin-top:12px">
+        <label style="display:flex;gap:6px;align-items:center;flex:0 0 auto"><input type="checkbox" id="gNotify" checked style="width:auto"> Email the customer</label>
+        <button id="gBtn">Grant access</button>
+      </div>
+      <div id="gOut"></div>
+    </section>
+
+    <section class="card">
+      <div class="row" style="margin-bottom:10px"><h2 style="margin:0">Members <span id="count"></span></h2><input id="q" placeholder="Search email / name"><button class="ghost" id="refresh">Refresh</button></div>
+      <div class="scroll"><table id="list"></table></div>
+    </section>
+
+    <section class="card" id="detail" hidden></section>
+  </div>
+</main>
+<div id="toast"></div>
+<script>
+(function(){
+  'use strict';
+  var API='/api/member-admin', $=function(id){return document.getElementById(id);}, TOK='', CAT=null, MEMBERS=[];
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function toast(t){var n=$('toast');n.textContent=t;n.style.display='block';clearTimeout(n._t);n._t=setTimeout(function(){n.style.display='none';},4000);}
+  function call(action,body,q){
+    return fetch(API+'?action='+action+(q||''),{method:body?'POST':'GET',headers:Object.assign({'Authorization':'Bearer '+TOK},body?{'Content-Type':'application/json'}:{}),body:body?JSON.stringify(body):undefined})
+      .then(function(r){return r.json().then(function(d){if(r.status===401){lock();throw new Error('Token rejected');}if(!r.ok)throw new Error(d.error||r.status);return d;});});
+  }
+  function lock(){TOK='';try{sessionStorage.removeItem('fob_adm');}catch(_){}$('app').hidden=true;$('gate').hidden=false;$('lockBtn').hidden=true;}
+  function unlock(t){TOK=t;call('files').then(function(d){try{sessionStorage.setItem('fob_adm',t);}catch(_){}$('gate').hidden=true;$('app').hidden=false;$('lockBtn').hidden=false;CAT=d;renderFiles(d);renderGrantForm(d);loadList();}).catch(function(e){toast(e.message);});}
+  $('tokBtn').onclick=function(){unlock($('tok').value.trim());};
+  $('tok').onkeydown=function(e){if(e.key==='Enter')unlock(this.value.trim());};
+  $('lockBtn').onclick=lock;
+  try{var s=sessionStorage.getItem('fob_adm');if(s)unlock(s);}catch(_){}
+
+  function renderFiles(d){
+    var miss=d.files.filter(function(f){return !f.present;}).length;
+    $('files').innerHTML='<tr><th>Guide</th><th>Object key</th><th>Status</th><th>Size</th></tr>'+d.files.map(function(f){
+      return '<tr><td>'+esc(f.name)+'</td><td><code>'+esc(f.path)+'</code></td><td class="'+(f.present?'ok':'bad')+'">'+(f.present?'✔ uploaded':'✘ missing')+'</td><td>'+(f.present?(f.size/1048576).toFixed(1)+' MB':'')+'</td></tr>';
+    }).join('')+(miss?'<tr><td colspan="4" class="bad">'+miss+' file(s) missing — buyers of those guides will see “being updated”.</td></tr>':'');
+  }
+  function renderGrantForm(d){
+    $('gProduct').innerHTML='<option value="">— pick guides below —</option>'+d.products.filter(function(p){return p.unlocks.length>1;}).map(function(p){return '<option value="'+esc(p.key)+'">'+esc(p.name)+'</option>';}).join('');
+    $('gGuides').innerHTML=d.files.map(function(f){return '<label><input type="checkbox" value="'+esc(f.key)+'"> '+esc(f.name.replace(' Interview Guide',''))+'</label>';}).join('');
+  }
+  $('gBtn').onclick=function(){
+    var guides=Array.prototype.map.call(document.querySelectorAll('#gGuides input:checked'),function(i){return i.value;});
+    var body={email:$('gEmail').value.trim(),name:$('gName').value.trim(),product:$('gProduct').value||undefined,guides:guides,note:$('gNote').value.trim(),notify:$('gNotify').checked};
+    if(!body.product&&!guides.length)return toast('Pick a product or guides');
+    $('gBtn').disabled=true;
+    call('grant',body).then(function(d){
+      $('gOut').innerHTML='<p style="margin-top:10px" class="ok">Granted '+d.added.length+' new guide(s) to '+esc(d.member.email)+'.</p>'+(d.code?'<div>New member — access code (also emailed if ticked):<br><span class="code">'+esc(d.code)+'</span></div>':'<p>Existing member — they keep their current code.</p>');
+      loadList();
+    }).catch(function(e){toast(e.message);}).then(function(){$('gBtn').disabled=false;});
+  };
+
+  function loadList(){call('list').then(function(d){MEMBERS=d.members;renderList();}).catch(function(e){toast(e.message);});}
+  $('refresh').onclick=loadList; $('q').oninput=renderList;
+  function renderList(){
+    var q=$('q').value.toLowerCase(), rows=MEMBERS.filter(function(m){return !q||(m.email+' '+m.name).toLowerCase().indexOf(q)>=0;});
+    $('count').textContent='('+rows.length+')';
+    $('list').innerHTML='<tr><th>Email</th><th>Name</th><th>Guides</th><th>Opens</th><th>Last login</th><th>Status</th></tr>'+rows.map(function(m){
+      return '<tr class="click" data-e="'+esc(m.email)+'"><td>'+esc(m.email)+'</td><td>'+esc(m.name)+'</td><td>'+m.owned.map(function(k){return '<span class="pill">'+esc(k)+'</span>';}).join('')+'</td><td>'+m.downloads+'</td><td>'+esc((m.lastLoginAt||'').slice(0,16).replace('T',' '))+'</td><td class="'+(m.status==='active'?'ok':'bad')+'">'+esc(m.status)+'</td></tr>';
+    }).join('');
+    Array.prototype.forEach.call(document.querySelectorAll('#list tr.click'),function(tr){tr.onclick=function(){openMember(tr.getAttribute('data-e'));};});
+  }
+
+  function openMember(email){
+    call('get',null,'&email='+encodeURIComponent(email)).then(function(d){
+      var m=d.member,D=$('detail'); if(!m)return;
+      var ent=Object.keys(m.entitlements||{});
+      D.hidden=false;
+      D.innerHTML='<h2>'+esc(m.email)+' — '+esc(m.name)+'</h2>'+
+        '<p>Status: <b class="'+(m.status==='active'?'ok':'bad')+'">'+esc(m.status)+'</b> · created '+esc((m.createdAt||'').slice(0,10))+' · code issued '+esc((m.codeIssuedAt||'').slice(0,16).replace('T',' '))+'</p>'+
+        '<table style="margin-top:10px"><tr><th>Guide</th><th>Granted</th><th>Order</th><th>Opens</th><th></th></tr>'+ent.map(function(k){var e=m.entitlements[k];return '<tr><td>'+esc(k)+'</td><td>'+esc((e.grantedAt||'').slice(0,10))+'</td><td>'+esc(e.orderId)+'</td><td>'+((m.downloads||{})[k]||0)+'</td><td><button class="ghost" data-a="reset-downloads" data-g="'+esc(k)+'">Reset count</button> <button class="warn" data-a="revoke" data-g="'+esc(k)+'">Revoke</button></td></tr>';}).join('')+'</table>'+
+        '<div class="row" style="margin-top:12px"><button data-a="reset-code">Issue new code &amp; email it</button><button class="'+(m.status==='active'?'warn':'')+'" data-a="set-status" data-s="'+(m.status==='active'?'disabled':'active')+'">'+(m.status==='active'?'Disable account':'Re-enable account')+'</button></div><div id="dOut"></div>'+
+        '<h2 style="margin-top:18px">Orders</h2><table><tr><th>When</th><th>Order</th><th>Product</th><th>Amount</th><th>Source</th></tr>'+(m.orders||[]).map(function(o){return '<tr><td>'+esc((o.at||'').slice(0,16).replace('T',' '))+'</td><td>'+esc(o.id)+'</td><td>'+esc(o.product||'')+'</td><td>'+(o.amount?esc((o.amount/100)+' '+o.currency):'')+'</td><td>'+esc(o.source)+(o.note?' · '+esc(o.note):'')+'</td></tr>';}).join('')+'</table>'+
+        '<h2 style="margin-top:18px">Recent access log</h2><table><tr><th>When</th><th>Guide</th><th>Mode</th><th>IP</th><th>Browser</th></tr>'+(m.log||[]).slice().reverse().map(function(l){return '<tr><td>'+esc((l.at||'').slice(0,16).replace('T',' '))+'</td><td>'+esc(l.g)+'</td><td>'+esc(l.mode)+'</td><td>'+esc(l.ip)+'</td><td>'+esc(l.ua)+'</td></tr>';}).join('')+'</table>';
+      Array.prototype.forEach.call(D.querySelectorAll('button[data-a]'),function(b){b.onclick=function(){
+        var a=b.getAttribute('data-a'), body={email:m.email,guide:b.getAttribute('data-g')||undefined,status:b.getAttribute('data-s')||undefined};
+        if((a==='revoke'||a==='set-status')&&!confirm('Are you sure?'))return;
+        call(a,body).then(function(r){ if(r.code){$('dOut').innerHTML='<p style="margin-top:8px">New code (emailed):</p><span class="code">'+esc(r.code)+'</span>';} toast('Done'); loadList(); if(!r.code)openMember(m.email); }).catch(function(e){toast(e.message);});
+      };});
+      D.scrollIntoView({behavior:'smooth'});
+    }).catch(function(e){toast(e.message);});
+  }
+})();
+</script>
+</body>
+</html>

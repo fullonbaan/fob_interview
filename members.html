@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Members Library | FullOnBaan Interview Guides</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;700;900&family=Work+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --gold:#A8782A; --gold-mid:#C9943E; --gold-lt:#E2B96A; --gold-pale:#F7EDD8; --gold-faint:rgba(168,120,42,0.08);
+      --ink:#1A160F; --ink-mid:#524B3E; --ink-lt:#8C8070; --bg:#FDFCFB; --surface:#fff; --surface-lo:#F9F6F1;
+      --surface-hi:#F2EBE1; --border:#E8E2D9; --rust:#7B3210; --green:#2E7D4F; --cream:#FFFDF8;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--bg);color:var(--ink);font-family:'Work Sans',sans-serif;font-size:15px;line-height:1.6;min-height:100vh;display:flex;flex-direction:column}
+    a{color:var(--gold)}
+    .site-nav{position:sticky;top:0;z-index:10;background:rgba(253,252,251,.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--border)}
+    .nav-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:0 32px;height:72px;gap:16px}
+    .nav-brand{font-family:'Noto Serif',serif;font-size:20px;font-weight:700;color:var(--ink);text-decoration:none;white-space:nowrap}
+    .nav-brand span{color:var(--gold)}
+    .nav-right{display:flex;gap:18px;align-items:center}
+    .nav-link{font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-mid);text-decoration:none}
+    .nav-link:hover{color:var(--gold)}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 22px;border:1px solid var(--ink);background:var(--ink);color:#fff;font-family:inherit;font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;text-decoration:none;transition:background .2s,border-color .2s}
+    .btn:hover{background:var(--gold);border-color:var(--gold)}
+    .btn:disabled{opacity:.55;cursor:wait}
+    .btn.ghost{background:transparent;color:var(--ink)}
+    .btn.ghost:hover{background:var(--gold-faint);border-color:var(--gold);color:var(--gold)}
+    .btn.sm{padding:10px 12px;font-size:11px;letter-spacing:.08em;white-space:nowrap}
+    main{flex:1;width:100%;max-width:1200px;margin:0 auto;padding:48px 32px 72px}
+    .eyebrow{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold)}
+    h1{font-family:'Noto Serif',serif;font-weight:900;font-size:clamp(28px,4vw,42px);line-height:1.15;margin:10px 0 12px}
+    .lede{color:var(--ink-mid);max-width:620px}
+    /* auth */
+    .auth-wrap{display:grid;grid-template-columns:1.1fr 1fr;gap:56px;align-items:start}
+    .card{background:var(--surface);border:1px solid var(--border);padding:32px;box-shadow:0 1px 0 rgba(26,22,15,.03)}
+    label{display:block;font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-mid);margin:18px 0 8px}
+    input{width:100%;padding:13px 14px;border:1px solid var(--border);background:var(--cream);font:inherit;color:var(--ink);outline:none;border-radius:0}
+    input:focus{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-faint)}
+    input.code{font-family:'DM Mono',monospace;font-size:18px;letter-spacing:.14em;text-transform:uppercase}
+    .form-actions{margin-top:22px;display:flex;flex-direction:column;gap:12px}
+    .form-actions .btn{width:100%}
+    .linkbtn{background:none;border:0;color:var(--gold);font:inherit;font-size:14px;cursor:pointer;text-decoration:underline;text-underline-offset:3px;padding:0;align-self:flex-start}
+    .msg{margin-top:16px;padding:12px 14px;font-size:14px;display:none;border-left:3px solid}
+    .msg.show{display:block}
+    .msg.err{background:#FBF0EC;border-color:var(--rust);color:var(--rust)}
+    .msg.ok{background:#EEF6F0;border-color:var(--green);color:var(--green)}
+    .points{list-style:none;margin-top:28px;display:grid;gap:14px}
+    .points li{display:flex;gap:12px;color:var(--ink-mid);font-size:14px}
+    .points b{color:var(--ink)}
+    .points .ic{flex:0 0 28px;height:28px;border:1px solid var(--gold-lt);color:var(--gold);display:grid;place-items:center;font-size:13px;background:var(--gold-faint)}
+    /* library */
+    .lib-head{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap;margin-bottom:28px}
+    .who{font-family:'DM Mono',monospace;font-size:12px;color:var(--ink-lt)}
+    .tabs{display:flex;gap:8px;margin:0 0 20px;flex-wrap:wrap}
+    .tab{padding:8px 14px;border:1px solid var(--border);background:var(--surface);font:inherit;font-size:12px;font-weight:600;letter-spacing:.06em;cursor:pointer;color:var(--ink-mid)}
+    .tab[aria-pressed="true"]{border-color:var(--ink);background:var(--ink);color:#fff}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:22px}
+    .book{background:var(--surface);border:1px solid var(--border);display:flex;flex-direction:column;transition:box-shadow .2s,transform .2s}
+    .book.owned:hover{box-shadow:0 10px 28px rgba(26,22,15,.08);transform:translateY(-2px)}
+    .cover{aspect-ratio:1274/900;background:var(--surface-hi) center/cover no-repeat;position:relative}
+    .book.locked .cover{filter:grayscale(.9) brightness(.92);opacity:.6}
+    .badge{position:absolute;top:10px;left:10px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;padding:4px 8px;background:var(--ink);color:var(--gold-lt)}
+    .book.locked .badge{background:rgba(255,255,255,.9);color:var(--ink-mid)}
+    .book-body{padding:16px 18px 18px;display:flex;flex-direction:column;gap:10px;flex:1}
+    .book-name{font-family:'Noto Serif',serif;font-weight:700;font-size:16px;line-height:1.3}
+    .book-meta{font-size:12px;color:var(--ink-lt);font-family:'DM Mono',monospace}
+    .book-actions{display:flex;gap:8px;margin-top:auto}
+    .book-actions .btn{flex:1}
+    .empty{padding:40px;text-align:center;border:1px dashed var(--border);color:var(--ink-mid)}
+    .notice{background:var(--gold-pale);border:1px solid var(--gold-lt);padding:12px 16px;font-size:14px;margin-bottom:22px;color:var(--ink)}
+    .loading{display:grid;place-items:center;min-height:280px;color:var(--ink-lt);font-family:'DM Mono',monospace;font-size:12px;letter-spacing:.2em}
+    footer{border-top:1px solid var(--border);padding:22px 32px;font-size:12px;color:var(--ink-lt);text-align:center}
+    [hidden]{display:none!important}
+    @media(max-width:860px){.auth-wrap{grid-template-columns:1fr;gap:32px}.nav-inner,main{padding-left:16px;padding-right:16px}main{padding-top:32px}.card{padding:22px}.hide-sm{display:none}.points{display:none}.lede{font-size:14px}}
+  </style>
+</head>
+<body>
+<nav class="site-nav">
+  <div class="nav-inner">
+    <a class="nav-brand" href="/">FullonBaan <span>Members</span></a>
+    <div class="nav-right">
+      <a class="nav-link hide-sm" href="/#guides">All guides</a>
+      <a class="nav-link hide-sm" href="/contact.html">Help</a>
+      <button class="btn sm ghost" id="logoutBtn" hidden>Sign out</button>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <div id="view-loading" class="loading">LOADING…</div>
+
+  <!-- ── Sign in ───────────────────────────────────────────── -->
+  <section id="view-auth" hidden>
+    <div class="auth-wrap">
+      <div>
+        <div class="eyebrow">Members Area</div>
+        <h1>Your interview guide library</h1>
+        <p class="lede">Sign in with the email you used at checkout and the access code we emailed you after payment. You'll see every guide you've bought, ready to read online or download.</p>
+        <ul class="points">
+          <li><span class="ic">&#9670;</span><span><b>Only your guides.</b> Your library shows exactly what you purchased — bundles unlock every guide inside them.</span></li>
+          <li><span class="ic">&#9670;</span><span><b>Read or download.</b> Open a guide in your browser or save the PDF to keep.</span></li>
+          <li><span class="ic">&#9670;</span><span><b>Personal copy.</b> Each PDF is licensed to you and carries your name and email.</span></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <form id="loginForm" novalidate>
+          <div class="eyebrow">Sign in</div>
+          <label for="email">Email address</label>
+          <input id="email" type="email" autocomplete="email" required placeholder="you@company.com">
+          <label for="code">Access code</label>
+          <input id="code" class="code" autocomplete="one-time-code" required placeholder="FOB-XXXXX-XXXXX" maxlength="17" spellcheck="false">
+          <div class="form-actions">
+            <button class="btn" type="submit" id="loginBtn">Open my library</button>
+            <button class="linkbtn" type="button" id="showResend">Lost your code? Email me a new one</button>
+          </div>
+          <div class="msg" id="loginMsg" role="alert"></div>
+        </form>
+
+        <form id="resendForm" novalidate hidden>
+          <div class="eyebrow">New access code</div>
+          <p style="margin-top:10px;color:var(--ink-mid);font-size:14px;">Enter the email you used to buy. We'll send a fresh code there — your old code will stop working.</p>
+          <label for="rEmail">Email address</label>
+          <input id="rEmail" type="email" autocomplete="email" required>
+          <div class="form-actions">
+            <button class="btn" type="submit" id="resendBtn">Send new code</button>
+            <button class="linkbtn" type="button" id="showLogin">Back to sign in</button>
+          </div>
+          <div class="msg" id="resendMsg" role="alert"></div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Library ───────────────────────────────────────────── -->
+  <section id="view-lib" hidden>
+    <div class="lib-head">
+      <div>
+        <div class="eyebrow">My library</div>
+        <h1 id="hello">Welcome back</h1>
+        <div class="who" id="who"></div>
+      </div>
+      <a class="btn ghost sm" href="/#bundles">Get more guides</a>
+    </div>
+    <div class="notice" id="libNotice" hidden></div>
+    <div class="tabs" role="group" aria-label="Filter">
+      <button class="tab" data-f="owned" aria-pressed="true">My guides</button>
+      <button class="tab" data-f="all" aria-pressed="false">All guides</button>
+    </div>
+    <div class="grid" id="grid"></div>
+  </section>
+</main>
+
+<footer>&copy; <span id="yr"></span> FullOnBaan IT Solutions · Personal licence — please don't share your code or files. · <a href="/terms.html">Terms</a> · <a href="mailto:support@fullonbaan.com">support@fullonbaan.com</a></footer>
+
+<script>
+(function(){
+  'use strict';
+  var API = '/api/member';
+  var $ = function(id){ return document.getElementById(id); };
+  var state = { lib:null, catalog:null, filter:'owned' };
+  $('yr').textContent = new Date().getFullYear();
+
+  var ERRORS = {
+    login:'Your session has ended. Please sign in again.',
+    forbidden:'That guide isn’t in your library.',
+    limit:'You’ve reached the download limit for that guide. Write to support@fullonbaan.com and we’ll reset it.',
+    missing:'That guide is being updated right now. Please try again shortly, or contact support.',
+    unknown:'Unknown guide.', blocked:'Please open downloads from this page.'
+  };
+
+  function show(view){ ['loading','auth','lib'].forEach(function(v){ $('view-'+v).hidden = (v!==view); }); $('logoutBtn').hidden = (view!=='lib'); }
+  function msg(el, text, kind){ el.textContent = text; el.className = 'msg show ' + (kind||'err'); }
+  function clearMsg(el){ el.className = 'msg'; el.textContent=''; }
+
+  function api(action, body){
+    var opt = body ? { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body), credentials:'same-origin' }
+                   : { credentials:'same-origin' };
+    return fetch(API + '?action=' + action, opt).then(function(r){
+      return r.json().catch(function(){ return {}; }).then(function(d){ d._status = r.status; return d; });
+    });
+  }
+
+  // Code input: auto-format to FOB-XXXXX-XXXXX
+  function codeBody(v){ var s = String(v||'').toUpperCase().replace(/[^A-Z0-9]/g,''); if (s.indexOf('FOB') === 0) s = s.slice(3); return s; }
+  $('code').addEventListener('input', function(e){
+    if (e.inputType && e.inputType.indexOf('delete') === 0) { e.target.value = e.target.value.toUpperCase(); return; }
+    var raw = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,''), pre = raw.indexOf('FOB') === 0;
+    var s = codeBody(raw).slice(0,10);
+    e.target.value = (pre ? 'FOB-' : '') + s.slice(0,5) + (s.length>5 ? '-' + s.slice(5) : '');
+  });
+
+  $('showResend').onclick = function(){ $('loginForm').hidden = true; $('resendForm').hidden = false; $('rEmail').value = $('email').value; $('rEmail').focus(); };
+  $('showLogin').onclick  = function(){ $('resendForm').hidden = true; $('loginForm').hidden = false; };
+
+  $('loginForm').addEventListener('submit', function(e){
+    e.preventDefault(); clearMsg($('loginMsg'));
+    var email = $('email').value.trim(), code = $('code').value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return msg($('loginMsg'), 'Please enter a valid email address.');
+    if (codeBody(code).length !== 10) return msg($('loginMsg'), 'Your access code looks like FOB-XXXXX-XXXXX.');
+    $('loginBtn').disabled = true; $('loginBtn').textContent = 'Checking…';
+    api('login', { email:email, code:code }).then(function(d){
+      if (d.ok) { try{ localStorage.setItem('fob_mem_email', email); }catch(_){} return loadLibrary(); }
+      msg($('loginMsg'), d.error || 'Sign-in failed. Please try again.');
+    }).catch(function(){ msg($('loginMsg'), 'Network error. Please check your connection.'); })
+      .then(function(){ $('loginBtn').disabled = false; $('loginBtn').textContent = 'Open my library'; });
+  });
+
+  $('resendForm').addEventListener('submit', function(e){
+    e.preventDefault(); clearMsg($('resendMsg'));
+    var email = $('rEmail').value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return msg($('resendMsg'), 'Please enter a valid email address.');
+    $('resendBtn').disabled = true;
+    api('resend', { email:email }).then(function(d){
+      if (d.ok) msg($('resendMsg'), d.message, 'ok'); else msg($('resendMsg'), d.error || 'Could not send. Try again.');
+    }).catch(function(){ msg($('resendMsg'), 'Network error.'); })
+      .then(function(){ setTimeout(function(){ $('resendBtn').disabled = false; }, 4000); });
+  });
+
+  $('logoutBtn').onclick = function(){ api('logout', {}).then(function(){ state.lib = null; show('auth'); }); };
+
+  Array.prototype.forEach.call(document.querySelectorAll('.tab'), function(t){
+    t.onclick = function(){ state.filter = t.getAttribute('data-f');
+      Array.prototype.forEach.call(document.querySelectorAll('.tab'), function(x){ x.setAttribute('aria-pressed', String(x===t)); });
+      render(); };
+  });
+
+  function el(tag, cls, text){ var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
+
+  function render(){
+    var lib = state.lib, cat = state.catalog, grid = $('grid');
+    grid.innerHTML = '';
+    var owned = {}; lib.owned.forEach(function(k){ owned[k] = true; });
+    var keys = Object.keys(cat).filter(function(k){ return state.filter === 'all' || owned[k]; });
+    keys.sort(function(a,b){ return (owned[b]?1:0) - (owned[a]?1:0); });
+    if (!keys.length) {
+      var em = el('div','empty'); em.appendChild(document.createTextNode('No guides in your library yet. '));
+      var a = el('a',null,'Browse guides'); a.href = '/#guides'; em.appendChild(a); grid.appendChild(em); return;
+    }
+    keys.forEach(function(k){
+      var b = cat[k], has = !!owned[k];
+      var card = el('article', 'book ' + (has ? 'owned' : 'locked'));
+      var cover = el('div','cover'); cover.style.backgroundImage = 'url(/covers/' + k + '.jpg)';
+      cover.appendChild(el('span','badge', has ? b.track : 'Not purchased'));
+      card.appendChild(cover);
+      var body = el('div','book-body');
+      body.appendChild(el('div','book-name', b.name));
+      var actions = el('div','book-actions');
+      if (has) {
+        var used = lib.downloads[k] || 0;
+        body.appendChild(el('div','book-meta', 'Opened ' + used + ' of ' + lib.limit + ' times'));
+        var v = el('a','btn sm','Read online'); v.href = API + '?action=file&mode=view&g=' + encodeURIComponent(k); v.target = '_blank'; v.rel = 'noopener';
+        var d = el('a','btn sm ghost','Download'); d.href = API + '?action=file&mode=download&g=' + encodeURIComponent(k);
+        [v,d].forEach(function(x){ x.addEventListener('click', function(){ lib.downloads[k] = (lib.downloads[k]||0)+1; setTimeout(render, 400); }); });
+        actions.appendChild(v); actions.appendChild(d);
+      } else {
+        body.appendChild(el('div','book-meta', b.track + ' track'));
+        var buy = el('a','btn sm ghost','Get this guide'); buy.href = '/#guides'; actions.appendChild(buy);
+      }
+      body.appendChild(actions); card.appendChild(body); grid.appendChild(card);
+    });
+  }
+
+  function loadLibrary(){
+    return api('me').then(function(d){
+      if (d._status !== 200 || !d.library) { show('auth'); return false; }
+      state.lib = d.library; state.catalog = d.catalog;
+      $('hello').textContent = d.library.name ? 'Welcome back, ' + d.library.name.split(' ')[0] : 'Welcome back';
+      $('who').textContent = d.library.email + ' · ' + d.library.owned.length + ' guide' + (d.library.owned.length===1?'':'s');
+      if (!d.library.owned.length) state.filter = 'all';
+      show('lib'); render(); return true;
+    }).catch(function(){ show('auth'); });
+  }
+
+  // Boot: show any error passed back from a file redirect, then try the existing session.
+  var params = new URLSearchParams(location.search), e = params.get('e');
+  try { var saved = localStorage.getItem('fob_mem_email'); if (saved) $('email').value = saved; } catch(_){}
+  if (params.get('email')) $('email').value = params.get('email');
+  if (e) history.replaceState(null, '', '/members');
+  loadLibrary().then(function(ok){
+    if (e && ERRORS[e]) {
+      if (ok && e !== 'login') { $('libNotice').textContent = ERRORS[e]; $('libNotice').hidden = false; }
+      else msg($('loginMsg'), ERRORS[e]);
+    }
+  });
+})();
+</script>
+</body>
+</html>
