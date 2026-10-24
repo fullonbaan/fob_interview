@@ -1298,10 +1298,8 @@
 </footer>
 
 <script>
-  var EMAILJS_PUBLIC_KEY       = '3U-YZo2UCV_RG5Gjo';
-  var EMAILJS_SERVICE_ID       = 'service_2qtgzr5';
-  var EMAILJS_TEMPLATE_SUCCESS = 'FOB_Razorpay_Success';
-  var EMAILJS_TEMPLATE_FAILURE = 'FOB_Razorpay_Failure';
+  /* Payment emails (invoice, order alert, failure alert) are sent by the SERVER (/api/checkout)
+     with the EmailJS private key — no email keys live in this public page. */
 
   /* ── GST ───────────────────────────────────────────────────────────── */
   var GST_RATE = 0.18;
@@ -1860,10 +1858,11 @@
     }
     /* Ask our server to create the Razorpay order at the catalogue price. */
     fetch('/api/checkout?action=order',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({product:selKey,currency:selCurr,orderRef:txnRef,customer:{name:name,email:email,mobile:mobile},notes:rzpNotes})})
+      body:JSON.stringify({product:selKey,currency:selCurr,orderRef:txnRef,customer:{name:name,email:email,mobile:mobile},billing:userData,notes:rzpNotes})})
       .then(function(r){return r.json().then(function(d){if(!r.ok||!d.orderId)throw new Error(d.error||('HTTP '+r.status));return d;});})
       .then(function(d){
         rzpOptions.order_id=d.orderId; rzpOptions.amount=d.amount; rzpOptions.currency=d.currency;
+        if(d.orderRef){ txnRef=d.orderRef; rzpOptions.notes.order_ref=d.orderRef; }
         if(d.keyId) rzpOptions.key=d.keyId;
         openRzp();
       })
@@ -1887,6 +1886,10 @@
         .then(function(r){return r.json().then(function(d){d._s=r.status;return d;});})
         .then(function(d){
           if(d.ok){
+            if(d.invoice&&d.invoice.invNo){
+              currentInvData=Object.assign({},currentInvData||{},d.invoice);
+              var tin=document.getElementById('tyInvNo'); if(tin)tin.textContent=d.invoice.invNo;
+            } else { var tin2=document.getElementById('tyInvNo'); if(tin2)tin2.textContent='will be emailed to you'; }
             var html='<strong style="color:var(--ink)">&#x1F513; Your library is ready.</strong><br>';
             if(d.code){
               html+='Sign in with <strong>'+esc(d.email)+'</strong> and your access code:<div style="font-family:\'DM Mono\',monospace;font-size:20px;font-weight:700;letter-spacing:.12em;color:var(--rust);margin:8px 0;">'+esc(d.code)+'</div>We\'ve emailed this code to you too &#8212; keep it private.';
@@ -1916,9 +1919,9 @@
     } else {
       split = { base:selAmount, cgst:0, sgst:0, igst:0, gst:0, total:selAmount, taxType:'NONE' };
     }
-    // pendingInvNo is set by lnPayInitiated (async GitHub counter fetch)
-    var invNo=pendingInvNo||('FOBI'+String(Date.now()).slice(-7));
-    pendingInvNo=null; // reset for next transaction
+    /* The GST invoice number is assigned by the server after it verifies the payment
+       (fobUnlockLibrary fills it in a moment later). */
+    var invNo=null;
     var today=new Date();
     var fmt=function(d){return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();};
     var invDate=fmt(today);
@@ -1941,13 +1944,7 @@
     };
     /* Backwards compatibility — also keep the gd alias used by the rest of this fn */
     var gd = { base: split.base, gst: split.gst, total: split.total };
-    /* Persist confirmed status + new fields to the GitHub admin record */
-    if(typeof admGhUpsert==='function'){
-      admGhUpsert(Object.assign({orderId:txnRef}, currentInvData, {
-        status:'submitted', utr:payId, submittedAt:new Date().toISOString(),
-        module:selDesc, amount:selAmount
-      }));
-    }
+    /* The order register is updated by the server (/api/checkout) — never from the browser. */
 
     document.getElementById('tyEmail').textContent=userData.email;
     var amtBlock;
@@ -1959,7 +1956,7 @@
       amtBlock = '<br><strong>Total Paid:</strong> '+fmtMoney(gd.total, selCurr)+' (no GST)';
     }
     document.getElementById('tyOrderBox').innerHTML=
-      '<strong>Invoice No:</strong> '+invNo+
+      '<strong>Invoice No:</strong> <span id="tyInvNo">generating&#8230;</span>'+
       '<br><strong>Order Ref:</strong> '+txnRef+
       '<br><strong>Payment ID:</strong> '+payId+
       '<br><strong>Guide:</strong> '+selDesc+
@@ -1968,17 +1965,20 @@
       '<br><strong>Email:</strong> '+userData.email;
     showStep('step4');
 
-    // Notify admin
-    sendEmail({to_email:'fullonbaan@gmail.com',subject:'New Order \u2014 '+selDesc,status:'PAYMENT CONFIRMED \u2014 RAZORPAY',order_ref:txnRef,utr_number:payId,guide:selDesc,amount:fmtMoney(selAmount,selCurr)+(selCurr==='INR'?(' (Base: '+fmtMoney(gd.base,'INR')+' + GST '+fmtMoney(gd.gst,'INR')+')'):' (no GST)'),cust_name:userData.name,cust_email:userData.email,cust_mobile:userData.mobile?('+91 '+userData.mobile):'(not provided)',message:'Invoice No: '+invNo+'. Payment ID: '+payId});
-    // Customer confirmation
-    sendEmail({to_email:userData.email,subject:'Your FullonBaan Tax Invoice \u2014 '+invNo,status:'PAYMENT CONFIRMED',order_ref:txnRef,utr_number:payId,guide:selDesc,amount:fmtMoney(selAmount,selCurr),cust_name:userData.name,cust_email:userData.email,cust_mobile:userData.mobile?('+91 '+userData.mobile):'(not provided)',message:'Thank you! Your payment (ID: '+payId+') was successful. Invoice No: '+invNo+'. Your access code has been emailed separately - sign in at https://interview.fullonbaan.com/members to read and download your guides. Download your GST invoice from the confirmation page or contact us at fullonbaan@gmail.com.'});
+    /* Invoice email to the customer and order alert to admin are sent by the server. */
   };
-  window.onPaymentFailure=function(){if(failureFired)return;failureFired=true;utrSubmitted=true;document.getElementById('failContact').textContent=userData.email+' / +91 '+userData.mobile;document.getElementById('failOrderBox').innerHTML='<strong>Guide:</strong> '+selDesc+'<br><strong>Amount:</strong> '+fmtMoney(selAmount,selCurr)+(selCurr==='INR'?' (incl. GST)':'')+'<br><strong>Name:</strong> '+userData.name+'<br><strong>Email:</strong> '+userData.email;showStep('step5');sendEmail({to_email:'fullonbaan@gmail.com',subject:'Payment Failed \u2014 '+selDesc,status:'PAYMENT FAILED',order_ref:txnRef||'N/A',guide:selDesc,amount:fmtMoney(selAmount,selCurr),cust_name:userData.name,cust_email:userData.email,cust_mobile:'+91 '+userData.mobile,message:'Payment failed.'},EMAILJS_TEMPLATE_FAILURE);};
+  window.onPaymentFailure=function(){if(failureFired)return;failureFired=true;utrSubmitted=true;document.getElementById('failContact').textContent=userData.email+' / +91 '+userData.mobile;document.getElementById('failOrderBox').innerHTML='<strong>Guide:</strong> '+selDesc+'<br><strong>Amount:</strong> '+fmtMoney(selAmount,selCurr)+(selCurr==='INR'?' (incl. GST)':'')+'<br><strong>Name:</strong> '+userData.name+'<br><strong>Email:</strong> '+userData.email;showStep('step5');fobEvent('failed');};
   window.retryPayment=function(){document.getElementById('utrInput').value='';document.getElementById('utrError').textContent='';goToStep3();};
-  function fireAbandonAlert(){if(!paymentIntentSent||utrSubmitted||abandonFired)return;abandonFired=true;sendEmail({to_email:'fullonbaan@gmail.com',subject:'\u26a0\ufe0f Possible Payment \u2014 No UTR \u2014 '+(userData?userData.name:'Unknown'),status:'PAYMENT LIKELY \u2014 UTR NOT SUBMITTED',order_ref:txnRef||'N/A',utr_number:'(not submitted)',guide:selDesc||'N/A',amount:selAmount?'Rs.'+selAmount.toLocaleString('en-IN'):'N/A',cust_name:userData?userData.name:'N/A',cust_email:userData?userData.email:'N/A',cust_mobile:userData?'+91 '+userData.mobile:'N/A',message:'Customer opened UPI screen but did not submit UTR. Order Ref: '+(txnRef||'N/A')});}
+  function fireAbandonAlert(){if(!paymentIntentSent||utrSubmitted||abandonFired)return;abandonFired=true;fobEvent('abandon');}
   document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')fireAbandonAlert();});
   window.addEventListener('pagehide',function(){fireAbandonAlert();});
-  function sendEmail(params,tmpl){if(!EMAILJS_PUBLIC_KEY){console.warn('EmailJS not configured.');return;}fetch('https://api.emailjs.com/api/v1.0/email/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({service_id:EMAILJS_SERVICE_ID,template_id:tmpl||EMAILJS_TEMPLATE_SUCCESS,user_id:EMAILJS_PUBLIC_KEY,template_params:params})}).then(function(r){if(r.ok)console.log('Email sent');else console.warn('Email failed',r.status);}).catch(function(e){console.warn('Email error',e);});}
+  /* Tell the server about a failed / abandoned checkout. It emails ONLY the admin, once per order. */
+  function fobEvent(type){
+    if(!txnRef)return;
+    var body=JSON.stringify({type:type,orderRef:txnRef});
+    try{ if(type==='abandon'&&navigator.sendBeacon){ navigator.sendBeacon('/api/checkout?action=event',new Blob([body],{type:'application/json'})); return; } }catch(e){}
+    fetch('/api/checkout?action=event',{method:'POST',headers:{'Content-Type':'application/json'},body:body,keepalive:true}).catch(function(){});
+  }
 
   /* ── Number-to-Words (Indian) ──────────────────────────────────────── */
   function numToWords(n){
@@ -2148,6 +2148,7 @@
   window.downloadInvoice=function(invData){
     var d=invData||currentInvData;
     if(!d){alert('No invoice data available.');return;}
+    if(!d.invNo){alert('Your GST invoice number is still being generated. Please try again in a few seconds - it is also emailed to you.');return;}
     try{
       var doc=generateGSTInvoice(d);
       doc.save('Invoice-'+d.invNo+'.pdf');
@@ -2203,8 +2204,8 @@
       <div class="alc-gem">F</div>
       <h2>Interview Payment Admin</h2>
       <p>FullonBaan · Infor LN Interview Guides<br>Payment tracking dashboard</p>
-      <input type="password" id="adm-pw" placeholder="Admin password" onkeydown="if(event.key==='Enter')admLogin()" oninput="this.classList.remove('bad');document.getElementById('adm-err').style.display='none'">
-      <div id="adm-err" class="alc-err">⚠️ Incorrect password.</div>
+      <input type="password" id="adm-pw" placeholder="Admin token (ADMIN_API_TOKEN from Vercel)" autocomplete="off" onkeydown="if(event.key==='Enter')admLogin()" oninput="this.classList.remove('bad');document.getElementById('adm-err').style.display='none'">
+      <div id="adm-err" class="alc-err">⚠️ Token not accepted.</div>
       <button class="alc-btn" onclick="admLogin()">Sign In →</button><br>
       <button class="alc-cancel" onclick="admClose()">Cancel</button>
     </div>
@@ -2287,7 +2288,10 @@
 <div id="adm-toast"></div>
 
 <script>
-var ADM_PW='Admin@M3Pay2025';
+/* Admin access = the ADMIN_API_TOKEN from Vercel (same token as /members-admin).
+   It is never stored in this page; it is kept only in this browser tab (sessionStorage). */
+var ADM_TOK=''; try{ ADM_TOK=sessionStorage.getItem('fob_adm')||''; }catch(e){}
+function admFetch(url,opt){ opt=opt||{}; opt.headers=Object.assign({},opt.headers||{},{'Authorization':'Bearer '+ADM_TOK}); return fetch(url,opt); }
 /* All GitHub access goes through Vercel serverless proxies — the PAT lives in
    process.env.GITHUB_PAT and never reaches the browser. */
 var ADM_API     = '/api/payments';
@@ -2304,7 +2308,7 @@ async function genInvoiceNoGH(){
   /* Proxy endpoint atomically increments the counter file in fob_pay_store_ln_intv
      and returns the next FOB####### value. PAT never touches the browser. */
   try{
-    var r = await fetch(ADM_INV_API);
+    var r = await admFetch(ADM_INV_API);
     if(r.ok){
       var d = await r.json();
       if(d.invoiceNo) return d.invoiceNo;
@@ -2315,7 +2319,7 @@ async function genInvoiceNoGH(){
 /* Set the invoice counter to a specific value (used by Renumber migration).
    POSTs to /api/invoice-counter which writes the new value server-side. */
 async function setInvoiceCounterGH(value){
-  var w = await fetch(ADM_INV_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({counter:Number(value)})});
+  var w = await admFetch(ADM_INV_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({counter:Number(value)})});
   if(!w.ok){ var t=''; try{t=await w.text();}catch(_){} throw new Error('Counter set '+w.status+(t?': '+t.slice(0,120):'')); }
   return value;
 }
@@ -2323,17 +2327,26 @@ async function setInvoiceCounterGH(value){
 var admRecs=[],admFl='all';
 
 function admOpen(){document.getElementById('adm-overlay').classList.add('open');document.getElementById('adm-login').style.display='flex';document.getElementById('adm-dash').style.display='none';document.body.style.overflow='hidden';setTimeout(function(){document.getElementById('adm-pw').focus();},50);}
+var _admOpenBase=admOpen; admOpen=function(){ _admOpenBase(); if(ADM_TOK){ document.getElementById('adm-pw').value=ADM_TOK; admLogin(); } };
 function admClose(){document.getElementById('adm-overlay').classList.remove('open');document.body.style.overflow='';}
 document.addEventListener('keydown',function(e){if(e.key==='Escape')admClose();});
 
 (function(){if(window.location.hash==='#admin'||window.location.pathname==='/admin'){history.replaceState(null,'','/');admOpen();}})();
 window.addEventListener('hashchange',function(){if(window.location.hash==='#admin'){history.replaceState(null,'',window.location.pathname);admOpen();}});
 
-function admLogin(){var pw=document.getElementById('adm-pw').value;if(pw===ADM_PW){document.getElementById('adm-pw').value='';document.getElementById('adm-login').style.display='none';document.getElementById('adm-dash').style.display='block';admRefresh();}else{document.getElementById('adm-err').style.display='block';document.getElementById('adm-pw').classList.add('bad');}}
+async function admLogin(){
+  var inp=document.getElementById('adm-pw'), t=inp.value.trim(), err=document.getElementById('adm-err');
+  if(!t)return;
+  ADM_TOK=t;
+  var ok=false; try{ var r=await admFetch(ADM_API); ok=r.ok; }catch(e){}
+  if(!ok){ ADM_TOK=''; try{sessionStorage.removeItem('fob_adm');}catch(_){} err.style.display='block'; inp.classList.add('bad'); return; }
+  try{ sessionStorage.setItem('fob_adm',t); }catch(_){}
+  inp.value=''; document.getElementById('adm-login').style.display='none'; document.getElementById('adm-dash').style.display='block'; admRefresh();
+}
 
 async function admGhRead(){
   /* Proxy returns {records:[...], sha} already decoded. */
-  var r = await fetch(ADM_API);
+  var r = await admFetch(ADM_API);
   if(!r.ok) throw new Error('Proxy GET '+r.status);
   var d = await r.json();
   return { records: d.records || [], sha: d.sha || null };
@@ -2347,7 +2360,7 @@ async function admGhUpsert(rec){
     var i = gh.records.findIndex(function(x){return x.orderId===rec.orderId;});
     if(i>=0) gh.records[i] = Object.assign({}, gh.records[i], rec);
     else gh.records.push(rec);
-    var w = await fetch(ADM_API, {
+    var w = await admFetch(ADM_API, {
       method: 'PUT',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({records: gh.records, sha: gh.sha, message: 'intpay:'+rec.status+' '+rec.orderId})
@@ -2366,52 +2379,9 @@ async function admGhUpsert(rec){
 }
 async function admGhMerge(){var gh=[];try{var r=await admGhRead();gh=r.records;admSync('ok','Synced');}catch(e){admSync('err','Offline');}var lo=JSON.parse(localStorage.getItem('interview_payments')||'[]');var m=gh.slice();lo.forEach(function(l){if(!m.find(function(x){return x.orderId===l.orderId;}))m.push(l);});localStorage.setItem('interview_payments',JSON.stringify(m));return m;}
 
-window.lnPayInitiated=function(txnRefVal,userDataVal,selDescVal,selAmountVal){
-  /* Currency-aware split. SEL_CURR is the global currency state set by switchCurrency(). */
-  var split;
-  if(SEL_CURR === 'INR'){
-    split = calcGSTSplitFromInclusive(selAmountVal, (userDataVal.billCountry==='IN')?userDataVal.billStateCode:'');
-  } else {
-    split = { base:selAmountVal, cgst:0, sgst:0, igst:0, gst:0, total:selAmountVal, taxType:'NONE' };
-  }
-  var today=new Date();
-  var fmtD=function(d){return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();};
-  /* Counter only increments on CONFIRMED payment — generated in onPaymentSuccess.
-     For initiated records, leave invoiceNo blank. */
-  var rec={
-    orderId:txnRefVal, status:'initiated',
-    name:userDataVal.name, email:userDataVal.email, mobile:userDataVal.mobile,
-    module:selDescVal, amount:selAmountVal, currency:SEL_CURR,
-    baseAmt:split.base, gstAmt:split.gst, totalAmt:split.total,
-    cgstAmt:split.cgst, sgstAmt:split.sgst, igstAmt:split.igst, taxType:split.taxType,
-    billCompany:userDataVal.billCompany||'', billLine1:userDataVal.billLine1||'', billLine2:userDataVal.billLine2||'',
-    billCity:userDataVal.billCity||'', billPincode:userDataVal.billPincode||'',
-    billStateCode:userDataVal.billStateCode||'', billStateName:userDataVal.billStateName||'',
-    billCountry:userDataVal.billCountry||'IN',
-    gstin:userDataVal.gstin||'', gstLegalName:userDataVal.gstLegalName||'',
-    placeOfSupply:userDataVal.billStateName?(userDataVal.billStateName+(userDataVal.billStateCode?' ('+userDataVal.billStateCode+')':'')):'',
-    invoiceNo:'',
-    invDate:fmtD(today),
-    dueDate:fmtD(new Date(today.getTime()+15*24*60*60*1000)),
-    initiatedAt:new Date().toISOString(), submittedAt:null, utr:null
-  };
-  var lo=JSON.parse(localStorage.getItem('interview_payments')||'[]');
-  var i=lo.findIndex(function(x){return x.orderId===txnRefVal;});
-  if(i>=0)lo[i]=Object.assign({},lo[i],rec);else lo.push(rec);
-  localStorage.setItem('interview_payments',JSON.stringify(lo));
-  admGhUpsert(rec);
-};
-window.lnPaySubmitted=async function(txnRefVal,utrVal){
-  /* Counter only increments on confirmed payment — get invoice number now */
-  var invNo;
-  try { invNo = await genInvoiceNoGH(); pendingInvNo = invNo; }
-  catch(e){ invNo = 'FOB'+Date.now(); }
-  var lo=JSON.parse(localStorage.getItem('interview_payments')||'[]');
-  var i=lo.findIndex(function(x){return x.orderId===txnRefVal;});
-  var upd={status:'submitted', utr:utrVal, submittedAt:new Date().toISOString(), invoiceNo:invNo};
-  if(i>=0){lo[i]=Object.assign({},lo[i],upd);localStorage.setItem('interview_payments',JSON.stringify(lo));admGhUpsert(lo[i]);}
-  else admGhUpsert(Object.assign({orderId:txnRefVal,name:'—',email:'—',mobile:'—',module:'—',amount:0,initiatedAt:null},upd));
-};
+/* Register writes moved to the server (/api/checkout) — kept as no-ops for older callers. */
+window.lnPayInitiated=function(){};
+window.lnPaySubmitted=function(){};
 
 async function admRefresh(){document.getElementById('alist').innerHTML='<div class="aempty">⏳ Syncing with GitHub…</div>';admSync('spin','Syncing…');try{admRecs=await admGhMerge();}catch(e){admRecs=JSON.parse(localStorage.getItem('interview_payments')||'[]');admSync('err','Offline');}admStats();admRender();}
 function admStats(){var i=admRecs.filter(function(r){return r.status==='initiated';}).length;var s=admRecs.filter(function(r){return r.status==='submitted';}).length;document.getElementById('ast-all').textContent=admRecs.length;document.getElementById('ast-init').textContent=i;document.getElementById('ast-sub').textContent=s;}
@@ -2493,7 +2463,7 @@ async function admDeleteRecord(orderId){
     var idx = (gh.records||[]).findIndex(function(x){return x.orderId===orderId;});
     if(idx < 0){ admToast('Record not on server. Refreshing.'); admRefresh(); return; }
     gh.records.splice(idx, 1);
-    var w = await fetch(ADM_API, {
+    var w = await admFetch(ADM_API, {
       method: 'PUT',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({records: gh.records, sha: gh.sha, message: 'admin: delete '+orderId})
@@ -2526,7 +2496,7 @@ async function admMigrateInvoiceNos(){
         r.invoiceNo = newNo; r.invoiceMigratedAt = new Date().toISOString(); changed++;
       }
     });
-    var w = await fetch(ADM_API, {
+    var w = await admFetch(ADM_API, {
       method: 'PUT',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({records: allRecs, sha: gh.sha, message: 'invoice-migration: renumbered '+confirmedRecs.length+' confirmed (changed '+changed+')'})

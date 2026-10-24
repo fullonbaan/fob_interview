@@ -1,12 +1,15 @@
 // api/checkout.js — server-side Razorpay checkout.
 //   POST /api/checkout?action=order   → creates a Razorpay Order at the CATALOG price
-//   POST /api/checkout?action=verify  → verifies the payment signature, then unlocks the ebooks
+//   POST /api/checkout?action=verify  → verifies the payment signature, unlocks the ebooks,
+//                                       registers the order + GST invoice number, sends emails
+//   POST /api/checkout?action=event   → {type:'failed'|'abandon', orderRef}: alert to the admin only
 // Env: RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET (+ storage / email / session env, see SETUP)
 const H = require('./_lib/http');
 const C = require('./_lib/crypto');
 const catalog = require('./_lib/catalog');
 const rzp = require('./_lib/razorpay');
-const members = require('./_lib/members');
+const settle = require('./_lib/settle');
+const pay = require('./_lib/payrecords');
 
 const clip = (v, n) => String(v == null ? '' : v).slice(0, n || 250);
 
@@ -25,7 +28,7 @@ async function createOrder(req, res) {
     product_key: productKey,
     cust_email: email,
     cust_name: clip(b.customer.name, 120),
-    order_ref: clip(b.orderRef, 40)
+    order_ref: 'FOB' + Date.now() + String(require('crypto').randomInt(100, 1000))   // server-made, unique
   };
   const extra = b.notes && typeof b.notes === 'object' ? b.notes : {};
   Object.keys(extra).forEach(k => {
@@ -36,12 +39,17 @@ async function createOrder(req, res) {
 
   const order = await rzp.createOrder({
     amount, currency,
-    receipt: clip(b.orderRef || ('FOB' + Date.now()), 40),
+    receipt: notes.order_ref,
     notes,
     payment_capture: 1
   });
+  // Register line ("initiated") written by the server — the browser never touches the register.
+  try {
+    await pay.recordInitiated({ orderRef: notes.order_ref || order.receipt, rzpOrderId: order.id, productKey, currency,
+      billing: Object.assign({}, b.billing || {}, { name: b.customer.name, email, mobile: b.customer.mobile }) });
+  } catch (e) { console.error('register (initiated) failed', e.message); }
   return H.send(res, 200, {
-    orderId: order.id, amount: order.amount, currency: order.currency,
+    orderId: order.id, orderRef: notes.order_ref, amount: order.amount, currency: order.currency,
     keyId: process.env.RAZORPAY_KEY_ID, productName: product.name
   });
 }
@@ -64,12 +72,14 @@ async function verify(req, res) {
   }
   if (payment.status !== 'captured') return H.send(res, 409, { error: 'Payment is ' + payment.status + ', not captured yet. Your access will be emailed as soon as it completes.' });
 
-  const r = await members.fulfilOrder(order, payment, H.siteUrl(req), 'verify');
+  const s = await settle.settle(order, payment, H.siteUrl(req), 'verify');
+  const r = s.fulfil;
   return H.send(res, 200, {
     ok: true,
     email: r.member.email,
     code: r.code || null,                // shown once on the thank-you screen for brand-new members
     returning: !r.code,
+    invoice: s.invoice,                  // server-assigned GST invoice (number, amounts, billing) for the PDF
     unlocked: (catalog.getProduct(order.notes.product_key) || { unlocks: [] }).unlocks,
     membersUrl: '/members'
   });
@@ -82,6 +92,12 @@ module.exports = async function handler(req, res) {
   try {
     if (action === 'order') return await createOrder(req, res);
     if (action === 'verify') return await verify(req, res);
+    if (action === 'event') {
+      const b = await H.readJson(req);
+      const type = b.type === 'failed' ? 'failed' : b.type === 'abandon' ? 'abandon' : null;
+      if (type) { try { await settle.alertAdmin(String(b.orderRef || ''), type); } catch (e) { console.error('alert failed', e.message); } }
+      return H.send(res, 200, { ok: true });
+    }
     return H.send(res, 404, { error: 'Unknown action.' });
   } catch (e) {
     console.error('checkout error', action, e);

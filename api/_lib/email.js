@@ -27,6 +27,22 @@ async function sendMail(to, subject, html, text) {
   return true;
 }
 
+// Send with one of your existing EmailJS templates (e.g. FOB_Razorpay_Success) from the SERVER.
+async function sendTemplate(templateId, params) {
+  if (process.env.FOB_EMAIL_LOG) {
+    fs.appendFileSync(process.env.FOB_EMAIL_LOG, JSON.stringify({ to: params.to_email, subject: params.subject, template: templateId }) + '\n');
+    return true;
+  }
+  const svc = process.env.EMAILJS_SERVICE_ID, pub = process.env.EMAILJS_PUBLIC_KEY, priv = process.env.EMAILJS_PRIVATE_KEY;
+  if (!svc || !pub || !priv) { console.error('EmailJS env not configured — template', templateId, 'not sent'); return false; }
+  const r = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ service_id: svc, template_id: templateId, user_id: pub, accessToken: priv, template_params: params })
+  });
+  if (!r.ok) { console.error('EmailJS template send failed', templateId, r.status, (await r.text()).slice(0, 200)); return false; }
+  return true;
+}
+
 function shell(title, inner) {
   return '<div style="background:#F9F6F1;padding:28px 12px;font-family:Arial,Helvetica,sans-serif;">' +
     '<div style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #E8E2D9;border-radius:12px;overflow:hidden;">' +
@@ -73,4 +89,4 @@ function newCodeEmail(o) {
   return sendMail(o.email, subject, html, subject + '\n\nAccess code: ' + o.code + '\nSign in: ' + loginUrl);
 }
 
-module.exports = { sendMail, purchaseEmail, newCodeEmail, esc };
+module.exports = { sendMail, sendTemplate, purchaseEmail, newCodeEmail, esc };

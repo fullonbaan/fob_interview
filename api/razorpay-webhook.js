@@ -4,7 +4,7 @@
 // Events: order.paid  (optionally payment.captured).  Secret → env RAZORPAY_WEBHOOK_SECRET.
 const H = require('./_lib/http');
 const rzp = require('./_lib/razorpay');
-const members = require('./_lib/members');
+const settle = require('./_lib/settle');
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return H.send(res, 405, { error: 'Method not allowed.' });
@@ -27,8 +27,8 @@ module.exports = async function handler(req, res) {
     if ((evt.event === 'order.paid' || evt.event === 'payment.captured') && orderId) {
       const order = await rzp.fetchOrder(orderId);               // re-read from Razorpay
       if (!order.notes || !order.notes.product_key) return H.send(res, 200, { ignored: 'not a members order' });
-      const r = await members.fulfilOrder(order, payment, H.siteUrl(req), 'webhook');
-      return H.send(res, 200, { ok: true, duplicate: r.duplicate });
+      const s = await settle.settle(order, payment, H.siteUrl(req), 'webhook');
+      return H.send(res, 200, { ok: true, duplicate: s.fulfil.duplicate, invoice: s.record ? s.record.invoiceNo : null });
     }
     return H.send(res, 200, { ignored: evt.event });
   } catch (e) {

@@ -226,22 +226,39 @@ in-browser viewing with no download is possible later if you want it, but it fru
 
 ---
 
-## 6. Existing issues found (outside the members feature) — please fix soon
+## 6. Payment & customer data protection (fixed)
 
-1. **`/api/payments` is open to the internet.** Anyone can `GET` it and receive every customer's
-   name, email, phone, address and GSTIN, or `PUT` to overwrite the records. It has no authentication.
-2. **The admin password (`ADM_PW`) is in the page source** of `index.html`, so the "#admin" login
-   protects nothing.
-3. Fix for both: move payment-record writes to the server (the new `/api/checkout?action=verify`
-   is the natural place) and require the `ADMIN_API_TOKEN` on `/api/payments` and `/api/invoice-counter`.
-   This touches the invoice/admin panel, so it was left as a separate change.
+| Before | Now |
+|---|---|
+| `/api/payments` returned every customer's name, email, phone, address and GSTIN to anyone, and accepted writes from any website | **Admin token required** for read and write; no cross-site access |
+| `/api/invoice-counter` could be read/changed by anyone | **Admin token required** |
+| Customers' browsers wrote their own order lines to the register | The **server** writes the register: "initiated" when it creates the Razorpay order, "submitted" + GST invoice number after it verifies the payment |
+| `#admin` password was in the page source | `#admin` asks for the **ADMIN_API_TOKEN** (same as `/members-admin`), kept only in that browser tab |
+| Invoice/alert emails sent from the browser with EmailJS keys in the page | Sent by the **server** with the EmailJS private key; no email keys in the page |
 
----
+How a paid order is recorded now: Razorpay paid → server verifies the signature → unlocks the ebooks →
+assigns the next invoice number (a lock guarantees one number per order even if the browser and the
+webhook arrive together) → updates the register → emails the GST invoice to the customer and the order
+alert to you. If the customer closes the tab, the webhook does all of this instead.
+
+Failed / abandoned checkouts: the page tells the server, which emails **only you**, at most once per order,
+and only for orders the server itself created.
+
+**One-time after deploying — lock EmailJS:** EmailJS → Account → **Security** → tick
+**"Use Private Key (recommended)"** and save. From then on nobody can send through your EmailJS
+account without the private key (which only Vercel has). The contact page uses a separate EmailJS
+account and is not affected.
+
+Optional env (defaults shown): `ADMIN_ALERT_EMAIL=fullonbaan@gmail.com`,
+`EMAILJS_TEMPLATE_PAYMENT=FOB_Razorpay_Success`, `EMAILJS_TEMPLATE_FAILURE=FOB_Razorpay_Failure`.
 
 ## 7. Files added / changed
 
 ```
 api/_lib/library.js     reads each guide's ebook folder live from the bucket (titles, order, drafts)
+api/_lib/payrecords.js  order register + GST invoice numbers (server-only writes)
+api/_lib/settle.js      once-per-order: unlock, invoice number, register, emails
+api/_lib/auth.js        admin token check shared by all admin endpoints
 api/_lib/catalog.js     prices + bundle contents (server source of truth — keep in sync with GUIDES in index.html)
 api/_lib/crypto.js      access codes, scrypt hashing, signed sessions
 api/_lib/r2.js          private R2 storage + 5-minute signed links
