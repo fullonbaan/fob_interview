@@ -64,6 +64,7 @@ async function putObject(key, body, contentType, cond) {
     const exists = fs.existsSync(lp(key));
     if (cond && cond.ifNoneMatch === '*' && exists) return false;
     if (cond && cond.ifMatch && (!exists || letag(fs.readFileSync(lp(key))) !== cond.ifMatch)) return false;
+    if (cond && cond.ifMatch && process.env.FOB_LOCAL_FAIL_IFMATCH) return false;   // test: mimic R2 412
     fs.mkdirSync(path.dirname(lp(key)), { recursive: true });
     fs.writeFileSync(lp(key), buf); return true;
   }
@@ -71,7 +72,7 @@ async function putObject(key, body, contentType, cond) {
   if (cond && cond.ifMatch) headers['If-Match'] = cond.ifMatch;
   if (cond && cond.ifNoneMatch) headers['If-None-Match'] = cond.ifNoneMatch;
   const r = await client().fetch(objUrl(key), { method: 'PUT', headers, body: buf });
-  if (r.status === 412) return false;
+  if (r.status === 412) { console.warn('R2 PUT 412', key, JSON.stringify(cond)); return false; }
   if (!r.ok) throw new Error('R2 PUT ' + key + ' → ' + r.status + ' ' + (await r.text()).slice(0, 200));
   return true;
 }
@@ -128,4 +129,8 @@ async function signedUrl(key, opts) {
   return signed.url;
 }
 
-module.exports = { getObject, headObject, putObject, deleteObject, listKeys, getJson, putJson, signedUrl };
+function bareEtag(e) { return String(e || '').replace(/^W\//, '').replace(/"/g, '').trim(); }
+function quoteEtag(e) { return '"' + bareEtag(e) + '"'; }
+function sameEtag(a, b) { return !!bareEtag(a) && bareEtag(a) === bareEtag(b); }
+
+module.exports = { bareEtag, quoteEtag, sameEtag, getObject, headObject, putObject, deleteObject, listKeys, getJson, putJson, signedUrl };

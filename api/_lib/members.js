@@ -25,7 +25,16 @@ async function updateMember(email, mutator) {
     const next = await mutator(rec ? JSON.parse(JSON.stringify(rec)) : null);
     if (!next) return rec;
     next.updatedAt = new Date().toISOString();
-    const ok = await r2.putJson(key, next, cur ? { ifMatch: cur.etag } : { ifNoneMatch: '*' });
+    let ok = await r2.putJson(key, next, cur ? { ifMatch: r2.quoteEtag(cur.etag) } : { ifNoneMatch: '*' });
+    if (!ok && cur) {
+      // R2 can answer 412 to If-Match even when nothing changed. If the object's
+      // version is still the one we read, nobody else wrote — safe to save.
+      const now = await r2.headObject(key);
+      if (now && r2.sameEtag(now.etag, cur.etag)) {
+        console.warn('R2 If-Match 412 on unchanged object; writing unconditionally', key);
+        ok = await r2.putJson(key, next);
+      }
+    }
     if (ok) return next;
     await new Promise(r => setTimeout(r, 120 + Math.random() * 250));
   }
