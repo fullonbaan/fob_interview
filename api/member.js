@@ -12,6 +12,7 @@ const members = require('./_lib/members');
 const mail = require('./_lib/email');
 const library = require('./_lib/library');
 const crypto = require('crypto');
+const RL = require('./_lib/ratelimit');
 
 const COOKIE = 'fob_mem';
 const SESSION_DAYS = 7;
@@ -38,6 +39,8 @@ async function login(req, res) {
   const email = C.normEmail(b.email), code = String(b.code || '');
   const generic = { error: 'That email and access code don’t match. Check the code in your purchase email, or request a new one.' };
   if (!C.isEmail(email) || C.normCode(code).length < 8) return H.send(res, 400, generic);
+  // Per-network limit on top of the per-account lockout (stops guessing across many accounts).
+  if (!(await RL.allow('login', H.clientIp(req), 30, 900))) return H.send(res, 429, { error: 'Too many sign-in attempts. Please wait 15 minutes.' });
 
   const rec = await members.getMember(email);
   if (rec && rec.failed && rec.failed.lockedUntil > Date.now()) {
@@ -153,6 +156,7 @@ async function resend(req, res) {
   const email = C.normEmail(b.email);
   const generic = { ok: true, message: 'If that email has a FullOnBaan library, a new access code is on its way. Check your inbox (and spam) in a minute.' };
   if (!C.isEmail(email)) return H.send(res, 400, { error: 'Please enter a valid email.' });
+  if (!(await RL.allow('resend', H.clientIp(req), 6, 3600))) return H.send(res, 200, generic);   // same answer, no email
   const rec = await members.getMember(email);
   if (!rec || rec.status !== 'active' || (Date.now() - (rec.lastResendAt || 0)) < RESEND_GAP_MS) return H.send(res, 200, generic);
 

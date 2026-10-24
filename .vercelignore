@@ -1,0 +1,4 @@
+# Files in the repo that must NOT be served by the website
+MEMBERS_SETUP.md
+history-clean.bundle
+*.bundle

@@ -10,6 +10,7 @@ const catalog = require('./_lib/catalog');
 const rzp = require('./_lib/razorpay');
 const settle = require('./_lib/settle');
 const pay = require('./_lib/payrecords');
+const RL = require('./_lib/ratelimit');
 
 const clip = (v, n) => String(v == null ? '' : v).slice(0, n || 250);
 
@@ -22,6 +23,10 @@ async function createOrder(req, res) {
   const email = C.normEmail(b.customer && b.customer.email);
   if (!product || amount == null) return H.send(res, 400, { error: 'Unknown product or currency.' });
   if (!C.isEmail(email)) return H.send(res, 400, { error: 'A valid email is required.' });
+  // Abuse guard: each checkout creates a Razorpay order and a register line.
+  if (!(await RL.allow('order', H.clientIp(req), Number(process.env.RL_ORDERS_PER_HOUR || 20), 3600))) {
+    return H.send(res, 429, { error: 'Too many checkout attempts from your network. Please wait a few minutes, or write to support@fullonbaan.com.' });
+  }
 
   // Server-controlled notes first (these drive fulfilment), then billing notes from the form.
   const notes = {

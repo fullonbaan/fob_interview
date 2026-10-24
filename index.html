@@ -661,8 +661,8 @@
   <!-- Razorpay Standard Checkout -->
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <!-- jsPDF + AutoTable for GST Invoice generation -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha512-qZvrmS2ekKPF2mSznTQsxqPgnpkI4DNTlrdUmTzrDgektczlKNRRhy5X5AAOnx5S09ydFYWWNSfcEqDTTHgtNA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js" integrity="sha512-2/YdOMV+YNpanLCF5MdQwaoFRVbTmrJ4u4EpqS/USXAQNUDgI5uwYi6J98WVtJKcfe1AbgerygzDFToxAlOGEQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body>
 
@@ -1472,7 +1472,7 @@
   var currentInvData = null;
 
   /* ── Razorpay ──────────────────────────────────────────────────────── */
-  var RZP_KEY_ID = 'rzp_live_Sd3yvlDYShR9ll';
+  var RZP_KEY_ID = 'rzp_live_Tri5INpPmDldL3';
   /* The key SECRET lives only in Vercel env (RAZORPAY_KEY_SECRET). Orders are
      created and payments verified server-side in /api/checkout.            */
 
@@ -2196,7 +2196,7 @@
 </script>
 
 <!-- ══ ADMIN TRIGGER ══ -->
-<button id="adm-trigger" onclick="admOpen()" title="Admin">🛡</button>
+<!-- Admin panel: open by visiting /#admin (no public button). -->
 <!-- ══ ADMIN OVERLAY ══ -->
 <div id="adm-overlay">
   <div id="adm-login">
@@ -2204,7 +2204,7 @@
       <div class="alc-gem">F</div>
       <h2>Interview Payment Admin</h2>
       <p>FullonBaan · Infor LN Interview Guides<br>Payment tracking dashboard</p>
-      <input type="password" id="adm-pw" placeholder="Admin token (ADMIN_API_TOKEN from Vercel)" autocomplete="off" onkeydown="if(event.key==='Enter')admLogin()" oninput="this.classList.remove('bad');document.getElementById('adm-err').style.display='none'">
+      <input type="password" id="adm-pw" placeholder="Admin token (ADMIN_API_TOKEN from Vercel)" autocomplete="new-password" name="fob-k-a" readonly onfocus="this.removeAttribute('readonly')" spellcheck="false" autocapitalize="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" onkeydown="if(event.key==='Enter')admLogin()" oninput="this.classList.remove('bad');document.getElementById('adm-err').style.display='none'">
       <div id="adm-err" class="alc-err">⚠️ Token not accepted.</div>
       <button class="alc-btn" onclick="admLogin()">Sign In →</button><br>
       <button class="alc-cancel" onclick="admClose()">Cancel</button>
@@ -2289,8 +2289,16 @@
 
 <script>
 /* Admin access = the ADMIN_API_TOKEN from Vercel (same token as /members-admin).
-   It is never stored in this page; it is kept only in this browser tab (sessionStorage). */
-var ADM_TOK=''; try{ ADM_TOK=sessionStorage.getItem('fob_adm')||''; }catch(e){}
+   It is kept ONLY in memory while the panel is open: never saved, never auto-filled.
+   Closing the panel, reloading, or 20 minutes without activity locks it again. */
+var ADM_TOK=''; try{ sessionStorage.removeItem('fob_adm'); }catch(e){}
+var admIdle=null;
+function admTouch(){ clearTimeout(admIdle); if(ADM_TOK) admIdle=setTimeout(function(){ admLock('Locked after 20 minutes without activity.'); },20*60*1000); }
+function admLock(msg){ ADM_TOK=''; clearTimeout(admIdle); var d=document.getElementById('adm-dash'), l=document.getElementById('adm-login'), p=document.getElementById('adm-pw');
+  if(d)d.style.display='none'; if(l)l.style.display='flex'; if(p){p.value='';p.setAttribute('readonly','');}
+  if(typeof admRecs!=='undefined'){ admRecs=[]; var al=document.getElementById('alist'); if(al)al.innerHTML=''; }
+  if(msg&&typeof admToast==='function')admToast(msg); }
+['click','keydown'].forEach(function(ev){ document.addEventListener(ev,function(){ if(ADM_TOK)admTouch(); },true); });
 function admFetch(url,opt){ opt=opt||{}; opt.headers=Object.assign({},opt.headers||{},{'Authorization':'Bearer '+ADM_TOK}); return fetch(url,opt); }
 /* All GitHub access goes through Vercel serverless proxies — the PAT lives in
    process.env.GITHUB_PAT and never reaches the browser. */
@@ -2327,8 +2335,8 @@ async function setInvoiceCounterGH(value){
 var admRecs=[],admFl='all';
 
 function admOpen(){document.getElementById('adm-overlay').classList.add('open');document.getElementById('adm-login').style.display='flex';document.getElementById('adm-dash').style.display='none';document.body.style.overflow='hidden';setTimeout(function(){document.getElementById('adm-pw').focus();},50);}
-var _admOpenBase=admOpen; admOpen=function(){ _admOpenBase(); if(ADM_TOK){ document.getElementById('adm-pw').value=ADM_TOK; admLogin(); } };
-function admClose(){document.getElementById('adm-overlay').classList.remove('open');document.body.style.overflow='';}
+/* No automatic login: the token must be typed/pasted each time the panel is opened. */
+function admClose(){admLock();document.getElementById('adm-overlay').classList.remove('open');document.body.style.overflow='';}
 document.addEventListener('keydown',function(e){if(e.key==='Escape')admClose();});
 
 (function(){if(window.location.hash==='#admin'||window.location.pathname==='/admin'){history.replaceState(null,'','/');admOpen();}})();
@@ -2339,8 +2347,8 @@ async function admLogin(){
   if(!t)return;
   ADM_TOK=t;
   var ok=false; try{ var r=await admFetch(ADM_API); ok=r.ok; }catch(e){}
-  if(!ok){ ADM_TOK=''; try{sessionStorage.removeItem('fob_adm');}catch(_){} err.style.display='block'; inp.classList.add('bad'); return; }
-  try{ sessionStorage.setItem('fob_adm',t); }catch(_){}
+  if(!ok){ ADM_TOK=''; err.style.display='block'; inp.classList.add('bad'); return; }
+  admTouch();
   inp.value=''; document.getElementById('adm-login').style.display='none'; document.getElementById('adm-dash').style.display='block'; admRefresh();
 }
 
@@ -2387,7 +2395,9 @@ async function admRefresh(){document.getElementById('alist').innerHTML='<div cla
 function admStats(){var i=admRecs.filter(function(r){return r.status==='initiated';}).length;var s=admRecs.filter(function(r){return r.status==='submitted';}).length;document.getElementById('ast-all').textContent=admRecs.length;document.getElementById('ast-init').textContent=i;document.getElementById('ast-sub').textContent=s;}
 function admFilt(f,btn){admFl=f;document.querySelectorAll('.afbtn').forEach(function(b){b.classList.remove('on');});btn.classList.add('on');var sb=document.getElementById('asrch');if(sb)sb.value='';admRender();}
 function aH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function aE(s){return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
+/* For values placed inside onclick="…'VALUE'…": escape for the JS string AND for the HTML attribute,
+   so a stored value containing " < > & or a line break can never break out and run code. */
+function aE(s){return aH(String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r?\n/g,'\\n'));}
 function admRender(){var q=(document.getElementById('asrch').value||'').toLowerCase();var r=admFl==='all'?admRecs:admRecs.filter(function(x){return x.status===admFl;});if(q)r=r.filter(function(x){return['name','email','mobile','module','orderId','utr','billCompany','billCity','billStateName','billPincode','gstin','gstLegalName'].some(function(k){return(x[k]||'').toLowerCase().includes(q);});});r=r.slice().sort(function(a,b){if(a.status!==b.status){var ord={submitted:0,initiated:1,failed:2};return (ord[a.status]||3)-(ord[b.status]||3);}return new Date(b.submittedAt||b.initiatedAt||0)-new Date(a.submittedAt||a.initiatedAt||0);});var el=document.getElementById('alist');if(!r.length){el.innerHTML='<div class="aempty">No records found.</div>';return;}el.innerHTML=r.map(admCard).join('');}
 
 function admCard(r){

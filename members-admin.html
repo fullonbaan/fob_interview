@@ -48,7 +48,7 @@
   <section class="card" id="gate">
     <h2>Admin token</h2>
     <p style="margin-bottom:10px;color:var(--ink-mid)">Paste the <code>ADMIN_API_TOKEN</code> value from Vercel. It is kept only for this browser tab.</p>
-    <div class="row"><input id="tok" type="password" autocomplete="off"><button id="tokBtn">Unlock</button></div>
+    <div class="row"><input id="tok" type="password" autocomplete="new-password" name="fob-k-b" readonly onfocus="this.removeAttribute('readonly')" spellcheck="false" autocapitalize="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other"><button id="tokBtn">Unlock</button></div>
   </section>
 
   <div id="app" hidden style="display:grid;gap:18px">
@@ -94,12 +94,16 @@
     return fetch(API+'?action='+action+(q||''),{method:body?'POST':'GET',headers:Object.assign({'Authorization':'Bearer '+TOK},body?{'Content-Type':'application/json'}:{}),body:body?JSON.stringify(body):undefined})
       .then(function(r){return r.json().then(function(d){if(r.status===401){lock();throw new Error('Token rejected');}if(!r.ok)throw new Error(d.error||r.status);return d;});});
   }
-  function lock(){TOK='';try{sessionStorage.removeItem('fob_adm');}catch(_){}$('app').hidden=true;$('gate').hidden=false;$('lockBtn').hidden=true;}
-  function unlock(t){TOK=t;call('files').then(function(d){try{sessionStorage.setItem('fob_adm',t);}catch(_){}$('gate').hidden=true;$('app').hidden=false;$('lockBtn').hidden=false;CAT=d;renderFiles(d);renderGrantForm(d);loadList();}).catch(function(e){toast(e.message);});}
+  function lock(msg){TOK='';clearTimeout(idle);$('tok').value='';$('tok').setAttribute('readonly','');$('app').hidden=true;$('gate').hidden=false;$('lockBtn').hidden=true;['files','list'].forEach(function(id){var e=$(id);if(e)e.innerHTML='';});$('detail').hidden=true;if(msg)toast(msg);}
+  /* Token is kept only in memory: never saved, never auto-filled. Reload or 20 min idle = locked. */
+  var idle=null; try{sessionStorage.removeItem('fob_adm');}catch(_){}
+  function touch(){clearTimeout(idle);if(TOK)idle=setTimeout(function(){lock('Locked after 20 minutes without activity');},20*60*1000);}
+  ['click','keydown'].forEach(function(ev){document.addEventListener(ev,function(){if(TOK)touch();},true);});
+  function unlock(t){TOK=t;call('files').then(function(d){$('tok').value='';touch();$('gate').hidden=true;$('app').hidden=false;$('lockBtn').hidden=false;CAT=d;renderFiles(d);renderGrantForm(d);loadList();}).catch(function(e){toast(e.message);});}
   $('tokBtn').onclick=function(){unlock($('tok').value.trim());};
   $('tok').onkeydown=function(e){if(e.key==='Enter')unlock(this.value.trim());};
   $('lockBtn').onclick=lock;
-  try{var s=sessionStorage.getItem('fob_adm');if(s)unlock(s);}catch(_){}
+  /* no automatic unlock */
 
   function mb(b){return b>1048576?(b/1048576).toFixed(1)+' MB':Math.max(1,Math.round(b/1024))+' KB';}
   function renderFiles(d,noAuto){

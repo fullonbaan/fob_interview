@@ -7,6 +7,7 @@ const r2 = require('./r2');
 const members = require('./members');
 const pay = require('./payrecords');
 const mail = require('./email');
+const RL = require('./ratelimit');
 
 const ADMIN_EMAIL = () => process.env.ADMIN_ALERT_EMAIL || 'fullonbaan@gmail.com';
 const TPL_OK = () => process.env.EMAILJS_TEMPLATE_PAYMENT || 'FOB_Razorpay_Success';
@@ -78,6 +79,8 @@ async function settle(order, payment, siteUrl, via) {
 // only to YOUR address, at most once per order and type — so it can't be used to send spam.
 async function alertAdmin(orderRef, type) {
   if (!/^[A-Za-z0-9_-]{6,40}$/.test(String(orderRef || ''))) return false;
+  // Hard daily cap on alert emails so nobody can drain the EmailJS quota that customers' emails need.
+  if (!(await RL.allow('alerts', 'global', Number(process.env.RL_ALERTS_PER_DAY || 25), 86400))) return false;
   let send = null;
   await pay.upsertRecord(orderRef, (cur) => {
     if (!cur || cur.status !== 'initiated') return null;
