@@ -50,7 +50,7 @@ function shell(title, inner) {
     '<span style="color:#C9943E;font-size:12px;letter-spacing:2px;margin-left:8px;">MEMBERS</span></div>' +
     '<div style="padding:28px;color:#1A160F;font-size:15px;line-height:1.6;"><h2 style="font-family:Georgia,serif;margin:0 0 14px;font-size:21px;">' + esc(title) + '</h2>' + inner + '</div>' +
     '<div style="padding:16px 28px;background:#F9F6F1;color:#8C8070;font-size:12px;line-height:1.5;">Your access is personal to you. Downloads are watermarked with your name and email and are logged. ' +
-    'Need help? Reply to this email or write to support@fullonbaan.com.<br>&copy; FullOnBaan IT Solutions, Bangalore</div></div></div>';
+    'Need help? Reply to this email or write to support@fullonbaan.com.<br>&copy; FullOnBaan Consulting Services, Bangalore</div></div></div>';
 }
 function codeBox(code) {
   return '<div style="margin:18px 0;padding:16px;border:1px dashed #A8782A;border-radius:10px;background:#FFFDF8;text-align:center;">' +
