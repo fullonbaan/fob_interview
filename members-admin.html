@@ -33,6 +33,10 @@
     #toast{position:fixed;bottom:18px;right:18px;background:var(--ink);color:#fff;padding:12px 16px;max-width:360px;display:none;z-index:9}
     .code{font:700 20px ui-monospace,Consolas,monospace;letter-spacing:.12em;color:var(--rust);background:#FFFDF8;border:1px dashed var(--gold);padding:10px;margin-top:8px;display:inline-block}
     .scroll{overflow-x:auto}
+    .ebrow{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:6px 0;border-bottom:1px dashed var(--border)}.ebrow:last-child{border-bottom:0}
+    small{color:var(--ink-lt)} button.sm{padding:5px 10px;font-size:12px}
+    .upl{display:inline-block;padding:8px 12px;border:1px dashed var(--gold);color:var(--gold);cursor:pointer;font-weight:600;font-size:13px;margin:0}
+    .upst{font-size:12px;color:var(--ink-mid);margin-top:6px;word-break:break-word}
     [hidden]{display:none!important}
   </style>
 </head>
@@ -47,7 +51,7 @@
 
   <div id="app" hidden style="display:grid;gap:18px">
     <section class="card">
-      <h2>Ebook files in private storage</h2>
+      <h2>Ebook library</h2><p style="margin:-4px 0 12px;color:var(--ink-mid)">Every PDF in a guide’s folder appears in buyers’ libraries straight away — no code change. File name = title shown (an ordering prefix like <code>01 - </code> is hidden). Names starting with <code>_</code> stay hidden as drafts.</p>
       <div class="scroll"><table id="files"></table></div>
     </section>
 
@@ -93,15 +97,50 @@
   $('lockBtn').onclick=lock;
   try{var s=sessionStorage.getItem('fob_adm');if(s)unlock(s);}catch(_){}
 
+  function mb(b){return b>1048576?(b/1048576).toFixed(1)+' MB':Math.max(1,Math.round(b/1024))+' KB';}
   function renderFiles(d){
-    var miss=d.files.filter(function(f){return !f.present;}).length;
-    $('files').innerHTML='<tr><th>Guide</th><th>Object key</th><th>Status</th><th>Size</th></tr>'+d.files.map(function(f){
-      return '<tr><td>'+esc(f.name)+'</td><td><code>'+esc(f.path)+'</code></td><td class="'+(f.present?'ok':'bad')+'">'+(f.present?'✔ uploaded':'✘ missing')+'</td><td>'+(f.present?(f.size/1048576).toFixed(1)+' MB':'')+'</td></tr>';
-    }).join('')+(miss?'<tr><td colspan="4" class="bad">'+miss+' file(s) missing — buyers of those guides will see “being updated”.</td></tr>':'');
+    var empty=d.guides.filter(function(g){return !g.ebooks.length;}).length;
+    $('files').innerHTML='<tr><th style="width:24%">Guide</th><th>Ebooks customers see (in this order)</th><th style="width:220px">Add ebooks</th></tr>'+d.guides.map(function(g){
+      var rows=g.ebooks.length?g.ebooks.map(function(f){
+        return '<div class="ebrow"><span><b>'+esc(f.title)+'</b><br><small>'+esc(f.legacy?'ebooks/'+f.file+' (old single-file location)':g.folder+f.file)+' · '+mb(f.size)+'</small></span>'+
+               '<button class="ghost sm" data-del="'+esc(f.id)+'" data-g="'+esc(g.key)+'" data-t="'+esc(f.title)+'">Delete</button></div>';
+      }).join(''):'<span class="bad">No ebooks yet — buyers see “being prepared”.</span>';
+      return '<tr><td><b>'+esc(g.name.replace(' Interview Guide',''))+'</b><br><small>'+esc(g.track)+' · '+g.ebooks.length+' ebook'+(g.ebooks.length===1?'':'s')+'</small></td><td>'+rows+'</td>'+
+             '<td><label class="upl">+ Upload PDF(s)<input type="file" accept="application/pdf,.pdf" multiple data-up="'+esc(g.key)+'" hidden></label><div class="upst" id="up-'+esc(g.key)+'"></div></td></tr>';
+    }).join('')+(empty?'<tr><td colspan="3" class="bad">'+empty+' guide(s) have no ebooks yet.</td></tr>':'');
+    Array.prototype.forEach.call(document.querySelectorAll('[data-up]'),function(inp){inp.onchange=function(){uploadFiles(inp.getAttribute('data-up'),Array.prototype.slice.call(inp.files));inp.value='';};});
+    Array.prototype.forEach.call(document.querySelectorAll('[data-del]'),function(b){b.onclick=function(){
+      if(!confirm('Delete “'+b.getAttribute('data-t')+'”? Customers will no longer see it. (Copies they already downloaded are not affected.)'))return;
+      call('delete-file',{guide:b.getAttribute('data-g'),id:b.getAttribute('data-del')}).then(function(){toast('Deleted');reloadFiles();}).catch(function(e){toast(e.message);});
+    };});
+  }
+  function reloadFiles(){return call('files').then(function(d){CAT=d;renderFiles(d);});}
+  function putFile(url,file,onp){
+    return new Promise(function(res,rej){
+      var x=new XMLHttpRequest();x.open('PUT',url);x.setRequestHeader('Content-Type','application/pdf');
+      x.upload.onprogress=function(e){if(e.lengthComputable)onp(Math.round(e.loaded/e.total*100));};
+      x.onload=function(){(x.status>=200&&x.status<300)?res():rej(new Error('Storage answered '+x.status));};
+      x.onerror=function(){rej(new Error('Upload blocked — check the R2 bucket CORS rule (see MEMBERS_SETUP.md)'));};
+      x.send(file);
+    });
+  }
+  async function uploadFiles(guide,files){
+    var st=$('up-'+guide);
+    for(var i=0;i<files.length;i++){
+      var f=files[i];
+      if(!/\.pdf$/i.test(f.name)){toast(f.name+' is not a PDF');continue;}
+      try{
+        var u=await call('upload-url',{guide:guide,filename:f.name});
+        if(u.replaces&&!confirm('“'+u.title+'” already exists in this guide. Replace it with the new file?'))continue;
+        await putFile(u.url,f,function(p){st.textContent=(i+1)+'/'+files.length+' · '+u.title+' · '+p+'%';});
+        st.textContent='✔ '+u.title;
+      }catch(e){st.textContent='';toast(f.name+': '+e.message);}
+    }
+    reloadFiles();
   }
   function renderGrantForm(d){
     $('gProduct').innerHTML='<option value="">— pick guides below —</option>'+d.products.filter(function(p){return p.unlocks.length>1;}).map(function(p){return '<option value="'+esc(p.key)+'">'+esc(p.name)+'</option>';}).join('');
-    $('gGuides').innerHTML=d.files.map(function(f){return '<label><input type="checkbox" value="'+esc(f.key)+'"> '+esc(f.name.replace(' Interview Guide',''))+'</label>';}).join('');
+    $('gGuides').innerHTML=d.guides.map(function(f){return '<label><input type="checkbox" value="'+esc(f.key)+'"> '+esc(f.name.replace(' Interview Guide',''))+'</label>';}).join('');
   }
   $('gBtn').onclick=function(){
     var guides=Array.prototype.map.call(document.querySelectorAll('#gGuides input:checked'),function(i){return i.value;});
@@ -132,10 +171,10 @@
       D.hidden=false;
       D.innerHTML='<h2>'+esc(m.email)+' — '+esc(m.name)+'</h2>'+
         '<p>Status: <b class="'+(m.status==='active'?'ok':'bad')+'">'+esc(m.status)+'</b> · created '+esc((m.createdAt||'').slice(0,10))+' · code issued '+esc((m.codeIssuedAt||'').slice(0,16).replace('T',' '))+'</p>'+
-        '<table style="margin-top:10px"><tr><th>Guide</th><th>Granted</th><th>Order</th><th>Opens</th><th></th></tr>'+ent.map(function(k){var e=m.entitlements[k];return '<tr><td>'+esc(k)+'</td><td>'+esc((e.grantedAt||'').slice(0,10))+'</td><td>'+esc(e.orderId)+'</td><td>'+((m.downloads||{})[k]||0)+'</td><td><button class="ghost" data-a="reset-downloads" data-g="'+esc(k)+'">Reset count</button> <button class="warn" data-a="revoke" data-g="'+esc(k)+'">Revoke</button></td></tr>';}).join('')+'</table>'+
+        '<table style="margin-top:10px"><tr><th>Guide</th><th>Granted</th><th>Order</th><th>Opens</th><th></th></tr>'+ent.map(function(k){var e=m.entitlements[k];return '<tr><td>'+esc(k)+'</td><td>'+esc((e.grantedAt||'').slice(0,10))+'</td><td>'+esc(e.orderId)+'</td><td>'+Object.keys(m.downloads||{}).filter(function(x){return x===k||x===k+'.pdf'||x.indexOf(k+'/')===0;}).reduce(function(s,x){return s+m.downloads[x];},0)+'</td><td><button class="ghost" data-a="reset-downloads" data-g="'+esc(k)+'">Reset count</button> <button class="warn" data-a="revoke" data-g="'+esc(k)+'">Revoke</button></td></tr>';}).join('')+'</table>'+
         '<div class="row" style="margin-top:12px"><button data-a="reset-code">Issue new code &amp; email it</button><button class="'+(m.status==='active'?'warn':'')+'" data-a="set-status" data-s="'+(m.status==='active'?'disabled':'active')+'">'+(m.status==='active'?'Disable account':'Re-enable account')+'</button></div><div id="dOut"></div>'+
         '<h2 style="margin-top:18px">Orders</h2><table><tr><th>When</th><th>Order</th><th>Product</th><th>Amount</th><th>Source</th></tr>'+(m.orders||[]).map(function(o){return '<tr><td>'+esc((o.at||'').slice(0,16).replace('T',' '))+'</td><td>'+esc(o.id)+'</td><td>'+esc(o.product||'')+'</td><td>'+(o.amount?esc((o.amount/100)+' '+o.currency):'')+'</td><td>'+esc(o.source)+(o.note?' · '+esc(o.note):'')+'</td></tr>';}).join('')+'</table>'+
-        '<h2 style="margin-top:18px">Recent access log</h2><table><tr><th>When</th><th>Guide</th><th>Mode</th><th>IP</th><th>Browser</th></tr>'+(m.log||[]).slice().reverse().map(function(l){return '<tr><td>'+esc((l.at||'').slice(0,16).replace('T',' '))+'</td><td>'+esc(l.g)+'</td><td>'+esc(l.mode)+'</td><td>'+esc(l.ip)+'</td><td>'+esc(l.ua)+'</td></tr>';}).join('')+'</table>';
+        '<h2 style="margin-top:18px">Recent access log</h2><table><tr><th>When</th><th>Guide</th><th>Mode</th><th>IP</th><th>Browser</th></tr>'+(m.log||[]).slice().reverse().map(function(l){return '<tr><td>'+esc((l.at||'').slice(0,16).replace('T',' '))+'</td><td>'+esc(l.f||l.g)+'</td><td>'+esc(l.mode)+'</td><td>'+esc(l.ip)+'</td><td>'+esc(l.ua)+'</td></tr>';}).join('')+'</table>';
       Array.prototype.forEach.call(D.querySelectorAll('button[data-a]'),function(b){b.onclick=function(){
         var a=b.getAttribute('data-a'), body={email:m.email,guide:b.getAttribute('data-g')||undefined,status:b.getAttribute('data-s')||undefined};
         if((a==='revoke'||a==='set-status')&&!confirm('Are you sure?'))return;

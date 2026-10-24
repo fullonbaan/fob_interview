@@ -2,7 +2,7 @@
 //   POST ?action=login   {email, code}     → sets an HttpOnly session cookie
 //   POST ?action=logout
 //   GET  ?action=me                          → the signed-in member's library
-//   GET  ?action=file&g=dev&mode=view|download → entitlement check → 302 to a 5-minute signed link
+//   GET  ?action=file&g=dev&f=<ebook id>&mode=view|download → entitlement check → 302 to a 5-minute signed link
 //   POST ?action=resend  {email}             → emails a fresh access code (always answers the same way)
 const H = require('./_lib/http');
 const C = require('./_lib/crypto');
@@ -10,6 +10,8 @@ const r2 = require('./_lib/r2');
 const catalog = require('./_lib/catalog');
 const members = require('./_lib/members');
 const mail = require('./_lib/email');
+const library = require('./_lib/library');
+const crypto = require('crypto');
 
 const COOKIE = 'fob_mem';
 const SESSION_DAYS = 7;
@@ -68,12 +70,20 @@ async function login(req, res) {
 async function me(req, res) {
   const rec = await currentMember(req);
   if (!rec) return H.send(res, 401, { error: 'Not signed in.' });
-  return H.send(res, 200, { library: members.publicLibrary(rec), catalog: catalogView() });
+  const lib = members.publicLibrary(rec);
+  const shelf = await library.shelf();
+  // Ebook lists only for guides this member owns (others just show the guide card).
+  const files = {};
+  lib.owned.forEach(g => {
+    files[g] = (shelf[g] || []).map(f => ({ id: f.id, title: f.title, size: f.size, updated: f.updated, opens: (rec.downloads || {})[f.id] || 0 }));
+  });
+  const counts = {}; Object.keys(shelf).forEach(g => { counts[g] = shelf[g].length; });
+  return H.send(res, 200, { library: lib, catalog: catalogView(counts), files });
 }
 
-function catalogView() {
+function catalogView(counts) {
   const out = {};
-  Object.keys(catalog.EBOOKS).forEach(k => { out[k] = { name: catalog.EBOOKS[k].name, track: catalog.EBOOKS[k].track }; });
+  Object.keys(catalog.EBOOKS).forEach(k => { out[k] = { name: catalog.EBOOKS[k].name, track: catalog.EBOOKS[k].track, count: counts ? counts[k] || 0 : undefined }; });
   return out;
 }
 
@@ -87,41 +97,47 @@ async function file(req, res) {
   if (!rec) return back('login');
   if (!rec.entitlements || !rec.entitlements[g]) return back('forbidden');
 
-  const book = catalog.EBOOKS[g];
-  const master = await r2.headObject(book.file);
-  if (!master) { console.error('MASTER MISSING in bucket:', book.file); return back('missing'); }
+  // Which ebook inside the guide. Old links without &f= get the guide's first ebook.
+  let key = q.f ? library.keyForId(g, q.f) : null;
+  if (!q.f) { const list = (await library.shelf())[g] || []; key = list.length ? list[0].key : null; }
+  if (!key) return back(q.f ? 'unknown' : 'missing');
+  const id = key.slice(library.ROOT.length);
+  const master = await r2.headObject(key);
+  if (!master) { console.error('EBOOK MISSING in bucket:', key); return back('missing'); }
 
-  // Count + log the access (and enforce the per-guide cap) before handing out a link.
+  // Count + log the access (and enforce the per-ebook cap) before handing out a link.
   let capped = false;
   await members.updateMember(rec.email, (m) => {
     m.downloads = m.downloads || {};
-    const n = m.downloads[g] || 0;
+    const n = m.downloads[id] || 0;
     if (n >= members.downloadLimit()) { capped = true; return null; }
-    m.downloads[g] = n + 1;
-    m.log = (m.log || []).concat([{ at: new Date().toISOString(), g, mode, ip: H.clientIp(req), ua: String(req.headers['user-agent'] || '').slice(0, 120) }]).slice(-60);
+    m.downloads[id] = n + 1;
+    m.log = (m.log || []).concat([{ at: new Date().toISOString(), g, f: id, mode, ip: H.clientIp(req), ua: String(req.headers['user-agent'] || '').slice(0, 120) }]).slice(-80);
     return m;
   });
   if (capped) return back('limit');
 
-  let key = book.file;
+  let serveKey = key;
   if (String(process.env.WATERMARK || 'on').toLowerCase() !== 'off') {
     const ver = String(master.etag || '').replace(/[^a-zA-Z0-9]/g, '').slice(0, 12) || 'v1';
-    const personal = 'stamped/' + rec.emailHash + '/' + g + '-' + ver + '.pdf';
-    if (await r2.headObject(personal)) key = personal;
+    const fid = crypto.createHash('sha1').update(id).digest('hex').slice(0, 16);
+    const personal = 'stamped/' + rec.emailHash + '/' + g + '/' + fid + '-' + ver + '.pdf';
+    if (await r2.headObject(personal)) serveKey = personal;
     else {
       try {
-        const src = await r2.getObject(book.file);
+        const src = await r2.getObject(key);
         const ent = rec.entitlements[g];
         const out = await require('./_lib/stamp').stampPdf(src.body, { name: rec.name, email: rec.email, orderId: ent.orderId });
         await r2.putObject(personal, out, 'application/pdf');
-        key = personal;
+        serveKey = personal;
       } catch (e) {
-        console.error('watermark failed for', g, '- serving master', e.message);
+        console.error('watermark failed for', key, '- serving master', e.message);
       }
     }
   }
-  const fname = 'FullOnBaan-' + book.name.replace(/\s+/g, '-') + '.pdf';
-  const url = await r2.signedUrl(key, { ttl: Number(process.env.LINK_TTL_SECONDS || 300), disposition: mode === 'download' ? 'attachment' : 'inline', filename: fname });
+  const title = library.parseKey(key).title;
+  const fname = 'FullOnBaan - ' + title + '.pdf';
+  const url = await r2.signedUrl(serveKey, { ttl: Number(process.env.LINK_TTL_SECONDS || 300), disposition: mode === 'download' ? 'attachment' : 'inline', filename: fname });
   res.statusCode = 302;
   res.setHeader('Location', url);
   res.setHeader('Cache-Control', 'no-store');

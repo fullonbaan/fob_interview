@@ -46,20 +46,54 @@ library; the email says "sign in with your existing code". Lost code → "Email 
 | **Cloudflare R2 private bucket + signed links** | ✅ **Recommended.** No public URL exists. The server checks who is asking, then issues a link that expires in 5 minutes. S3-compatible, 10 GB free, **no download (egress) fees**. |
 | AWS S3 private bucket | ✅ Also fine (same design), but you pay per GB downloaded. |
 
-### Bucket layout (created automatically, except `ebooks/`)
+### Bucket layout — each guide is a folder, every PDF in it is part of that guide
 
 ```
-fob-interview-ebooks/              (PRIVATE — public access OFF)
-├── ebooks/                        ← YOU upload the 12 master PDFs here, exact names:
-│   ├── dev.pdf  adm.pdf  bod.pdf  ion.pdf  ext.pdf  os.pdf  std.pdf
-│   └── fin.pdf  scm.pdf  mfg.pdf  pln.pdf  wms.pdf
-├── members/<sha256-of-email>.json ← one record per customer (auto)
-├── orders/<razorpay_order_id>.json← fulfilment audit trail (auto)
-└── stamped/<hash>/<guide>-<ver>.pdf ← personal watermarked copies (auto)
+fob-interview-ebooks/                    (PRIVATE — public access OFF)
+├── ebooks/
+│   ├── dev/                             ← Development guide = everything in this folder
+│   │   ├── 01 - Core 4GL & Sessions.pdf     shown as "Core 4GL & Sessions"
+│   │   ├── 02 - Advanced Scenarios.pdf      shown as "Advanced Scenarios"
+│   │   ├── 03 - DAL & Scripts.pdf
+│   │   └── _draft-next-edition.pdf          "_" prefix = hidden draft
+│   ├── fin/
+│   │   ├── 01 - GL, AP & AR.pdf
+│   │   └── 02 - Tax & Period Close.pdf
+│   ├── adm/  bod/  ion/  ext/  os/  std/  scm/  mfg/  pln/  wms/
+│   └── dev.pdf, fin.pdf …               ← old single-file location, still works
+├── members/  orders/  stamped/          (automatic — don't touch)
 ```
 
-To **update an ebook**, just upload the new PDF over `ebooks/<key>.pdf`. Personal copies are
-keyed by the master's version, so every buyer automatically gets the new edition on their next download.
+Folder names are the guide codes: `dev adm bod ion ext os std fin scm mfg pln wms`.
+
+**Rules (no code ever needed):**
+- Every `.pdf` in a guide's folder shows up in the library of everyone who owns that guide, straight away (including past buyers and bundle buyers).
+- **Title shown = file name** without `.pdf`. A leading number such as `01 - `, `2_` or `03) ` sets the order and is hidden from customers.
+- Names starting with `_` are hidden (drafts).
+- **Replace** an ebook by uploading a file with the same name. Every buyer gets the new edition on their next open (their personal watermarked copy is rebuilt automatically).
+- **Delete** a file to remove it from libraries. Copies already downloaded are unaffected.
+- The open/download limit (`DOWNLOAD_LIMIT_PER_GUIDE`, default 25) now applies **per ebook**.
+
+### Two ways to add ebooks
+1. **From `/members-admin` → Ebook library → "+ Upload PDF(s)"** next to the guide (multiple files at once, progress shown, warns before replacing). Needs the one-time CORS rule below.
+2. **Cloudflare dashboard** → R2 → bucket → Objects → open `ebooks/` → open/create the guide folder → Upload.
+
+### One-time: allow the admin page to upload (R2 CORS rule)
+Cloudflare → R2 → `fob-interview-ebooks` → **Settings → CORS Policy → Add CORS policy** → JSON:
+
+```json
+[
+  {
+    "AllowedOrigins": ["https://interview.fullonbaan.com"],
+    "AllowedMethods": ["PUT"],
+    "AllowedHeaders": ["content-type"],
+    "MaxAgeSeconds": 3600
+  }
+]
+```
+
+This only lets *your site* send uploads that already carry a 15-minute signed link the server issued
+to an authenticated admin. It does not make anything in the bucket readable.
 
 ---
 
@@ -81,7 +115,7 @@ as compromised:
    - Permissions: **Object Read & Write**
    - Specify bucket: **only `fob-interview-ebooks`**
    - Copy **Access Key ID**, **Secret Access Key**, and your **Account ID** (shown on the R2 overview page).
-4. Bucket → **Objects → Upload**: create folder `ebooks` and upload the 12 PDFs with the names above.
+4. Upload the ebooks into `ebooks/<guide>/` folders (or later from `/members-admin`). See the bucket layout above.
 
 ### Step 3 — EmailJS template for member emails (server-side sending)
 1. EmailJS → **Account → Security**: tick **"Allow EmailJS API for non-browser applications"**.
@@ -132,7 +166,7 @@ Keep `GITHUB_PAT` as it is (used by the existing payments/invoice proxies).
 ### Step 6 — Deploy & test
 1. Commit and push (Vercel installs `aws4fetch` and `pdf-lib` from `package.json`).
 2. Open `https://interview.fullonbaan.com/members-admin`, paste `ADMIN_API_TOKEN`.
-   The **Ebook files** table must show all 12 as ✔ uploaded.
+   The **Ebook library** table must show at least one ebook under every guide.
 3. Grant yourself one guide (Grant access → your email) → you receive the code email →
    sign in at `/members` → Read online and Download → open the PDF and check the footer watermark.
 4. Do one real ₹ purchase end to end (refund it from the Razorpay dashboard afterwards).
@@ -190,6 +224,7 @@ in-browser viewing with no download is possible later if you want it, but it fru
 ## 7. Files added / changed
 
 ```
+api/_lib/library.js     reads each guide's ebook folder live from the bucket (titles, order, drafts)
 api/_lib/catalog.js     prices + bundle contents (server source of truth — keep in sync with GUIDES in index.html)
 api/_lib/crypto.js      access codes, scrypt hashing, signed sessions
 api/_lib/r2.js          private R2 storage + 5-minute signed links

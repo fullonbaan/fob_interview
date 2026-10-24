@@ -83,12 +83,28 @@ async function deleteObject(key) {
   if (!r.ok && r.status !== 404) throw new Error('R2 DELETE ' + key + ' → ' + r.status);
 }
 
-async function listKeys(prefix) {
+function xmlDecode(s) {
+  return s.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, "'")
+          .replace(/&#(\d+);/g, (m, n) => String.fromCharCode(Number(n))).replace(/&amp;/g, '&');
+}
+
+// Every object under a prefix (recursive): [{ key, size, lastModified }]
+async function listObjects(prefix) {
   if (LOCAL) {
-    const dir = lp(prefix); if (!fs.existsSync(dir)) return [];
-    return fs.readdirSync(dir).map(f => prefix + f);
+    const out = [];
+    const walk = (dir, rel) => {
+      if (!fs.existsSync(dir)) return;
+      fs.readdirSync(dir).forEach(f => {
+        const p = path.join(dir, f), k = rel + f;
+        const st = fs.statSync(p);
+        if (st.isDirectory()) walk(p, k + '/'); else out.push({ key: k, size: st.size, lastModified: st.mtime.toISOString() });
+      });
+    };
+    const base = prefix.endsWith('/') ? prefix : prefix + '/';
+    walk(lp(base), base);
+    return out;
   }
-  const keys = []; let token = null;
+  const items = []; let token = null;
   do {
     const u = new URL('https://' + process.env.R2_ACCOUNT_ID + '.r2.cloudflarestorage.com/' + process.env.R2_BUCKET);
     u.searchParams.set('list-type', '2'); u.searchParams.set('prefix', prefix);
@@ -96,11 +112,24 @@ async function listKeys(prefix) {
     const r = await client().fetch(u.toString());
     if (!r.ok) throw new Error('R2 LIST → ' + r.status);
     const xml = await r.text();
-    (xml.match(/<Key>([^<]+)<\/Key>/g) || []).forEach(m => keys.push(m.slice(5, -6).replace(/&amp;/g, '&')));
+    (xml.match(/<Contents>[\s\S]*?<\/Contents>/g) || []).forEach(c => {
+      const k = c.match(/<Key>([^<]*)<\/Key>/), s = c.match(/<Size>(\d+)<\/Size>/), d = c.match(/<LastModified>([^<]*)<\/LastModified>/);
+      if (k) items.push({ key: xmlDecode(k[1]), size: s ? Number(s[1]) : 0, lastModified: d ? d[1] : null });
+    });
     const t = xml.match(/<NextContinuationToken>([^<]+)<\/NextContinuationToken>/);
-    token = (/<IsTruncated>true<\/IsTruncated>/.test(xml) && t) ? t[1] : null;
+    token = (/<IsTruncated>true<\/IsTruncated>/.test(xml) && t) ? xmlDecode(t[1]) : null;
   } while (token);
-  return keys;
+  return items;
+}
+async function listKeys(prefix) { return (await listObjects(prefix)).map(o => o.key); }
+
+// Short-lived signed PUT link so the admin page can upload a PDF straight to the private bucket.
+async function signedPutUrl(key, ttl) {
+  if (LOCAL) return 'local-put://' + key;
+  const u = new URL(objUrl(key));
+  u.searchParams.set('X-Amz-Expires', String(ttl || 900));
+  const signed = await client().sign(new Request(u.toString(), { method: 'PUT' }), { aws: { signQuery: true } });
+  return signed.url;
 }
 
 async function getJson(key) {
@@ -133,4 +162,4 @@ function bareEtag(e) { return String(e || '').replace(/^W\//, '').replace(/"/g, 
 function quoteEtag(e) { return '"' + bareEtag(e) + '"'; }
 function sameEtag(a, b) { return !!bareEtag(a) && bareEtag(a) === bareEtag(b); }
 
-module.exports = { bareEtag, quoteEtag, sameEtag, getObject, headObject, putObject, deleteObject, listKeys, getJson, putJson, signedUrl };
+module.exports = { bareEtag, quoteEtag, sameEtag, getObject, headObject, putObject, deleteObject, listKeys, listObjects, signedPutUrl, getJson, putJson, signedUrl };

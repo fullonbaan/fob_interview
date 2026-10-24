@@ -2,7 +2,9 @@
 // Every call needs:  Authorization: Bearer <ADMIN_API_TOKEN>   (env var, 40+ random chars)
 //   GET  ?action=list                    all members (summary)
 //   GET  ?action=get&email=…             one member (full record minus secrets)
-//   GET  ?action=files                   which master PDFs are present in the bucket
+//   GET  ?action=files                   every guide with the ebooks currently in its folder
+//   POST ?action=upload-url   {guide, filename}  → 15-min signed PUT link (browser uploads straight to R2)
+//   POST ?action=delete-file  {guide, id}
 //   POST ?action=grant        {email, name, product | guides[], note, notify}
 //   POST ?action=revoke       {email, guide}
 //   POST ?action=reset-code   {email, notify}     → returns the new code so you can share it too
@@ -14,6 +16,7 @@ const r2 = require('./_lib/r2');
 const catalog = require('./_lib/catalog');
 const members = require('./_lib/members');
 const mail = require('./_lib/email');
+const library = require('./_lib/library');
 
 function authed(req) {
   const t = process.env.ADMIN_API_TOKEN;
@@ -51,17 +54,35 @@ module.exports = async function handler(req, res) {
       }
       if (action === 'get') return H.send(res, 200, { member: strip(await members.getMember(q.email)) });
       if (action === 'files') {
-        const files = await Promise.all(Object.keys(catalog.EBOOKS).map(async k => {
-          const h = await r2.headObject(catalog.EBOOKS[k].file);
-          return { key: k, name: catalog.EBOOKS[k].name, path: catalog.EBOOKS[k].file, present: !!h, size: h ? h.size : 0 };
+        const shelf = await library.shelf();
+        const guides = Object.keys(catalog.EBOOKS).map(k => ({
+          key: k, name: catalog.EBOOKS[k].name, track: catalog.EBOOKS[k].track, folder: library.ROOT + k + '/',
+          ebooks: shelf[k].map(f => ({ id: f.id, title: f.title, file: f.file, size: f.size, updated: f.updated, legacy: f.legacy }))
         }));
-        return H.send(res, 200, { files, products: Object.keys(catalog.PRODUCTS).map(k => ({ key: k, name: catalog.PRODUCTS[k].name, unlocks: catalog.PRODUCTS[k].unlocks })) });
+        return H.send(res, 200, { guides, products: Object.keys(catalog.PRODUCTS).map(k => ({ key: k, name: catalog.PRODUCTS[k].name, unlocks: catalog.PRODUCTS[k].unlocks })) });
       }
       return H.send(res, 404, { error: 'Unknown action' });
     }
 
     if (req.method !== 'POST') return H.send(res, 405, { error: 'Method not allowed' });
     const b = await H.readJson(req);
+
+    // ── Ebook file management (no email involved) ──
+    if (action === 'upload-url') {
+      if (!catalog.isEbook(b.guide)) return H.send(res, 400, { error: 'Unknown guide' });
+      const name = library.safeFileName(b.filename);
+      if (!name) return H.send(res, 400, { error: 'Bad file name' });
+      const key = library.ROOT + b.guide + '/' + name;
+      const exists = !!(await r2.headObject(key));
+      return H.send(res, 200, { url: await r2.signedPutUrl(key, 900), key, id: key.slice(library.ROOT.length), title: library.titleFromFile(name), replaces: exists });
+    }
+    if (action === 'delete-file') {
+      const key = library.keyForId(String(b.guide || ''), b.id);
+      if (!key) return H.send(res, 400, { error: 'Unknown ebook' });
+      await r2.deleteObject(key);
+      return H.send(res, 200, { ok: true });
+    }
+
     const email = C.normEmail(b.email);
     if (!C.isEmail(email)) return H.send(res, 400, { error: 'Valid email required' });
 
@@ -92,7 +113,12 @@ module.exports = async function handler(req, res) {
     const simple = {
       'revoke': (rec) => { if (!catalog.isEbook(b.guide)) return null; delete rec.entitlements[b.guide]; return rec; },
       'set-status': (rec) => { rec.status = b.status === 'disabled' ? 'disabled' : 'active'; if (rec.status === 'disabled') rec.sessionVersion++; return rec; },
-      'reset-downloads': (rec) => { rec.downloads = rec.downloads || {}; if (b.guide) delete rec.downloads[b.guide]; else rec.downloads = {}; return rec; }
+      'reset-downloads': (rec) => {
+        rec.downloads = rec.downloads || {};
+        if (!b.guide) rec.downloads = {};
+        else Object.keys(rec.downloads).forEach(k => { if (k === b.guide || k === b.guide + '.pdf' || k.startsWith(b.guide + '/')) delete rec.downloads[k]; });
+        return rec;
+      }
     };
     if (simple[action]) {
       const m = await members.updateMember(email, (rec) => rec ? simple[action](rec) : null);
