@@ -64,7 +64,7 @@
     .book{background:var(--surface);border:1px solid var(--border);display:flex;flex-direction:column;transition:box-shadow .2s,transform .2s}
     .book.owned:hover{box-shadow:0 10px 28px rgba(26,22,15,.08);transform:translateY(-2px)}
     .cover{aspect-ratio:1274/900;background:var(--surface-hi) center/cover no-repeat;position:relative}
-    .book.locked .cover{filter:grayscale(.9) brightness(.92);opacity:.6}
+    .book.locked .cover{filter:saturate(.75)}
     .badge{position:absolute;top:10px;left:10px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;padding:4px 8px;background:var(--ink);color:var(--gold-lt)}
     .book.locked .badge{background:rgba(255,255,255,.9);color:var(--ink-mid)}
     .book-body{padding:16px 18px 18px;display:flex;flex-direction:column;gap:10px;flex:1}
@@ -84,6 +84,37 @@
     .empty{padding:40px;text-align:center;border:1px dashed var(--border);color:var(--ink-mid)}
     .notice{background:var(--gold-pale);border:1px solid var(--gold-lt);padding:12px 16px;font-size:14px;margin-bottom:22px;color:var(--ink)}
     .loading{display:grid;place-items:center;min-height:280px;color:var(--ink-lt);font-family:'DM Mono',monospace;font-size:12px;letter-spacing:.2em}
+    /* library: category sections + ebook thumbnails */
+    .libbar{position:sticky;top:72px;z-index:5;background:rgba(253,252,251,.95);backdrop-filter:blur(10px);padding:12px 0;margin:0 0 8px;border-bottom:1px solid var(--border)}
+    .libbar .tabs{margin:0 0 10px}
+    .jump{display:flex;gap:8px;overflow-x:auto;scrollbar-width:thin;padding-bottom:2px}
+    .chip{flex:0 0 auto;display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border:1px solid var(--border);background:var(--surface);color:var(--ink);text-decoration:none;font-size:12px;font-weight:600;white-space:nowrap}
+    .chip:hover{border-color:var(--gold);color:var(--gold)}
+    .chip b{font-family:'DM Mono',monospace;font-weight:500;color:var(--gold);font-size:11px}
+    .cat{padding:34px 0 10px;scroll-margin-top:170px}
+    .cat + .cat{border-top:1px solid var(--border)}
+    .cat-head{display:flex;align-items:center;gap:18px;margin-bottom:20px;flex-wrap:wrap}
+    .cat-cover{width:112px;aspect-ratio:1274/900;background:var(--surface-hi) center/cover no-repeat;border:1px solid var(--border);flex:0 0 auto}
+    .cat-name{font-family:'Noto Serif',serif;font-weight:900;font-size:clamp(20px,2.4vw,26px);line-height:1.2;margin:4px 0 2px}
+    .cat-meta{font-family:'DM Mono',monospace;font-size:12px;color:var(--ink-lt)}
+    .shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(188px,1fr));gap:22px}
+    .eb{background:var(--surface);border:1px solid var(--border);display:flex;flex-direction:column;transition:box-shadow .2s,transform .2s}
+    .eb:hover{box-shadow:0 12px 30px rgba(26,22,15,.10);transform:translateY(-2px)}
+    .thumb{position:relative;display:block;aspect-ratio:3/4;background:#16120c center top/cover no-repeat;border-bottom:1px solid var(--border);overflow:hidden}
+    .thumb img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
+    .thumb .ph{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:18px;
+      background:radial-gradient(120% 80% at 50% 0%,#3a2c14 0%,#16120c 60%);color:var(--gold-lt);border:1px solid rgba(226,185,106,.35);outline:1px solid rgba(226,185,106,.18);outline-offset:-8px}
+    .thumb .ph small{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.3em;color:var(--gold-mid);margin-bottom:12px}
+    .thumb .ph span{font-family:'Noto Serif',serif;font-weight:700;font-size:16px;line-height:1.25}
+    .thumb .pages{position:absolute;right:8px;bottom:8px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;background:rgba(26,22,15,.82);color:var(--gold-lt);padding:3px 7px}
+    .eb-body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:6px;flex:1}
+    .eb-title{font-weight:600;font-size:14px;line-height:1.35}
+    .eb-sub{font-family:'DM Mono',monospace;font-size:11px;color:var(--ink-lt)}
+    .eb-actions{display:flex;gap:6px;margin-top:auto;padding-top:8px}
+    .eb-actions .btn{flex:1;padding:9px 6px;font-size:10.5px;letter-spacing:.08em}
+    .soon{font-size:14px;color:var(--ink-lt);padding:18px;border:1px dashed var(--border);background:var(--surface)}
+    .more{margin-top:40px;padding-top:30px;border-top:2px solid var(--ink)}
+    @media(max-width:860px){.libbar{top:72px}.shelf{grid-template-columns:repeat(2,1fr);gap:14px}.cat-cover{width:84px}.eb-actions{flex-direction:column}}
     footer{border-top:1px solid var(--border);padding:22px 32px;font-size:12px;color:var(--ink-lt);text-align:center}
     [hidden]{display:none!important}
     @media(max-width:860px){.auth-wrap{grid-template-columns:1fr;gap:32px}.nav-inner,main{padding-left:16px;padding-right:16px}main{padding-top:32px}.card{padding:22px}.hide-sm{display:none}.points{display:none}.lede{font-size:14px}}
@@ -158,11 +189,19 @@
       <a class="btn ghost sm" href="/#bundles">Get more guides</a>
     </div>
     <div class="notice" id="libNotice" hidden></div>
-    <div class="tabs" role="group" aria-label="Filter">
-      <button class="tab" data-f="owned" aria-pressed="true">My guides</button>
-      <button class="tab" data-f="all" aria-pressed="false">All guides</button>
+    <div class="libbar">
+      <div class="tabs" role="group" aria-label="Track">
+        <button class="tab" data-t="all" aria-pressed="true">All tracks</button>
+        <button class="tab" data-t="Technical" aria-pressed="false">Technical</button>
+        <button class="tab" data-t="Functional" aria-pressed="false">Functional</button>
+      </div>
+      <nav class="jump" id="jump" aria-label="Jump to guide"></nav>
     </div>
-    <div class="grid" id="grid"></div>
+    <div id="shelves"></div>
+    <section class="more" id="more" hidden>
+      <div class="cat-head"><div><div class="eyebrow">Add to your library</div><h2 class="cat-name">More interview guides</h2></div></div>
+      <div class="grid" id="moreGrid"></div>
+    </section>
   </section>
 </main>
 
@@ -173,7 +212,7 @@
   'use strict';
   var API = '/api/member';
   var $ = function(id){ return document.getElementById(id); };
-  var state = { lib:null, catalog:null, files:{}, filter:'owned' };
+  var state = { lib:null, catalog:null, files:{}, track:'all' };
   $('yr').textContent = new Date().getFullYear();
 
   var ERRORS = {
@@ -235,7 +274,7 @@
   $('logoutBtn').onclick = function(){ api('logout', {}).then(function(){ state.lib = null; show('auth'); }); };
 
   Array.prototype.forEach.call(document.querySelectorAll('.tab'), function(t){
-    t.onclick = function(){ state.filter = t.getAttribute('data-f');
+    t.onclick = function(){ state.track = t.getAttribute('data-t');
       Array.prototype.forEach.call(document.querySelectorAll('.tab'), function(x){ x.setAttribute('aria-pressed', String(x===t)); });
       render(); };
   });
@@ -244,51 +283,74 @@
 
   function fmtSize(b){ return b > 1048576 ? (b/1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(b/1024)) + ' KB'; }
   function fileLink(g, id, mode){ return API + '?action=file&mode=' + mode + '&g=' + encodeURIComponent(g) + '&f=' + encodeURIComponent(id); }
+  var ORDER = ['dev','adm','std','ext','bod','ion','os','fin','scm','mfg','pln','wms'];
+  function sortKeys(keys){ return keys.sort(function(a,b){ var x=ORDER.indexOf(a), y=ORDER.indexOf(b); return (x<0?99:x)-(y<0?99:y); }); }
+
+  function ebookCard(g, f){
+    var lim = state.lib.limit, card = el('article','eb');
+    var th = el('a','thumb'); th.href = fileLink(g, f.id, 'view'); th.target = '_blank'; th.rel = 'noopener'; th.title = 'Read ' + f.title;
+    var ph = el('div','ph'); ph.appendChild(el('small',null,'FULLONBAAN')); ph.appendChild(el('span',null,f.title)); th.appendChild(ph);
+    if (f.thumb) {
+      var img = new Image(); img.alt = ''; img.loading = 'lazy'; img.decoding = 'async';
+      img.onload = function(){ ph.remove(); }; img.onerror = function(){ img.remove(); };
+      img.src = f.thumb; th.appendChild(img);
+    }
+    th.appendChild(el('span','pages','PDF · ' + fmtSize(f.size)));
+    card.appendChild(th);
+    var body = el('div','eb-body');
+    body.appendChild(el('div','eb-title', f.title));
+    var sub = el('div','eb-sub', 'Opened ' + f.opens + ' of ' + lim); body.appendChild(sub);
+    var acts = el('div','eb-actions');
+    var v = el('a','btn sm','Read online'); v.href = fileLink(g, f.id, 'view'); v.target = '_blank'; v.rel = 'noopener';
+    var d = el('a','btn sm ghost','Download'); d.href = fileLink(g, f.id, 'download');
+    [th, v, d].forEach(function(x){ x.addEventListener('click', function(){ f.opens++; sub.textContent = 'Opened ' + f.opens + ' of ' + lim; }); });
+    acts.appendChild(v); acts.appendChild(d); body.appendChild(acts); card.appendChild(body);
+    return card;
+  }
 
   function render(){
-    var lib = state.lib, cat = state.catalog, files = state.files || {}, grid = $('grid');
-    grid.innerHTML = '';
+    var lib = state.lib, cat = state.catalog, files = state.files || {};
+    var shelves = $('shelves'), jump = $('jump'), more = $('moreGrid');
+    shelves.innerHTML = ''; jump.innerHTML = ''; more.innerHTML = '';
     var owned = {}; lib.owned.forEach(function(k){ owned[k] = true; });
-    var keys = Object.keys(cat).filter(function(k){ return state.filter === 'all' || owned[k]; });
-    keys.sort(function(a,b){ return (owned[b]?1:0) - (owned[a]?1:0); });
-    if (!keys.length) {
+    var inTrack = function(k){ return state.track === 'all' || cat[k].track === state.track; };
+    var mine = sortKeys(lib.owned.filter(function(k){ return cat[k] && inTrack(k); }));
+    var others = sortKeys(Object.keys(cat).filter(function(k){ return !owned[k] && inTrack(k); }));
+
+    if (!lib.owned.length) {
       var em = el('div','empty'); em.appendChild(document.createTextNode('No guides in your library yet. '));
-      var a = el('a',null,'Browse guides'); a.href = '/#guides'; em.appendChild(a); grid.appendChild(em); return;
+      var a0 = el('a',null,'Browse guides'); a0.href = '/#guides'; em.appendChild(a0); shelves.appendChild(em);
+    } else if (!mine.length) {
+      shelves.appendChild(el('div','empty','You don’t own any ' + state.track + ' guides yet.'));
     }
-    keys.forEach(function(k){
-      var b = cat[k], has = !!owned[k], list = files[k] || [];
-      var card = el('article', 'book ' + (has ? 'owned' : 'locked'));
-      var cover = el('div','cover'); cover.style.backgroundImage = 'url(/covers/' + k + '.jpg)';
-      cover.appendChild(el('span','badge', has ? b.track : 'Not purchased'));
-      card.appendChild(cover);
-      var body = el('div','book-body');
-      body.appendChild(el('div','book-name', b.name));
-      if (has) {
-        body.appendChild(el('div','book-meta', list.length + (list.length === 1 ? ' ebook' : ' ebooks') + ' included'));
-        if (!list.length) body.appendChild(el('div','soon','Your ebooks for this guide are being prepared and will appear here automatically.'));
-        else {
-          var ul = el('ul','ebooks');
-          list.forEach(function(f){
-            var li = el('li','ebook'), top = el('div','ebook-top');
-            top.appendChild(el('span','ebook-ic','PDF'));
-            var tx = el('div'); tx.appendChild(el('div','ebook-title', f.title));
-            tx.appendChild(el('div','ebook-sub', fmtSize(f.size) + ' · opened ' + f.opens + '/' + lib.limit));
-            top.appendChild(tx); li.appendChild(top);
-            var actions = el('div','book-actions');
-            var v = el('a','btn sm','Read online'); v.href = fileLink(k, f.id, 'view'); v.target = '_blank'; v.rel = 'noopener';
-            var d = el('a','btn sm ghost','Download'); d.href = fileLink(k, f.id, 'download');
-            [v,d].forEach(function(x){ x.addEventListener('click', function(){ f.opens++; setTimeout(render, 400); }); });
-            actions.appendChild(v); actions.appendChild(d); li.appendChild(actions); ul.appendChild(li);
-          });
-          body.appendChild(ul);
-        }
-      } else {
-        body.appendChild(el('div','book-meta', b.track + ' track' + (b.count > 1 ? ' · ' + b.count + ' ebooks' : '')));
-        var acts = el('div','book-actions'), buy = el('a','btn sm ghost','Get this guide'); buy.href = '/#guides'; acts.appendChild(buy);
-        body.appendChild(acts);
-      }
-      card.appendChild(body); grid.appendChild(card);
+
+    mine.forEach(function(k){
+      var b = cat[k], list = files[k] || [];
+      var chip = el('a','chip'); chip.href = '#cat-' + k; chip.appendChild(document.createTextNode(b.name.replace(/ Interview Guide$/,'').replace(/^Infor (LN )?/,'')));
+      chip.appendChild(el('b',null,String(list.length))); jump.appendChild(chip);
+
+      var sec = el('section','cat'); sec.id = 'cat-' + k;
+      var head = el('div','cat-head'), cv = el('div','cat-cover'); cv.style.backgroundImage = 'url(/covers/' + k + '.jpg)';
+      var tx = el('div'); tx.appendChild(el('div','eyebrow', b.track + ' track'));
+      tx.appendChild(el('h2','cat-name', b.name));
+      tx.appendChild(el('div','cat-meta', list.length + (list.length === 1 ? ' ebook' : ' ebooks')));
+      head.appendChild(cv); head.appendChild(tx); sec.appendChild(head);
+      if (!list.length) sec.appendChild(el('div','soon','Your ebooks for this guide are being prepared and will appear here automatically.'));
+      else { var shelf = el('div','shelf'); list.forEach(function(f){ shelf.appendChild(ebookCard(k, f)); }); sec.appendChild(shelf); }
+      shelves.appendChild(sec);
     });
+    $('jump').hidden = mine.length < 2;
+
+    others.forEach(function(k){
+      var b = cat[k], card = el('article','book locked');
+      var cover = el('div','cover'); cover.style.backgroundImage = 'url(/covers/' + k + '.jpg)';
+      cover.appendChild(el('span','badge', b.track)); card.appendChild(cover);
+      var body = el('div','book-body'); body.appendChild(el('div','book-name', b.name));
+      body.appendChild(el('div','book-meta', b.count ? b.count + (b.count === 1 ? ' ebook' : ' ebooks') : b.track + ' track'));
+      var acts = el('div','book-actions'), buy = el('a','btn sm ghost','Get this guide'); buy.href = '/#guides'; acts.appendChild(buy);
+      body.appendChild(acts); card.appendChild(body); more.appendChild(card);
+    });
+    $('more').hidden = !others.length;
   }
 
   function loadLibrary(){
@@ -297,7 +359,6 @@
       state.lib = d.library; state.catalog = d.catalog; state.files = d.files || {};
       $('hello').textContent = d.library.name ? 'Welcome back, ' + d.library.name.split(' ')[0] : 'Welcome back';
       $('who').textContent = d.library.email + ' · ' + d.library.owned.length + ' guide' + (d.library.owned.length===1?'':'s');
-      if (!d.library.owned.length) state.filter = 'all';
       show('lib'); render(); return true;
     }).catch(function(){ show('auth'); });
   }

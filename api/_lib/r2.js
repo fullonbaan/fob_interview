@@ -133,7 +133,7 @@ async function listKeys(prefix) { return (await listObjects(prefix)).map(o => o.
 
 // Short-lived signed PUT link so the admin page can upload a PDF straight to the private bucket.
 async function signedPutUrl(key, ttl) {
-  if (LOCAL) return 'local-put://' + key;
+  if (LOCAL) return '/__local/' + key.split('/').map(encodeURIComponent).join('/');
   const u = new URL(objUrl(key));
   u.searchParams.set('X-Amz-Expires', String(ttl || 900));
   const signed = await client().sign(new Request(u.toString(), { method: 'PUT' }), { aws: { signQuery: true } });
@@ -153,14 +153,14 @@ function putJson(key, data, cond) {
 async function signedUrl(key, opts) {
   opts = opts || {};
   const ttl = Math.max(30, Math.min(3600, opts.ttl || 300));
-  if (LOCAL) return 'file://' + lp(key) + '?ttl=' + ttl + '&disp=' + (opts.disposition || 'inline');
+  if (LOCAL) return '/__local/' + key.split('/').map(encodeURIComponent).join('/') + '?ttl=' + ttl + '&disp=' + (opts.disposition || 'inline');
   const u = new URL(objUrl(key));
   u.searchParams.set('X-Amz-Expires', String(ttl));
   if (opts.filename) {
     const fn = String(opts.filename).replace(/[^A-Za-z0-9._ -]/g, '_');
     u.searchParams.set('response-content-disposition', (opts.disposition || 'inline') + '; filename="' + fn + '"');
   }
-  u.searchParams.set('response-content-type', 'application/pdf');
+  if (opts.contentType !== null) u.searchParams.set('response-content-type', opts.contentType || 'application/pdf');
   u.searchParams.set('response-cache-control', 'private, no-store');
   const signed = await client().sign(new Request(u.toString(), { method: 'GET' }), { aws: { signQuery: true } });
   return signed.url;

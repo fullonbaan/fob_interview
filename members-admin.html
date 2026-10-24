@@ -33,6 +33,8 @@
     #toast{position:fixed;bottom:18px;right:18px;background:var(--ink);color:#fff;padding:12px 16px;max-width:360px;display:none;z-index:9}
     .code{font:700 20px ui-monospace,Consolas,monospace;letter-spacing:.12em;color:var(--rust);background:#FFFDF8;border:1px dashed var(--gold);padding:10px;margin-top:8px;display:inline-block}
     .scroll{overflow-x:auto}
+    .ebth{flex:0 0 36px;height:48px;border:1px solid var(--border);background:#16120c;display:grid;place-items:center;overflow:hidden}.ebth img{width:100%;height:100%;object-fit:cover;object-position:top}.ebth i{color:#E2B96A;font:600 9px ui-monospace,monospace;font-style:normal}
+    .btnlike{display:inline-block;padding:5px 10px;border:1px solid var(--ink);font-size:12px;font-weight:600;cursor:pointer;color:var(--ink);background:#fff;margin:0}
     .ebrow{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:6px 0;border-bottom:1px dashed var(--border)}.ebrow:last-child{border-bottom:0}
     small{color:var(--ink-lt)} button.sm{padding:5px 10px;font-size:12px}
     .upl{display:inline-block;padding:8px 12px;border:1px dashed var(--gold);color:var(--gold);cursor:pointer;font-weight:600;font-size:13px;margin:0}
@@ -53,6 +55,7 @@
     <section class="card">
       <h2>Ebook library</h2><p style="margin:-4px 0 12px;color:var(--ink-mid)">Every PDF in a guide’s folder appears in buyers’ libraries straight away — no code change. File name = title shown (an ordering prefix like <code>01 - </code> is hidden). Names starting with <code>_</code> stay hidden as drafts.</p>
       <button id="moveAll" hidden style="margin-bottom:12px"></button>
+      <div id="thumbStatus" style="font-size:13px;margin:0 0 10px;color:var(--ink-mid)"></div>
       <div class="scroll"><table id="files"></table></div>
     </section>
 
@@ -99,19 +102,20 @@
   try{var s=sessionStorage.getItem('fob_adm');if(s)unlock(s);}catch(_){}
 
   function mb(b){return b>1048576?(b/1048576).toFixed(1)+' MB':Math.max(1,Math.round(b/1024))+' KB';}
-  function renderFiles(d){
+  function renderFiles(d,noAuto){
     var empty=d.guides.filter(function(g){return !g.ebooks.length;}).length;
     $('files').innerHTML='<tr><th style="width:24%">Guide</th><th>Ebooks customers see (in this order)</th><th style="width:220px">Add ebooks</th></tr>'+d.guides.map(function(g){
       var rows=g.ebooks.length?g.ebooks.map(function(f){
-        return '<div class="ebrow"><span><b>'+esc(f.title)+'</b><br><small>'+esc(f.legacy?'ebooks/'+f.file+' (old single-file location)':g.folder+f.file)+' · '+mb(f.size)+'</small></span>'+
+        return '<div class="ebrow"><span class="ebth">'+(f.thumb?'<img src="'+esc(f.thumb)+'" alt="">':'<i>PDF</i>')+'</span><span style="flex:1"><b>'+esc(f.title)+'</b><br><small>'+esc(f.legacy?'ebooks/'+f.file+' (old single-file location)':g.folder+f.file)+' · '+mb(f.size)+'</small></span>'+
                (f.legacy?'<button class="sm" data-mv="'+esc(f.id)+'" data-g="'+esc(g.key)+'" data-n="'+esc(defaultName(g))+'">Move into folder</button> ':'<button class="ghost sm" data-rn="'+esc(f.id)+'" data-g="'+esc(g.key)+'" data-n="'+esc(f.file)+'">Rename</button> ')+
+               '<label class="ghost sm btnlike" title="Use your own cover image">Thumbnail<input type="file" accept="image/*" data-th="'+esc(f.id)+'" data-g="'+esc(g.key)+'" hidden></label> '+
                '<button class="ghost sm" data-del="'+esc(f.id)+'" data-g="'+esc(g.key)+'" data-t="'+esc(f.title)+'">Delete</button></div>';
       }).join(''):'<span class="bad">No ebooks yet — buyers see “being prepared”.</span>';
       return '<tr><td><b>'+esc(g.name.replace(' Interview Guide',''))+'</b><br><small>'+esc(g.track)+' · '+g.ebooks.length+' ebook'+(g.ebooks.length===1?'':'s')+'</small></td><td>'+rows+'</td>'+
              '<td><label class="upl">+ Upload PDF(s)<input type="file" accept="application/pdf,.pdf" multiple data-up="'+esc(g.key)+'" hidden></label><div class="upst" id="up-'+esc(g.key)+'"></div></td></tr>';
     }).join('')+(empty?'<tr><td colspan="3" class="bad">'+empty+' guide(s) have no ebooks yet.</td></tr>':'');
     var legacy=[];d.guides.forEach(function(g){g.ebooks.forEach(function(f){if(f.legacy)legacy.push({g:g,f:f});});});
-    $('moveAll').hidden=!legacy.length; $('moveAll').textContent='Move all '+legacy.length+' old single files into their guide folders';
+    $('moveAll').hidden=!legacy.length; $('moveAll').textContent=legacy.length===1?'Move the 1 old single file into its guide folder':'Move all '+legacy.length+' old single files into their guide folders';
     $('moveAll').onclick=async function(){
       if(!confirm('Move '+legacy.length+' file(s) from ebooks/<guide>.pdf into ebooks/<guide>/ ?\nEach keeps its title and stays first in its guide.'))return;
       this.disabled=true; var ok=0,fail=[];
@@ -124,6 +128,11 @@
       if(!n)return;
       call('move-file',{guide:b.getAttribute('data-g'),id:b.getAttribute('data-mv')||b.getAttribute('data-rn'),name:n}).then(function(r){toast('Saved as “'+r.title+'”');reloadFiles();}).catch(function(e){toast(e.message);});
     };});
+    Array.prototype.forEach.call(document.querySelectorAll('[data-th]'),function(inp){inp.onchange=async function(){
+      var f=inp.files[0]; inp.value=''; if(!f)return;
+      try{ await saveThumb(inp.getAttribute('data-g'),inp.getAttribute('data-th'),await imageToJpeg(f)); toast('Thumbnail updated'); reloadFiles(true); }catch(e){ toast(e.message); }
+    };});
+    if(!noAuto) autoThumbs(d);
     Array.prototype.forEach.call(document.querySelectorAll('[data-up]'),function(inp){inp.onchange=function(){uploadFiles(inp.getAttribute('data-up'),Array.prototype.slice.call(inp.files));inp.value='';};});
     Array.prototype.forEach.call(document.querySelectorAll('[data-del]'),function(b){b.onclick=function(){
       if(!confirm('Delete “'+b.getAttribute('data-t')+'”? Customers will no longer see it. (Copies they already downloaded are not affected.)'))return;
@@ -131,7 +140,56 @@
     };});
   }
   function defaultName(g){return '00 - '+g.name+'.pdf';}
-  function reloadFiles(){return call('files').then(function(d){CAT=d;renderFiles(d);});}
+  function reloadFiles(noAuto){return call('files').then(function(d){CAT=d;renderFiles(d,noAuto===true);});}
+  /* ── Thumbnails: page 1 of each PDF, rendered here and saved next to the ebook ── */
+  var thumbBusy=false;
+  function canvasToBlob(c){return new Promise(function(r){c.toBlob(r,'image/jpeg',0.82);});}
+  function putBlob(url,blob){return fetch(url,{method:'PUT',headers:{'Content-Type':'image/jpeg'},body:blob}).then(function(r){if(!r.ok)throw new Error('Storage answered '+r.status);});}
+  /* PDFium (Chrome's PDF engine, WebAssembly) renders gradients exactly like the real PDF. */
+  var PDFIUM='https://cdn.jsdelivr.net/npm/@hyzyla/pdfium@2.1.9/dist/', pdfiumLib=null;
+  async function pdfium(){
+    if(!pdfiumLib){ var m=await import(PDFIUM+'index.esm.js'); pdfiumLib=await m.PDFiumLibrary.init({wasmUrl:PDFIUM+'pdfium.wasm'}); }
+    return pdfiumLib;
+  }
+  async function pdfFirstPage(url){
+    var lib=await pdfium();
+    var r; try{ r=await fetch(url); }catch(e){ throw new Error('CORS'); }
+    if(!r.ok)throw new Error('Could not read PDF ('+r.status+')');
+    var doc=await lib.loadDocument(new Uint8Array(await r.arrayBuffer()));
+    try{
+      var page=doc.getPage(0), sz=page.getSize(), w=600, h=Math.round(w*sz.height/sz.width);
+      var img=await page.render({width:w,height:h,render:'bitmap'});
+      var c=document.createElement('canvas'); c.width=img.width; c.height=img.height;
+      var ctx=c.getContext('2d'); ctx.fillStyle='#fff'; ctx.fillRect(0,0,c.width,c.height);
+      var tmp=document.createElement('canvas'); tmp.width=img.width; tmp.height=img.height;
+      tmp.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(img.data),img.width,img.height),0,0);
+      ctx.drawImage(tmp,0,0);                       // flatten any transparency onto white
+      return canvasToBlob(c);
+    } finally { doc.destroy(); }
+  }
+  async function imageToJpeg(file){
+    var img=new Image(), u=URL.createObjectURL(file);
+    await new Promise(function(res,rej){img.onload=res;img.onerror=function(){rej(new Error('Not an image'));};img.src=u;});
+    var w=Math.min(600,img.naturalWidth), c=document.createElement('canvas'); c.width=w; c.height=Math.round(img.naturalHeight*w/img.naturalWidth);
+    c.getContext('2d').drawImage(img,0,0,c.width,c.height); URL.revokeObjectURL(u); return canvasToBlob(c);
+  }
+  async function saveThumb(guide,id,blob){ var u=await call('thumb-upload-url',{guide:guide,id:id}); await putBlob(u.url,blob); }
+  async function autoThumbs(d){
+    if(thumbBusy)return; var todo=[];
+    d.guides.forEach(function(g){g.ebooks.forEach(function(f){if(f.thumbStale)todo.push({g:g.key,f:f});});});
+    var st=$('thumbStatus'); if(!todo.length){st.textContent='✔ All ebooks have thumbnails.';return;}
+    thumbBusy=true; var ok=0, cors=false, errs=[];
+    for(var i=0;i<todo.length;i++){
+      st.textContent='Creating thumbnails '+(i+1)+'/'+todo.length+' · '+todo[i].f.title+'…';
+      try{ var src=await call('thumb-src',{guide:todo[i].g,id:todo[i].f.id}); await saveThumb(todo[i].g,todo[i].f.id,await pdfFirstPage(src.url)); ok++; }
+      catch(e){ if(e.message==='CORS'){cors=true;break;} errs.push(todo[i].f.title+': '+e.message); }
+    }
+    thumbBusy=false;
+    st.innerHTML=cors?'<span class="bad">Thumbnails need <b>"GET"</b> in the R2 bucket CORS rule (AllowedMethods: PUT, GET, HEAD). Add it, then reload this page.</span>'
+      :('✔ Created '+ok+' thumbnail'+(ok===1?'':'s')+(errs.length?' · <span class="bad">failed: '+esc(errs.join('; '))+'</span>':''));
+    if(ok)call('files').then(function(nd){CAT=nd;renderFiles(nd,true);});
+  }
+
   function putFile(url,file,onp){
     return new Promise(function(res,rej){
       var x=new XMLHttpRequest();x.open('PUT',url);x.setRequestHeader('Content-Type','application/pdf');

@@ -78,24 +78,41 @@ Folder names are the guide codes: `dev adm bod ion ext os std fin scm mfg pln wm
 1. **From `/members-admin` → Ebook library → "+ Upload PDF(s)"** next to the guide (multiple files at once, progress shown, warns before replacing). Needs the one-time CORS rule below.
 2. **Cloudflare dashboard** → R2 → bucket → Objects → open `ebooks/` → open/create the guide folder → Upload.
 
-### One-time: allow the admin page to upload (R2 CORS rule)
-Cloudflare → R2 → `fob-interview-ebooks` → **Settings → CORS Policy → Add CORS policy** → JSON:
+### Thumbnails (automatic)
+- Every ebook shows a cover thumbnail made from **page 1 of the PDF**.
+- They are created **automatically whenever you open `/members-admin`** (and right after an upload). The status line says
+  "Creating thumbnails 3/12…" then "✔ All ebooks have thumbnails". Leave the tab open until it finishes.
+- Rendering uses PDFium (Chrome's own PDF engine), so gradients and colours match the real cover.
+- If you **replace a PDF**, its thumbnail is rebuilt the next time you open the admin page.
+- **Custom cover:** click **Thumbnail** next to any ebook and pick an image (JPG/PNG). It's resized and used instead.
+  (Replacing that PDF later will regenerate it from page 1 again.)
+- Stored privately next to the ebook: `ebooks/<guide>/_thumbs/<pdf name>.jpg`. Moving, renaming or deleting an ebook carries its thumbnail along.
+- Until a thumbnail exists, customers see a gold-on-black placeholder with the ebook title — never a broken image.
+
+### One-time: allow the admin page to upload and make thumbnails (R2 CORS rule)
+Cloudflare → R2 → `fob-interview-ebooks` → **Settings → CORS Policy** → JSON:
 
 ```json
 [
   {
-    "AllowedOrigins": ["https://interview.fullonbaan.com"],
-    "AllowedMethods": ["PUT"],
-    "AllowedHeaders": ["content-type"],
+    "AllowedOrigins": ["https://interview.fullonbaan.com", "https://fob-interview.vercel.app"],
+    "AllowedMethods": ["PUT", "GET", "HEAD"],
+    "AllowedHeaders": ["*"],
+    "ExposeHeaders": ["ETag"],
     "MaxAgeSeconds": 3600
   }
 ]
 ```
 
-This only lets *your site* send uploads that already carry a 15-minute signed link the server issued
-to an authenticated admin. It does not make anything in the bucket readable.
+`PUT` lets the admin page upload; `GET` lets it read a PDF to draw its thumbnail. Both only work with a
+short-lived signed link that the server gives to an authenticated admin, so nothing in the bucket becomes public.
 
----
+### What customers see
+- **Track filter:** All tracks / Technical / Functional.
+- **Jump chips** for each guide they own (with ebook counts), which stay pinned while scrolling.
+- **One section per guide** (cover, track, name, number of ebooks), with a grid of ebook cards:
+  thumbnail, title, size, "Opened x of N", **Read online** and **Download**. Clicking the thumbnail also opens it.
+- **"More interview guides"** at the bottom: the guides they don't own yet, linking to the shop.
 
 ## 3. One-time setup (≈ 30 minutes)
 

@@ -74,9 +74,12 @@ async function me(req, res) {
   const shelf = await library.shelf();
   // Ebook lists only for guides this member owns (others just show the guide card).
   const files = {};
-  lib.owned.forEach(g => {
-    files[g] = (shelf[g] || []).map(f => ({ id: f.id, title: f.title, size: f.size, updated: f.updated, opens: (rec.downloads || {})[f.id] || 0 }));
-  });
+  await Promise.all(lib.owned.map(async g => {
+    files[g] = await Promise.all((shelf[g] || []).map(async f => ({
+      id: f.id, title: f.title, size: f.size, updated: f.updated, opens: (rec.downloads || {})[f.id] || 0,
+      thumb: f.thumbKey ? await r2.signedUrl(f.thumbKey, { ttl: 3600, contentType: null }) : null
+    })));
+  }));
   const counts = {}; Object.keys(shelf).forEach(g => { counts[g] = shelf[g].length; });
   return H.send(res, 200, { library: lib, catalog: catalogView(counts), files });
 }

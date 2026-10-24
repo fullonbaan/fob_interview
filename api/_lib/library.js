@@ -7,6 +7,9 @@
 // Title shown to customers = file name without ".pdf", with an optional ordering
 // prefix removed:  "01 - Core 4GL Q&A.pdf"  →  "Core 4GL Q&A"   (sorted by the prefix)
 // Files whose name starts with "_" or "." are hidden (drafts).
+//
+// Thumbnails:  ebooks/<guide>/_thumbs/<pdf file name>.jpg   (legacy: ebooks/_thumbs/<guide>.pdf.jpg)
+// Generated automatically from page 1 by the admin page, or uploaded as a custom image.
 const r2 = require('./r2');
 const catalog = require('./catalog');
 
@@ -34,15 +37,27 @@ function parseKey(key) {
   return { guide: g, id: rel, file, title: titleFromFile(file), legacy: false };
 }
 
+function thumbKeyForId(id) {
+  const i = id.lastIndexOf('/');
+  return ROOT + (i >= 0 ? id.slice(0, i + 1) : '') + '_thumbs/' + id.slice(i + 1) + '.jpg';
+}
+
 const collator = new Intl.Collator('en', { numeric: true, sensitivity: 'base' });
 
 // → { dev: [ {id, key, title, size, updated}, … ], fin: [...], … }  (every guide present, maybe empty)
 async function shelf() {
   const objs = await r2.listObjects(ROOT);
+  const byKey = {}; objs.forEach(o => { byKey[o.key] = o; });
   const out = {}; Object.keys(catalog.EBOOKS).forEach(g => { out[g] = []; });
   objs.forEach(o => {
     const p = parseKey(o.key);
-    if (p) out[p.guide].push({ id: p.id, key: o.key, file: p.file, title: p.title, size: o.size, updated: o.lastModified, legacy: p.legacy });
+    if (!p) return;
+    const tk = thumbKeyForId(p.id), t = byKey[tk];
+    out[p.guide].push({
+      id: p.id, key: o.key, file: p.file, title: p.title, size: o.size, updated: o.lastModified, legacy: p.legacy,
+      thumbKey: t ? tk : null,
+      thumbStale: !t || (o.lastModified && t.lastModified && new Date(t.lastModified) < new Date(o.lastModified))
+    });
   });
   Object.keys(out).forEach(g => out[g].sort((a, b) => (b.legacy - a.legacy) || collator.compare(a.file, b.file)));
   return out;
@@ -63,4 +78,4 @@ function safeFileName(name) {
   return n.length > 4 ? n.slice(-140) : null;
 }
 
-module.exports = { ROOT, shelf, keyForId, titleFromFile, safeFileName, parseKey };
+module.exports = { ROOT, shelf, keyForId, thumbKeyForId, titleFromFile, safeFileName, parseKey };

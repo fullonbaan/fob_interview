@@ -58,8 +58,11 @@ module.exports = async function handler(req, res) {
         const shelf = await library.shelf();
         const guides = Object.keys(catalog.EBOOKS).map(k => ({
           key: k, name: catalog.EBOOKS[k].name, track: catalog.EBOOKS[k].track, folder: library.ROOT + k + '/',
-          ebooks: shelf[k].map(f => ({ id: f.id, title: f.title, file: f.file, size: f.size, updated: f.updated, legacy: f.legacy }))
+          ebooks: shelf[k].map(f => ({ id: f.id, title: f.title, file: f.file, size: f.size, updated: f.updated, legacy: f.legacy, thumbKey: f.thumbKey, thumbStale: f.thumbStale }))
         }));
+        await Promise.all(guides.map(g => Promise.all(g.ebooks.map(async e => {
+          e.thumb = e.thumbKey ? await r2.signedUrl(e.thumbKey, { ttl: 3600, contentType: null }) : null; delete e.thumbKey;
+        }))));
         return H.send(res, 200, { guides, products: Object.keys(catalog.PRODUCTS).map(k => ({ key: k, name: catalog.PRODUCTS[k].name, unlocks: catalog.PRODUCTS[k].unlocks })) });
       }
       return H.send(res, 404, { error: 'Unknown action' });
@@ -77,6 +80,17 @@ module.exports = async function handler(req, res) {
       const exists = !!(await r2.headObject(key));
       return H.send(res, 200, { url: await r2.signedPutUrl(key, 900), key, id: key.slice(library.ROOT.length), title: library.titleFromFile(name), replaces: exists });
     }
+    // Thumbnails: the admin browser renders page 1 of the PDF and uploads a JPEG (or a custom image).
+    if (action === 'thumb-src') {
+      const key = library.keyForId(String(b.guide || ''), b.id);
+      if (!key) return H.send(res, 400, { error: 'Unknown ebook' });
+      return H.send(res, 200, { url: await r2.signedUrl(key, { ttl: 300 }) });
+    }
+    if (action === 'thumb-upload-url') {
+      const key = library.keyForId(String(b.guide || ''), b.id);
+      if (!key) return H.send(res, 400, { error: 'Unknown ebook' });
+      return H.send(res, 200, { url: await r2.signedPutUrl(library.thumbKeyForId(key.slice(library.ROOT.length)), 600) });
+    }
     if (action === 'move-file') {
       const guide = String(b.guide || '');
       const src = library.keyForId(guide, b.id);
@@ -91,12 +105,16 @@ module.exports = async function handler(req, res) {
       const to = await r2.headObject(dst);                       // verify before removing the original
       if (!to || to.size !== from.size) return H.send(res, 500, { error: 'Copy could not be verified — original kept' });
       await r2.deleteObject(src);
+      // carry the thumbnail along
+      const ts = library.thumbKeyForId(src.slice(library.ROOT.length)), td = library.thumbKeyForId(dst.slice(library.ROOT.length));
+      try { if (await r2.headObject(ts)) { await r2.copyObject(ts, td); await r2.deleteObject(ts); } } catch (e) { console.warn('thumb move failed', e.message); }
       return H.send(res, 200, { ok: true, id: dst.slice(library.ROOT.length), title: library.titleFromFile(name) });
     }
     if (action === 'delete-file') {
       const key = library.keyForId(String(b.guide || ''), b.id);
       if (!key) return H.send(res, 400, { error: 'Unknown ebook' });
       await r2.deleteObject(key);
+      try { await r2.deleteObject(library.thumbKeyForId(key.slice(library.ROOT.length))); } catch (e) { /* no thumb */ }
       return H.send(res, 200, { ok: true });
     }
 
